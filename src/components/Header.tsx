@@ -1,21 +1,27 @@
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+
 const Header = () => {
+  const { t, i18n } = useTranslation();
+  const switchLang = (lng: string) => {
+    i18n.changeLanguage(lng);
+    localStorage.setItem("dsom-lang", lng);
+  };
+
   return (
     <header className="absolute top-0 inset-x-0 z-30">
       <div className="container flex items-center justify-between py-7">
-        <a href="#" className="font-display text-2xl tracking-[0.4em] text-foreground">
-          DSOM
-        </a>
+        <Link to="/" className="font-display text-2xl tracking-[0.4em] text-foreground">DSOM</Link>
         <nav className="hidden md:flex items-center gap-10 text-[11px] tracking-luxe uppercase">
-          <a href="#catalog" className="hover:text-accent transition-colors">Каталог</a>
-          <a href="#philosophy" className="hover:text-accent transition-colors">Философия</a>
-          <a href="#journal" className="hover:text-accent transition-colors">Журнал</a>
-          <a href="#contact" className="hover:text-accent transition-colors">Контакты</a>
+          <Link to="/catalog" className="hover:text-accent transition-colors">{t("nav.catalog")}</Link>
+          <Link to="/about" className="hover:text-accent transition-colors">{t("nav.about")}</Link>
+          <Link to="/stores" className="hover:text-accent transition-colors">{t("nav.stores")}</Link>
+          <Link to="/contact" className="hover:text-accent transition-colors">{t("nav.contact")}</Link>
         </nav>
-        <div className="flex items-center gap-6 text-[11px] tracking-luxe uppercase">
-          <button className="hover:text-accent transition-colors hidden sm:block">Поиск</button>
-          <button className="hover:text-accent transition-colors">
-            Корзина <span className="text-muted-foreground">(0)</span>
-          </button>
+        <div className="flex items-center gap-3 text-[11px] tracking-luxe uppercase">
+          <button onClick={() => switchLang("ru")} className={i18n.language === "ru" ? "text-accent" : "text-muted-foreground hover:text-foreground"}>RU</button>
+          <span className="text-border">·</span>
+          <button onClick={() => switchLang("en")} className={i18n.language === "en" ? "text-accent" : "text-muted-foreground hover:text-foreground"}>EN</button>
         </div>
       </div>
     </header>
