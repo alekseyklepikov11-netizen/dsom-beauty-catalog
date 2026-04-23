@@ -49,45 +49,65 @@ const Index = () => {
     <main className="min-h-screen bg-background">
       <Header floating />
 
-      {/* HERO with full-bleed video background */}
-      <section className="relative min-h-[100vh] flex items-end overflow-hidden">
+      {/* HERO with full-bleed video background — Logoisum style */}
+      <section className="relative min-h-[100vh] flex items-center justify-center overflow-hidden bg-[#0a0a0a]">
         <video
           autoPlay muted loop playsInline preload="auto"
           poster={banner?.image_url || undefined}
           className="absolute inset-0 w-full h-full object-cover"
         >
           <source src={videoSrc} type="video/mp4" />
-          {banner?.image_url && <img src={banner.image_url} alt="" className="absolute inset-0 w-full h-full object-cover" />}
         </video>
 
-        {/* Soft cream gradient at bottom for text legibility, no heavy color overlay */}
-        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background via-background/60 to-transparent" />
-        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-foreground/20 to-transparent" />
+        {/* Subtle vignette only — no heavy color overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-black/30 pointer-events-none" />
 
-        <div className="relative container pb-24 md:pb-32 pt-40">
-          <div className="max-w-3xl animate-fade-up">
-            <p className="text-[11px] tracking-luxe uppercase text-foreground/70 mb-6">{t("hero.eyebrow")}</p>
-            <h1 className="font-display text-[clamp(3rem,8vw,7rem)] leading-[0.95] text-foreground">
-              {title}
-              <br />
-              <span className="italic text-accent">{subtitle?.split(".")[0]}</span>
-            </h1>
-            <div className="mt-10 flex flex-wrap items-center gap-4">
-              <Link
-                to={banner?.cta_url || "/catalog"}
-                className="inline-flex items-center gap-2 bg-foreground text-background rounded-full pl-6 pr-2 py-2 text-[11px] tracking-luxe uppercase hover:bg-accent transition-colors"
-              >
-                <span>{ctaLabel}</span>
-                <span className="grid place-items-center w-9 h-9 rounded-full bg-background/15">→</span>
-              </Link>
-              <button className="inline-flex items-center gap-3 bg-background/85 backdrop-blur-md text-foreground rounded-full pl-2 pr-6 py-2 text-[11px] tracking-luxe uppercase border border-foreground/5 hover:bg-background transition-colors">
-                <span className="grid place-items-center w-9 h-9 rounded-full bg-foreground text-background">
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                </span>
-                <span>{lang === "en" ? "Watch the ritual" : "Посмотреть ритуал"}</span>
-              </button>
-            </div>
+        <div className="relative container px-4 pt-32 pb-20 text-center animate-fade-up">
+          {/* Eyebrow */}
+          <p className="font-barlow font-medium text-[12px] tracking-[0.3em] uppercase text-white/80 mb-8">
+            — {t("hero.eyebrow")}
+          </p>
+
+          {/* Headline — two lines, mixed typography */}
+          <h1 className="text-white max-w-5xl mx-auto">
+            <span className="block font-barlow font-medium text-[clamp(2.5rem,7vw,5.5rem)] leading-[1] tracking-[-0.04em]">
+              {lang === "en" ? "Beauty rituals that" : "Ритуал красоты,"}
+            </span>
+            <span className="block font-serif italic text-[clamp(3rem,9vw,7rem)] leading-[1.05] -mt-1 md:-mt-2">
+              {lang === "en" ? "go viral & timeless" : "что становится культом"}
+            </span>
+          </h1>
+
+          {/* Subtext */}
+          <p className="mt-8 font-barlow font-medium text-[16px] md:text-[18px] text-white/85 max-w-2xl mx-auto leading-relaxed">
+            {lang === "en"
+              ? "Curated cosmetics for those who treat skincare as a daily ritual — not a routine."
+              : "Кураторская косметика для тех, кто относится к уходу как к ритуалу, а не рутине."}
+          </p>
+
+          {/* CTAs */}
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+            {/* Primary — white pill with play */}
+            <Link
+              to={banner?.cta_url || "/catalog"}
+              className="group inline-flex items-center gap-3 bg-white text-[#111] rounded-full pl-2 pr-7 py-2 font-barlow font-medium text-[14px] hover:bg-white/90 transition-colors"
+            >
+              <span className="grid place-items-center w-10 h-10 rounded-full bg-[#111] text-white">
+                <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+              </span>
+              <span>{lang === "en" ? "See our catalogue" : "Смотреть каталог"}</span>
+            </Link>
+
+            {/* Secondary — ghost outlined */}
+            <button className="inline-flex items-center gap-2 bg-transparent text-white rounded-full px-6 py-3 font-barlow font-medium text-[14px] border border-white/40 hover:bg-white/10 transition-colors">
+              <span>{lang === "en" ? "Watch the ritual" : "Посмотреть ритуал"}</span>
+            </button>
           </div>
+        </div>
+
+        {/* Scroll cue */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 font-barlow text-[10px] tracking-[0.3em] uppercase text-white/60">
+          {lang === "en" ? "Scroll" : "Листайте"} ↓
         </div>
       </section>
 
