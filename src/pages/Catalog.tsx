@@ -67,7 +67,7 @@ const Catalog = () => {
       </section>
 
       {/* Sticky horizontal category tabs */}
-      <div className="sticky top-[73px] z-30 bg-background/90 backdrop-blur-xl border-b border-border/60">
+      <div className="sticky top-[68px] z-30 bg-background/90 backdrop-blur-xl border-b border-border/60">
         <div className="container flex items-center justify-between gap-6 py-4 overflow-x-auto">
           <div className="flex items-center gap-1 min-w-0">
             {visibleCats.map((c) => {
