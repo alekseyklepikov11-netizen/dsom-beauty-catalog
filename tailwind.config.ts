@@ -65,6 +65,8 @@ export default {
       fontFamily: {
         display: ['"Cormorant Garamond"', 'serif'],
         sans: ['Inter', 'sans-serif'],
+        barlow: ['Barlow', 'sans-serif'],
+        serif: ['"Instrument Serif"', 'serif'],
       },
       borderRadius: {
         lg: "var(--radius)",
