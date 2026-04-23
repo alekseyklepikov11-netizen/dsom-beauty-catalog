@@ -7,6 +7,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard, { ProductLite } from "@/components/ProductCard";
 import QuickViewDialog from "@/components/QuickViewDialog";
+import PromoStrip from "@/components/PromoStrip";
+import SEO from "@/components/SEO";
 
 interface Banner {
   title: string; title_en: string | null;
@@ -47,6 +49,12 @@ const Index = () => {
 
   return (
     <main className="min-h-screen bg-background">
+      <SEO
+        title={lang === "en" ? "Skincare with formula architecture" : "Уход, рождённый наукой"}
+        description={lang === "en"
+          ? "DSOM — curated cosmetics for those who treat skincare as a daily ritual."
+          : "DSOM — кураторская косметика. Ритуал красоты, что становится культом."}
+      />
       <Header floating />
 
       {/* HERO with full-bleed video background — Logoisum style */}
@@ -128,6 +136,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* PROMO CODES */}
+      <PromoStrip />
 
       {/* BRANDS */}
       <section className="py-20 bg-secondary/40">

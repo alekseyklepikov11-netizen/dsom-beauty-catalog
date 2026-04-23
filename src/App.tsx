@@ -11,6 +11,8 @@ import Catalog from "./pages/Catalog.tsx";
 import ProductPage from "./pages/ProductPage.tsx";
 import AuthPage from "./pages/AuthPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import Favorites from "./pages/Favorites.tsx";
+import CmsPage from "./pages/CmsPage.tsx";
 
 import AdminLogin from "./pages/admin/AdminLogin.tsx";
 import Dashboard from "./pages/admin/Dashboard.tsx";
@@ -23,6 +25,8 @@ import BannersAdmin from "./pages/admin/BannersAdmin.tsx";
 import SocialAdmin from "./pages/admin/SocialAdmin.tsx";
 import PagesAdmin from "./pages/admin/PagesAdmin.tsx";
 import UsersAdmin from "./pages/admin/UsersAdmin.tsx";
+import NewsletterAdmin from "./pages/admin/NewsletterAdmin.tsx";
+import PromoCodesAdmin from "./pages/admin/PromoCodesAdmin.tsx";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +45,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/catalog" element={<Catalog />} />
             <Route path="/product/:slug" element={<ProductPage />} />
+            <Route path="/favorites" element={<Favorites />} />
+            <Route path="/page/:slug" element={<CmsPage />} />
             <Route path="/auth" element={<AuthPage />} />
 
             <Route path="/admin/login" element={<AdminLogin />} />
@@ -54,6 +60,8 @@ const App = () => (
             <Route path="/admin/social" element={<Protected><SocialAdmin /></Protected>} />
             <Route path="/admin/pages" element={<Protected><PagesAdmin /></Protected>} />
             <Route path="/admin/users" element={<Protected admin><UsersAdmin /></Protected>} />
+            <Route path="/admin/newsletter" element={<Protected><NewsletterAdmin /></Protected>} />
+            <Route path="/admin/promo" element={<Protected><PromoCodesAdmin /></Protected>} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
