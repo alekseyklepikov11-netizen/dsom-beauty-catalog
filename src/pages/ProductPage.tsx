@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MarketplaceButton from "@/components/MarketplaceButton";
+import SEO from "@/components/SEO";
 
 interface Product {
   id: string; slug: string; name: string; name_en: string | null;
@@ -74,8 +75,32 @@ const ProductPage = () => {
 
   const gallery = [product.cover_image_url, ...images.map((i) => i.url)].filter(Boolean) as string[];
 
+  const jsonLd = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    name,
+    description: description || subtitle || name,
+    image: gallery,
+    sku: product.slug,
+    brand: brandName ? { "@type": "Brand", name: brandName } : undefined,
+    offers: {
+      "@type": "Offer",
+      url: typeof window !== "undefined" ? window.location.href : undefined,
+      priceCurrency: "RUB",
+      price: Number(product.price),
+      availability: "https://schema.org/InStock",
+    },
+  };
+
   return (
     <main className="min-h-screen bg-background">
+      <SEO
+        title={name}
+        description={(subtitle || description || "").slice(0, 160) || name}
+        image={product.cover_image_url || undefined}
+        type="product"
+        jsonLd={jsonLd}
+      />
       <Header />
 
       <div className="container pt-8 pb-4">

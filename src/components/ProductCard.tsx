@@ -1,6 +1,8 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Eye } from "lucide-react";
+import { Eye, Heart } from "lucide-react";
+import { toast } from "sonner";
+import { useFavorites } from "@/hooks/useFavorites";
 
 export interface ProductLite {
   id: string;
@@ -24,9 +26,28 @@ interface Props {
 
 const ProductCard = ({ product, index, onQuickView }: Props) => {
   const { i18n, t } = useTranslation();
+  const navigate = useNavigate();
   const lang = i18n.language;
+  const { isFavorite, toggle, isAuthenticated } = useFavorites();
+  const fav = isFavorite(product.id);
   const name = lang === "en" && product.name_en ? product.name_en : product.name;
   const subtitle = lang === "en" && product.subtitle_en ? product.subtitle_en : product.subtitle;
+
+  const handleFav = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      toast.info(lang === "en" ? "Sign in to save favorites" : "Войдите, чтобы сохранять избранное");
+      navigate("/auth");
+      return;
+    }
+    const added = await toggle(product.id);
+    toast.success(
+      added
+        ? lang === "en" ? "Added to favorites" : "Добавлено в избранное"
+        : lang === "en" ? "Removed from favorites" : "Убрано из избранного"
+    );
+  };
 
   return (
     <div className="group block animate-fade-up" style={{ animationDelay: `${index * 60}ms` }}>
@@ -47,6 +68,16 @@ const ProductCard = ({ product, index, onQuickView }: Props) => {
             {product.is_new ? t("product.new") : t("product.bestseller")}
           </span>
         )}
+
+        <button
+          onClick={handleFav}
+          aria-label={fav ? "Remove from favorites" : "Add to favorites"}
+          className={`absolute top-3 right-3 grid place-items-center w-9 h-9 rounded-full backdrop-blur-md transition-all ${
+            fav ? "bg-accent text-accent-foreground" : "bg-background/80 text-foreground hover:bg-background"
+          }`}
+        >
+          <Heart className={`w-4 h-4 ${fav ? "fill-current" : ""}`} />
+        </button>
 
         {onQuickView && (
           <button
