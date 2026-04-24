@@ -154,7 +154,7 @@ const ProductPage = () => {
                     className="relative w-full h-full flex-shrink-0 snap-center snap-always"
                     style={{ minWidth: "100%" }}
                   >
-                    <img src={g} alt={name} className="absolute inset-0 w-full h-full object-cover" />
+                    <img src={g} alt={name} loading={i === 0 ? "eager" : "lazy"} decoding="async" className="absolute inset-0 w-full h-full object-cover" />
                   </div>
                 ))}
               </div>
@@ -191,7 +191,7 @@ const ProductPage = () => {
                         : "opacity-60 hover:opacity-100"
                     }`}
                   >
-                    <img src={g} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    <img src={g} alt="" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
