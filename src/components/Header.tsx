@@ -46,6 +46,7 @@ const Header = ({ floating = false }: { floating?: boolean }) => {
             <nav className="hidden md:flex items-center gap-9 font-barlow font-medium text-[14px] text-[#111]">
               <Link to="/page/about" className="hover:opacity-60 transition-opacity">{t("nav.about")}</Link>
               <Link to="/catalog" className={`hover:opacity-60 transition-opacity ${pathname.startsWith("/catalog") ? "opacity-60" : ""}`}>{t("nav.catalog")}</Link>
+              <Link to="/quiz" className={`hover:opacity-60 transition-opacity ${pathname.startsWith("/quiz") ? "opacity-60" : ""}`}>{t("nav.quiz")}</Link>
               <Link to="/page/stores" className="hover:opacity-60 transition-opacity">{t("nav.stores")}</Link>
               <Link to="/page/contact" className="hover:opacity-60 transition-opacity">{t("nav.contact")}</Link>
             </nav>
