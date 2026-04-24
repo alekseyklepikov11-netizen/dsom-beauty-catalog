@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Eye, EyeOff, X, Loader2, Save } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, X, Loader2, Save, FolderPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -32,6 +32,10 @@ const CategoriesAdmin = () => {
 
   const parents = rows.filter((r) => !r.parent_id);
   const childrenOf = (pid: string) => rows.filter((r) => r.parent_id === pid);
+  const newSubcategory = (parentId: string) => {
+    const siblings = childrenOf(parentId);
+    setEditing({ ...empty(), parent_id: parentId, sort_order: siblings.length + 1 });
+  };
 
   const save = async () => {
     if (!editing) return;
