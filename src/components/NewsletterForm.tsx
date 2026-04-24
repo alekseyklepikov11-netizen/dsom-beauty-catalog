@@ -4,6 +4,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
+import { track } from "@/lib/analytics";
 
 const schema = z.object({
   email: z.string().trim().email().max(255),

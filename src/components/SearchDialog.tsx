@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { track } from "@/lib/analytics";
 
 interface Result {
   id: string;
