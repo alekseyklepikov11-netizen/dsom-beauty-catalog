@@ -267,12 +267,12 @@ const ProductsImport = () => {
           <h2 className="font-display text-2xl mb-5">Результат импорта</h2>
           <div className="grid grid-cols-3 gap-4 mb-6">
             <div className="bg-secondary rounded-xl p-5">
-              <CheckCircle2 className="w-5 h-5 text-green-600 mb-3" />
+              <CheckCircle2 className="w-5 h-5 text-accent mb-3" />
               <p className="font-display text-3xl">{result.inserted}</p>
               <p className="text-[10px] tracking-luxe uppercase text-muted-foreground mt-1">Добавлено</p>
             </div>
             <div className="bg-secondary rounded-xl p-5">
-              <CheckCircle2 className="w-5 h-5 text-blue-600 mb-3" />
+              <CheckCircle2 className="w-5 h-5 text-foreground mb-3" />
               <p className="font-display text-3xl">{result.updated}</p>
               <p className="text-[10px] tracking-luxe uppercase text-muted-foreground mt-1">Обновлено</p>
             </div>
