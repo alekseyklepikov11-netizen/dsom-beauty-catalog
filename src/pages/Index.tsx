@@ -9,6 +9,7 @@ import ProductCard, { ProductLite } from "@/components/ProductCard";
 import QuickViewDialog from "@/components/QuickViewDialog";
 import PromoStrip from "@/components/PromoStrip";
 import RecentlyViewed from "@/components/RecentlyViewed";
+import SocialProof from "@/components/SocialProof";
 import SEO from "@/components/SEO";
 import { track } from "@/lib/analytics";
 
@@ -152,6 +153,9 @@ const Index = () => {
 
       {/* PROMO CODES */}
       <PromoStrip />
+
+      {/* SOCIAL PROOF — reviews from real customers */}
+      <SocialProof />
 
       {/* RECENTLY VIEWED */}
       <RecentlyViewed />
