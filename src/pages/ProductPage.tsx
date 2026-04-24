@@ -139,8 +139,8 @@ const ProductPage = () => {
           <div>
             <div
               ref={galleryRef}
-              className="relative bg-secondary aspect-[4/5] overflow-hidden flex snap-x snap-mandatory overflow-x-auto scroll-smooth"
-              style={{ scrollbarWidth: "none" }}
+              className="relative bg-secondary aspect-[4/5] overflow-hidden snap-x snap-mandatory overflow-x-auto scroll-smooth flex"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
               onScroll={(e) => {
                 const el = e.currentTarget;
                 const idx = Math.round(el.scrollLeft / el.clientWidth);
@@ -148,12 +148,13 @@ const ProductPage = () => {
               }}
             >
               {gallery.map((g, i) => (
-                <img
+                <div
                   key={`${g}-${i}`}
-                  src={g}
-                  alt={name}
-                  className="w-full h-full flex-none object-cover snap-center"
-                />
+                  className="relative w-full h-full flex-shrink-0 snap-center snap-always"
+                  style={{ minWidth: "100%" }}
+                >
+                  <img src={g} alt={name} className="absolute inset-0 w-full h-full object-cover" />
+                </div>
               ))}
               {(product.is_bestseller || product.is_new) && (
                 <span className="absolute top-5 left-5 bg-background/90 backdrop-blur px-3 py-1 text-[10px] tracking-luxe uppercase z-10">
