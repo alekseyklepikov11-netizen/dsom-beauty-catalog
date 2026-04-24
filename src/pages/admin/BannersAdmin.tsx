@@ -14,12 +14,13 @@ interface Banner {
   cta_url: string | null;
   image_url: string | null; video_url: string | null;
   is_active: boolean; sort_order: number;
+  ab_group: string | null;
 }
 
 const empty = (): Banner => ({
   position: "home_hero", title: "", title_en: "", subtitle: "", subtitle_en: "",
   cta_label: "", cta_label_en: "", cta_url: "/catalog",
-  image_url: null, video_url: "", is_active: true, sort_order: 0,
+  image_url: null, video_url: "", is_active: true, sort_order: 0, ab_group: null,
 });
 
 const BannersAdmin = () => {
