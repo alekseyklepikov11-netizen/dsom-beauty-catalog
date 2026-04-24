@@ -40,7 +40,26 @@ const Catalog = () => {
       else if (sort === "price_desc") q = q.order("price", { ascending: false });
       else q = q.order("is_new", { ascending: false }).order("sort_order");
       const { data } = await q;
-      setProducts((data || []) as ProductLite[]);
+      const list = (data || []) as ProductLite[];
+
+      // Fetch additional images for all products in one query
+      if (list.length > 0) {
+        const ids = list.map((p) => p.id);
+        const { data: imgs } = await supabase
+          .from("product_images")
+          .select("product_id,url,sort_order")
+          .in("product_id", ids)
+          .order("sort_order");
+        const byProduct = new Map<string, string[]>();
+        (imgs || []).forEach((row: any) => {
+          const arr = byProduct.get(row.product_id) || [];
+          arr.push(row.url);
+          byProduct.set(row.product_id, arr);
+        });
+        list.forEach((p) => { p.images = byProduct.get(p.id) || []; });
+      }
+
+      setProducts(list);
     })();
   }, [activeCat, sort, skin, cats]);
 
