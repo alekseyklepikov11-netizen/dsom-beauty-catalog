@@ -86,25 +86,27 @@ const QuickViewDialog = ({ slug, onClose }: QuickViewProps) => {
           <div className="p-20 text-center text-muted-foreground text-sm tracking-luxe uppercase">…</div>
         ) : (
           <div className="grid md:grid-cols-2">
-            <div
-              ref={galleryRef}
-              className="relative bg-secondary aspect-square md:aspect-auto md:min-h-[560px] overflow-hidden snap-x snap-mandatory overflow-x-auto scroll-smooth flex"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-              onScroll={(e) => {
-                const el = e.currentTarget;
-                const idx = Math.round(el.scrollLeft / el.clientWidth);
-                if (idx !== activeIdx && idx >= 0 && idx < gallery.length) setActiveIdx(idx);
-              }}
-            >
-              {gallery.map((g, i) => (
-                <div
-                  key={`${g}-${i}`}
-                  className="relative w-full h-full flex-shrink-0 snap-center snap-always"
-                  style={{ minWidth: "100%" }}
-                >
-                  <img src={g} alt={name} className="absolute inset-0 w-full h-full object-cover" />
-                </div>
-              ))}
+            <div className="relative bg-secondary aspect-square md:aspect-auto md:min-h-[560px] overflow-hidden">
+              <div
+                ref={galleryRef}
+                className="h-full snap-x snap-mandatory overflow-x-auto scroll-smooth flex"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                onScroll={(e) => {
+                  const el = e.currentTarget;
+                  const idx = Math.round(el.scrollLeft / el.clientWidth);
+                  if (idx !== activeIdx && idx >= 0 && idx < gallery.length) setActiveIdx(idx);
+                }}
+              >
+                {gallery.map((g, i) => (
+                  <div
+                    key={`${g}-${i}`}
+                    className="relative w-full h-full flex-shrink-0 snap-center snap-always"
+                    style={{ minWidth: "100%" }}
+                  >
+                    <img src={g} alt={name} className="absolute inset-0 w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
               {gallery.length > 1 && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 pointer-events-none">
                   {gallery.map((_, i) => (

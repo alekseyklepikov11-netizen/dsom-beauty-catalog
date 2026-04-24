@@ -137,25 +137,27 @@ const ProductPage = () => {
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16">
           {/* Gallery */}
           <div>
-            <div
-              ref={galleryRef}
-              className="relative bg-secondary aspect-[4/5] overflow-hidden snap-x snap-mandatory overflow-x-auto scroll-smooth flex"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-              onScroll={(e) => {
-                const el = e.currentTarget;
-                const idx = Math.round(el.scrollLeft / el.clientWidth);
-                if (idx !== activeIdx && idx >= 0 && idx < gallery.length) setActiveIdx(idx);
-              }}
-            >
-              {gallery.map((g, i) => (
-                <div
-                  key={`${g}-${i}`}
-                  className="relative w-full h-full flex-shrink-0 snap-center snap-always"
-                  style={{ minWidth: "100%" }}
-                >
-                  <img src={g} alt={name} className="absolute inset-0 w-full h-full object-cover" />
-                </div>
-              ))}
+            <div className="relative bg-secondary aspect-[4/5] overflow-hidden">
+              <div
+                ref={galleryRef}
+                className="h-full snap-x snap-mandatory overflow-x-auto scroll-smooth flex"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                onScroll={(e) => {
+                  const el = e.currentTarget;
+                  const idx = Math.round(el.scrollLeft / el.clientWidth);
+                  if (idx !== activeIdx && idx >= 0 && idx < gallery.length) setActiveIdx(idx);
+                }}
+              >
+                {gallery.map((g, i) => (
+                  <div
+                    key={`${g}-${i}`}
+                    className="relative w-full h-full flex-shrink-0 snap-center snap-always"
+                    style={{ minWidth: "100%" }}
+                  >
+                    <img src={g} alt={name} className="absolute inset-0 w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
               {(product.is_bestseller || product.is_new) && (
                 <span className="absolute top-5 left-5 bg-background/90 backdrop-blur px-3 py-1 text-[10px] tracking-luxe uppercase z-10">
                   {product.is_new ? t("product.new") : t("product.bestseller")}
