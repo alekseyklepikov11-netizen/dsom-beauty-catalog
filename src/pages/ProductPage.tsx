@@ -94,7 +94,9 @@ const ProductPage = () => {
   const ingredients = lang === "en" && product.ingredients_en ? product.ingredients_en : product.ingredients;
   const howTo = lang === "en" && product.how_to_use_en ? product.how_to_use_en : product.how_to_use;
 
-  const gallery = [product.cover_image_url, ...images.map((i) => i.url)].filter(Boolean) as string[];
+  const gallery = Array.from(
+    new Set([product.cover_image_url, ...images.map((i) => i.url)].filter(Boolean) as string[])
+  );
 
   const jsonLd = {
     "@context": "https://schema.org/",
