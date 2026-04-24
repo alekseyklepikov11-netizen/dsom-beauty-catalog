@@ -119,6 +119,8 @@ const CmsPage = () => {
             <img
               src={banner.image_url!}
               alt={bannerTitle || title}
+              decoding="async"
+              fetchPriority="high"
               className="absolute inset-0 w-full h-full object-cover"
             />
           )}
