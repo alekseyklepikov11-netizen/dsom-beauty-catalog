@@ -14,6 +14,7 @@ import AuthPage from "./pages/AuthPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Favorites from "./pages/Favorites.tsx";
 import CmsPage from "./pages/CmsPage.tsx";
+import Quiz from "./pages/Quiz.tsx";
 
 import AdminLogin from "./pages/admin/AdminLogin.tsx";
 import Dashboard from "./pages/admin/Dashboard.tsx";
