@@ -150,9 +150,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* RECENTLY VIEWED */}
-      <RecentlyViewed onQuickView={setQuickSlug} />
-
       {/* PROMO CODES */}
       <PromoStrip />
 
