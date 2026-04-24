@@ -89,6 +89,9 @@ const CategoriesAdmin = () => {
                     <p className="font-display text-lg">{c.name}</p>
                     <p className="text-[10px] tracking-luxe uppercase text-muted-foreground">{c.slug}</p>
                   </div>
+                  <button onClick={() => newSubcategory(c.id!)} title="Добавить подкатегорию" className="inline-flex items-center gap-1.5 text-[11px] tracking-luxe uppercase text-muted-foreground hover:text-foreground border border-border rounded-full px-3 py-1.5">
+                    <FolderPlus className="w-3.5 h-3.5" /> Подкатегория
+                  </button>
                   <button onClick={() => toggle(c)} className="p-2 rounded hover:bg-secondary">
                     {c.is_visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
                   </button>
