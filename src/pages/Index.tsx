@@ -154,6 +154,9 @@ const Index = () => {
       {/* PROMO CODES */}
       <PromoStrip />
 
+      {/* SOCIAL PROOF — reviews from real customers */}
+      <SocialProof />
+
       {/* RECENTLY VIEWED */}
       <RecentlyViewed />
 
