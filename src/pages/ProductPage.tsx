@@ -265,7 +265,7 @@ const ProductPage = () => {
         onQuickView={setQuickSlug}
       />
 
-      <RecentlyViewed excludeId={product.id} onQuickView={setQuickSlug} />
+      <RecentlyViewed excludeId={product.id} />
 
       <Footer />
       <QuickViewDialog slug={quickSlug} onClose={() => setQuickSlug(null)} />

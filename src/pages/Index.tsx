@@ -169,7 +169,7 @@ const Index = () => {
       </section>
 
       {/* RECENTLY VIEWED — at the very bottom */}
-      <RecentlyViewed onQuickView={setQuickSlug} />
+      <RecentlyViewed />
 
       <Footer />
 
