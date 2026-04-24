@@ -168,6 +168,9 @@ const Index = () => {
         </div>
       </section>
 
+      {/* RECENTLY VIEWED — at the very bottom */}
+      <RecentlyViewed onQuickView={setQuickSlug} />
+
       <Footer />
 
       <QuickViewDialog slug={quickSlug} onClose={() => setQuickSlug(null)} />
