@@ -572,6 +572,56 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          body: string
+          created_at: string
+          guest_email: string | null
+          guest_name: string | null
+          id: string
+          product_id: string
+          rating: number
+          status: string
+          title: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          guest_email?: string | null
+          guest_name?: string | null
+          id?: string
+          product_id: string
+          rating: number
+          status?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          guest_email?: string | null
+          guest_name?: string | null
+          id?: string
+          product_id?: string
+          rating?: number
+          status?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_settings: {
         Row: {
           key: string
@@ -742,6 +792,7 @@ export type Database = {
         | "search_query"
         | "newsletter_signup"
         | "favorite_add"
+        | "review_submit"
       app_role: "admin" | "editor" | "user"
       marketplace_kind:
         | "wildberries"
@@ -886,6 +937,7 @@ export const Constants = {
         "search_query",
         "newsletter_signup",
         "favorite_add",
+        "review_submit",
       ],
       app_role: ["admin", "editor", "user"],
       marketplace_kind: [
