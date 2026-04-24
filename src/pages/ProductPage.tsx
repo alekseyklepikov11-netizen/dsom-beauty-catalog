@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MarketplaceButton from "@/components/MarketplaceButton";
 import SEO from "@/components/SEO";
+import { track } from "@/lib/analytics";
 
 interface Product {
   id: string; slug: string; name: string; name_en: string | null;
@@ -40,6 +41,9 @@ const ProductPage = () => {
       if (!p) return;
       setProduct(p as Product);
       setActiveImg((p as Product).cover_image_url);
+
+      // Track product view (fire-and-forget)
+      track("product_view", { product_id: (p as Product).id, value: (p as Product).slug });
 
       const [imgs, mlinks, inv, brand] = await Promise.all([
         supabase.from("product_images").select("id,url,alt").eq("product_id", p.id).order("sort_order"),
