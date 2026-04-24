@@ -62,6 +62,8 @@ const SearchDialog = ({ open, onClose }: Props) => {
         }))
       );
       setLoading(false);
+      // Track search query (debounced via the same setTimeout)
+      track("search_query", { value: q, meta: { results: data?.length ?? 0 } });
     }, 220);
     return () => {
       cancelled = true;

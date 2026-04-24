@@ -160,7 +160,7 @@ const ProductPage = () => {
               <p className="text-[11px] tracking-luxe uppercase text-muted-foreground mb-4">{t("product.marketplaces")}</p>
               <div className="flex flex-col gap-2.5 max-w-md">
                 {links.length === 0 && <p className="text-sm text-muted-foreground italic">—</p>}
-                {links.map((l) => <MarketplaceButton key={l.id} kind={l.kind} url={l.url} label={l.label} />)}
+                {links.map((l) => <MarketplaceButton key={l.id} kind={l.kind} url={l.url} label={l.label} productId={product.id} />)}
               </div>
             </div>
 

@@ -39,6 +39,7 @@ const NewsletterForm = ({ source = "footer" }: { source?: string }) => {
       return;
     }
     setDone(true);
+    track("newsletter_signup", { value: source });
     toast.success(lang === "en" ? "Thanks for subscribing!" : "Спасибо за подписку!");
   };
 
