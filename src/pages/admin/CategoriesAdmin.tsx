@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Eye, EyeOff, X, Loader2, Save } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, X, Loader2, Save, FolderPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -32,6 +32,10 @@ const CategoriesAdmin = () => {
 
   const parents = rows.filter((r) => !r.parent_id);
   const childrenOf = (pid: string) => rows.filter((r) => r.parent_id === pid);
+  const newSubcategory = (parentId: string) => {
+    const siblings = childrenOf(parentId);
+    setEditing({ ...empty(), parent_id: parentId, sort_order: siblings.length + 1 });
+  };
 
   const save = async () => {
     if (!editing) return;
@@ -85,6 +89,9 @@ const CategoriesAdmin = () => {
                     <p className="font-display text-lg">{c.name}</p>
                     <p className="text-[10px] tracking-luxe uppercase text-muted-foreground">{c.slug}</p>
                   </div>
+                  <button onClick={() => newSubcategory(c.id!)} title="Добавить подкатегорию" className="inline-flex items-center gap-1.5 text-[11px] tracking-luxe uppercase text-muted-foreground hover:text-foreground border border-border rounded-full px-3 py-1.5">
+                    <FolderPlus className="w-3.5 h-3.5" /> Подкатегория
+                  </button>
                   <button onClick={() => toggle(c)} className="p-2 rounded hover:bg-secondary">
                     {c.is_visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
                   </button>
