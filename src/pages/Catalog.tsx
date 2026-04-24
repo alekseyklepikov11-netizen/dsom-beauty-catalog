@@ -111,9 +111,30 @@ const Catalog = () => {
             })}
           </div>
 
-          <div className="flex items-center gap-3 md:gap-4 shrink-0 text-[11px] tracking-luxe uppercase self-end md:self-auto">
-            {/* Mobile-only density toggle */}
-            <div className="md:hidden flex items-center gap-0.5 mr-1">
+          <div className="flex items-center gap-3 md:gap-4 shrink-0 text-[11px] tracking-luxe uppercase self-end md:self-auto ml-auto">
+            <select
+              value={skin}
+              onChange={(e) => setParam("skin", e.target.value)}
+              className="bg-transparent border-0 cursor-pointer focus:outline-none focus:ring-0 underline underline-offset-4 decoration-foreground/30"
+              aria-label={lang === "en" ? "Skin type" : "Тип кожи"}
+            >
+              <option value="">{lang === "en" ? "All skin types" : "Любой тип кожи"}</option>
+              {SKIN_TYPES.map((s) => (
+                <option key={s.value} value={s.value}>{lang === "en" ? s.en : s.ru}</option>
+              ))}
+            </select>
+            <select
+              value={sort}
+              onChange={(e) => setParam("sort", e.target.value)}
+              className="bg-transparent border-0 cursor-pointer focus:outline-none focus:ring-0 underline underline-offset-4 decoration-foreground/30"
+            >
+              <option value="new">{t("catalog.sortNew")}</option>
+              <option value="price_asc">{t("catalog.sortPriceAsc")}</option>
+              <option value="price_desc">{t("catalog.sortPriceDesc")}</option>
+            </select>
+
+            {/* Mobile-only density toggle — moved to far right */}
+            <div className="md:hidden flex items-center gap-0.5 ml-1">
               <button
                 onClick={() => setMobileCols(1)}
                 aria-label={lang === "en" ? "One column" : "В один ряд"}
@@ -135,27 +156,6 @@ const Catalog = () => {
                 <LayoutGrid className="w-3.5 h-3.5" />
               </button>
             </div>
-
-            <select
-              value={skin}
-              onChange={(e) => setParam("skin", e.target.value)}
-              className="bg-transparent border-0 cursor-pointer focus:outline-none focus:ring-0 underline underline-offset-4 decoration-foreground/30"
-              aria-label={lang === "en" ? "Skin type" : "Тип кожи"}
-            >
-              <option value="">{lang === "en" ? "All skin types" : "Любой тип кожи"}</option>
-              {SKIN_TYPES.map((s) => (
-                <option key={s.value} value={s.value}>{lang === "en" ? s.en : s.ru}</option>
-              ))}
-            </select>
-            <select
-              value={sort}
-              onChange={(e) => setParam("sort", e.target.value)}
-              className="bg-transparent border-0 cursor-pointer focus:outline-none focus:ring-0 underline underline-offset-4 decoration-foreground/30"
-            >
-              <option value="new">{t("catalog.sortNew")}</option>
-              <option value="price_asc">{t("catalog.sortPriceAsc")}</option>
-              <option value="price_desc">{t("catalog.sortPriceDesc")}</option>
-            </select>
           </div>
         </div>
       </div>
