@@ -1,4 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
+import { track } from "@/lib/analytics";
 
 const LABELS: Record<string, string> = {
   wildberries: "Wildberries",
@@ -16,12 +17,20 @@ const COLORS: Record<string, string> = {
   other: "bg-foreground text-background hover:bg-accent",
 };
 
-const MarketplaceButton = ({ kind, url, label }: { kind: string; url: string; label?: string | null }) => {
+interface Props {
+  kind: string;
+  url: string;
+  label?: string | null;
+  productId?: string;
+}
+
+const MarketplaceButton = ({ kind, url, label, productId }: Props) => {
   return (
     <a
       href={url}
       target="_blank"
       rel="noreferrer noopener"
+      onClick={() => track("marketplace_click", { product_id: productId, value: kind, meta: { url } })}
       className={`group flex items-center justify-between gap-4 rounded-full pl-6 pr-2 py-2 text-[11px] tracking-luxe uppercase transition-all duration-300 ${COLORS[kind] || COLORS.other}`}
     >
       <span>{label || LABELS[kind] || kind}</span>

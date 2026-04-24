@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import CookieBanner from "@/components/CookieBanner";
 
 import Index from "./pages/Index.tsx";
 import Catalog from "./pages/Catalog.tsx";
@@ -18,6 +19,7 @@ import AdminLogin from "./pages/admin/AdminLogin.tsx";
 import Dashboard from "./pages/admin/Dashboard.tsx";
 import ProductsList from "./pages/admin/ProductsList.tsx";
 import ProductEdit from "./pages/admin/ProductEdit.tsx";
+import ProductsImport from "./pages/admin/ProductsImport.tsx";
 import BrandsAdmin from "./pages/admin/BrandsAdmin.tsx";
 import CategoriesAdmin from "./pages/admin/CategoriesAdmin.tsx";
 import StoresAdmin from "./pages/admin/StoresAdmin.tsx";
@@ -52,6 +54,7 @@ const App = () => (
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<Protected><Dashboard /></Protected>} />
             <Route path="/admin/products" element={<Protected><ProductsList /></Protected>} />
+            <Route path="/admin/products/import" element={<Protected><ProductsImport /></Protected>} />
             <Route path="/admin/products/:id" element={<Protected><ProductEdit /></Protected>} />
             <Route path="/admin/brands" element={<Protected><BrandsAdmin /></Protected>} />
             <Route path="/admin/categories" element={<Protected><CategoriesAdmin /></Protected>} />
@@ -66,6 +69,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <CookieBanner />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Eye, EyeOff, Search, Pencil, Trash2 } from "lucide-react";
+import { Plus, Eye, EyeOff, Search, Pencil, Trash2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -49,10 +49,16 @@ const ProductsList = () => {
           <p className="text-[11px] tracking-luxe uppercase text-accent mb-3">— Каталог</p>
           <h1 className="font-display text-5xl">Товары</h1>
         </div>
-        <Link to="/admin/products/new" className="inline-flex items-center gap-2 bg-foreground text-background rounded-full pl-5 pr-2 py-2 text-[11px] tracking-luxe uppercase hover:bg-accent transition-colors">
-          <span>Новый товар</span>
-          <span className="grid place-items-center w-7 h-7 rounded-full bg-background/15"><Plus className="w-3.5 h-3.5" /></span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link to="/admin/products/import" className="inline-flex items-center gap-2 border border-border rounded-full px-4 py-2 text-[11px] tracking-luxe uppercase hover:border-foreground transition-colors">
+            <Upload className="w-3.5 h-3.5" />
+            <span>CSV</span>
+          </Link>
+          <Link to="/admin/products/new" className="inline-flex items-center gap-2 bg-foreground text-background rounded-full pl-5 pr-2 py-2 text-[11px] tracking-luxe uppercase hover:bg-accent transition-colors">
+            <span>Новый товар</span>
+            <span className="grid place-items-center w-7 h-7 rounded-full bg-background/15"><Plus className="w-3.5 h-3.5" /></span>
+          </Link>
+        </div>
       </div>
 
       <div className="relative mb-4">
