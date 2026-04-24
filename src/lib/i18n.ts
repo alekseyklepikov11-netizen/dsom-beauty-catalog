@@ -4,7 +4,7 @@ import { initReactI18next } from "react-i18next";
 const resources = {
   ru: {
     translation: {
-      nav: { catalog: "Каталог", about: "О бренде", stores: "Где купить", contact: "Контакты", shop: "В магазин" },
+      nav: { catalog: "Каталог", about: "О бренде", stores: "Где купить", contact: "Контакты", shop: "В магазин", quiz: "Подбор ухода" },
       hero: { cta: "Открыть каталог", eyebrow: "DSOM · Лаборатория ухода", title1: "Чистая наука.", title2: "Бережный ритуал" },
       sections: { bestsellers: "Бестселлеры", brands: "Бренды", philosophy: "Философия", all: "Весь каталог", new: "Новинки" },
       catalog: {
