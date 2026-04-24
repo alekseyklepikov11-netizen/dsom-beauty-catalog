@@ -29,6 +29,7 @@ import PagesAdmin from "./pages/admin/PagesAdmin.tsx";
 import UsersAdmin from "./pages/admin/UsersAdmin.tsx";
 import NewsletterAdmin from "./pages/admin/NewsletterAdmin.tsx";
 import PromoCodesAdmin from "./pages/admin/PromoCodesAdmin.tsx";
+import ReviewsAdmin from "./pages/admin/ReviewsAdmin.tsx";
 
 const queryClient = new QueryClient();
 
