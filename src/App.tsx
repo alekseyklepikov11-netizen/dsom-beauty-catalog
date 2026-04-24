@@ -31,6 +31,7 @@ import UsersAdmin from "./pages/admin/UsersAdmin.tsx";
 import NewsletterAdmin from "./pages/admin/NewsletterAdmin.tsx";
 import PromoCodesAdmin from "./pages/admin/PromoCodesAdmin.tsx";
 import ReviewsAdmin from "./pages/admin/ReviewsAdmin.tsx";
+import StockAlertsAdmin from "./pages/admin/StockAlertsAdmin.tsx";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,7 @@ const App = () => (
             <Route path="/admin/newsletter" element={<Protected><NewsletterAdmin /></Protected>} />
             <Route path="/admin/promo" element={<Protected><PromoCodesAdmin /></Protected>} />
             <Route path="/admin/reviews" element={<Protected><ReviewsAdmin /></Protected>} />
+            <Route path="/admin/stock-alerts" element={<Protected><StockAlertsAdmin /></Protected>} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

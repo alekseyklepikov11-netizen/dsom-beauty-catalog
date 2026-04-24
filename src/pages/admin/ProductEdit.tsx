@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import AdminLayout from "@/components/admin/AdminLayout";
 import I18nField, { Field, fieldCls } from "@/components/admin/I18nField";
 import ImageUpload from "@/components/admin/ImageUpload";
+import { SKIN_TYPES } from "@/lib/skinTypes";
 
 interface Brand { id: string; name: string }
 interface Cat { id: string; name: string; parent_id: string | null }
@@ -44,6 +45,7 @@ const ProductEdit = () => {
     cover_image_url: null as string | null,
     is_visible: true, is_bestseller: false, is_new: false,
     sort_order: 0,
+    skin_types: [] as string[],
   });
   const [links, setLinks] = useState<MLink[]>([]);
   const [images, setImages] = useState<Img[]>([]);
@@ -71,6 +73,7 @@ const ProductEdit = () => {
             cover_image_url: p.cover_image_url,
             is_visible: p.is_visible, is_bestseller: p.is_bestseller, is_new: p.is_new,
             sort_order: p.sort_order,
+            skin_types: (p as any).skin_types || [],
           });
           const [l, im] = await Promise.all([
             supabase.from("marketplace_links").select("id,kind,url,label").eq("product_id", id),
@@ -101,6 +104,7 @@ const ProductEdit = () => {
         cover_image_url: form.cover_image_url,
         is_visible: form.is_visible, is_bestseller: form.is_bestseller, is_new: form.is_new,
         sort_order: form.sort_order,
+        skin_types: form.skin_types,
       };
 
       let pid = id as string;
@@ -231,6 +235,25 @@ const ProductEdit = () => {
             <Field label="Порядок сортировки">
               <input type="number" value={form.sort_order} onChange={(e) => upd("sort_order", Number(e.target.value))} className={fieldCls} />
             </Field>
+
+            <div className="space-y-2 pt-2 border-t border-border">
+              <p className="text-[10px] tracking-luxe uppercase text-muted-foreground mb-2">Тип кожи</p>
+              {SKIN_TYPES.map((s) => (
+                <label key={s.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.skin_types.includes(s.value)}
+                    onChange={(e) => {
+                      const next = e.target.checked
+                        ? [...form.skin_types, s.value]
+                        : form.skin_types.filter((x) => x !== s.value);
+                      upd("skin_types", next);
+                    }}
+                  />
+                  {s.ru}
+                </label>
+              ))}
+            </div>
 
             <div className="space-y-2 pt-2 border-t border-border">
               <label className="flex items-center gap-2 text-sm cursor-pointer">

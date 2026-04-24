@@ -404,6 +404,7 @@ export type Database = {
           name: string
           name_en: string | null
           price: number
+          skin_types: string[] | null
           slug: string
           sort_order: number
           subcategory_id: string | null
@@ -432,6 +433,7 @@ export type Database = {
           name: string
           name_en?: string | null
           price?: number
+          skin_types?: string[] | null
           slug: string
           sort_order?: number
           subcategory_id?: string | null
@@ -460,6 +462,7 @@ export type Database = {
           name?: string
           name_en?: string | null
           price?: number
+          skin_types?: string[] | null
           slug?: string
           sort_order?: number
           subcategory_id?: string | null
@@ -666,6 +669,41 @@ export type Database = {
           url?: string
         }
         Relationships: []
+      }
+      stock_alerts: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          is_notified: boolean
+          notified_at: string | null
+          product_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          is_notified?: boolean
+          notified_at?: string | null
+          product_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          is_notified?: boolean
+          notified_at?: string | null
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_alerts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       store_inventory: {
         Row: {

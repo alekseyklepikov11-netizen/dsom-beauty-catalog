@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard, { ProductLite } from "@/components/ProductCard";
 import QuickViewDialog from "@/components/QuickViewDialog";
+import { SKIN_TYPES } from "@/lib/skinTypes";
 
 interface Cat { id: string; slug: string; name: string; name_en: string | null; parent_id: string | null }
 
@@ -16,6 +17,7 @@ const Catalog = () => {
   const [params, setParams] = useSearchParams();
   const activeCat = params.get("cat") || "all";
   const sort = (params.get("sort") as SortKey) || "new";
+  const skin = params.get("skin") || "";
 
   const [cats, setCats] = useState<Cat[]>([]);
   const [products, setProducts] = useState<ProductLite[]>([]);
@@ -33,20 +35,21 @@ const Catalog = () => {
         const cat = cats.find((c) => c.slug === activeCat);
         if (cat) q = q.eq("category_id", cat.id);
       }
+      if (skin) q = q.contains("skin_types", [skin]);
       if (sort === "price_asc") q = q.order("price", { ascending: true });
       else if (sort === "price_desc") q = q.order("price", { ascending: false });
       else q = q.order("is_new", { ascending: false }).order("sort_order");
       const { data } = await q;
       setProducts((data || []) as ProductLite[]);
     })();
-  }, [activeCat, sort, cats]);
+  }, [activeCat, sort, skin, cats]);
 
   const lang = i18n.language;
   const visibleCats = useMemo(() => [{ slug: "all", name: t("catalog.all"), name_en: t("catalog.all") }, ...cats.map((c) => ({ slug: c.slug, name: c.name, name_en: c.name_en }))], [cats, t]);
 
   const setParam = (k: string, v: string) => {
     const p = new URLSearchParams(params);
-    if (v === "all" || v === "new") p.delete(k); else p.set(k, v);
+    if (v === "all" || v === "new" || v === "") p.delete(k); else p.set(k, v);
     if (k === "cat" && v !== "all") p.set("cat", v);
     setParams(p, { replace: true });
   };
@@ -87,8 +90,18 @@ const Catalog = () => {
             })}
           </div>
 
-          <div className="flex items-center gap-2 md:gap-3 shrink-0 text-[11px] tracking-luxe uppercase self-end md:self-auto">
-            <span className="hidden md:inline text-muted-foreground">{t("catalog.sort")}:</span>
+          <div className="flex items-center gap-3 md:gap-4 shrink-0 text-[11px] tracking-luxe uppercase self-end md:self-auto">
+            <select
+              value={skin}
+              onChange={(e) => setParam("skin", e.target.value)}
+              className="bg-transparent border-0 cursor-pointer focus:outline-none focus:ring-0 underline underline-offset-4 decoration-foreground/30"
+              aria-label={lang === "en" ? "Skin type" : "Тип кожи"}
+            >
+              <option value="">{lang === "en" ? "All skin types" : "Любой тип кожи"}</option>
+              {SKIN_TYPES.map((s) => (
+                <option key={s.value} value={s.value}>{lang === "en" ? s.en : s.ru}</option>
+              ))}
+            </select>
             <select
               value={sort}
               onChange={(e) => setParam("sort", e.target.value)}

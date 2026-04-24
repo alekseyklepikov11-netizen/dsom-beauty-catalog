@@ -9,8 +9,11 @@ import MarketplaceButton from "@/components/MarketplaceButton";
 import SEO from "@/components/SEO";
 import ReviewsSection from "@/components/ReviewsSection";
 import RelatedProducts from "@/components/RelatedProducts";
+import RecentlyViewed from "@/components/RecentlyViewed";
 import QuickViewDialog from "@/components/QuickViewDialog";
+import StockAlertDialog from "@/components/StockAlertDialog";
 import { track } from "@/lib/analytics";
+import { addRecentlyViewed } from "@/lib/recentlyViewed";
 
 interface Product {
   id: string; slug: string; name: string; name_en: string | null;
@@ -47,8 +50,9 @@ const ProductPage = () => {
       setProduct(p as Product);
       setActiveImg((p as Product).cover_image_url);
 
-      // Track product view (fire-and-forget)
+      // Track product view + recently viewed (fire-and-forget)
       track("product_view", { product_id: (p as Product).id, value: (p as Product).slug });
+      addRecentlyViewed((p as Product).id);
 
       const [imgs, mlinks, inv, brand] = await Promise.all([
         supabase.from("product_images").select("id,url,alt").eq("product_id", p.id).order("sort_order"),
@@ -167,6 +171,9 @@ const ProductPage = () => {
                 {links.length === 0 && <p className="text-sm text-muted-foreground italic">—</p>}
                 {links.map((l) => <MarketplaceButton key={l.id} kind={l.kind} url={l.url} label={l.label} productId={product.id} />)}
               </div>
+              <div className="max-w-md mt-3">
+                <StockAlertDialog productId={product.id} productName={name} />
+              </div>
             </div>
 
             {/* Tabs */}
@@ -221,6 +228,8 @@ const ProductPage = () => {
         brandId={product.brand_id}
         onQuickView={setQuickSlug}
       />
+
+      <RecentlyViewed excludeId={product.id} onQuickView={setQuickSlug} />
 
       <Footer />
       <QuickViewDialog slug={quickSlug} onClose={() => setQuickSlug(null)} />
