@@ -37,7 +37,8 @@ const ProductPage = () => {
   const [images, setImages] = useState<Img[]>([]);
   const [links, setLinks] = useState<MLink[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
-  const [activeImg, setActiveImg] = useState<string | null>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const galleryRef = useRef<HTMLDivElement>(null);
   const [tab, setTab] = useState<"description" | "ingredients" | "how_to_use">("description");
   const [brandName, setBrandName] = useState<string | null>(null);
   const [quickSlug, setQuickSlug] = useState<string | null>(null);
