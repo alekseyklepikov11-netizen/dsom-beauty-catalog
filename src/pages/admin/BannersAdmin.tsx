@@ -97,28 +97,50 @@ const BannersAdmin = () => {
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        {rows.map((b) => (
-          <div key={b.id} className="bg-background border border-border rounded-2xl overflow-hidden">
-            <div className="aspect-video bg-secondary relative">
-              {b.image_url && <img src={b.image_url} alt="" className="absolute inset-0 w-full h-full object-cover" />}
-              {b.video_url && <span className="absolute top-2 right-2 bg-foreground/80 text-background text-[10px] px-2 py-1 rounded tracking-luxe uppercase">Видео</span>}
-            </div>
-            <div className="p-5">
-              <p className="text-[10px] tracking-luxe uppercase text-accent mb-2">{b.position}</p>
-              <h3 className="font-display text-2xl leading-tight">{b.title}</h3>
-              <p className="text-xs text-muted-foreground mt-1">{b.subtitle}</p>
-              <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
-                <button onClick={() => toggle(b)} className="text-[10px] tracking-luxe uppercase text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
-                  {b.is_active ? <><Eye className="w-3 h-3" />Активен</> : <><EyeOff className="w-3 h-3" />Скрыт</>}
-                </button>
-                <div className="flex gap-2">
-                  <button onClick={() => setEditing(b)} className="text-[10px] tracking-luxe uppercase hover:text-accent">Изм.</button>
-                  <button onClick={() => remove(b)} className="text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+        {rows.map((b) => {
+          const s = (b.id && stats[b.id]) || { views: 0, clicks: 0 };
+          const ctr = s.views > 0 ? ((s.clicks / s.views) * 100).toFixed(1) : "—";
+          return (
+            <div key={b.id} className="bg-background border border-border rounded-2xl overflow-hidden">
+              <div className="aspect-video bg-secondary relative">
+                {b.image_url && <img src={b.image_url} alt="" className="absolute inset-0 w-full h-full object-cover" />}
+                {b.video_url && <span className="absolute top-2 right-2 bg-foreground/80 text-background text-[10px] px-2 py-1 rounded tracking-luxe uppercase">Видео</span>}
+                {b.ab_group && <span className="absolute top-2 left-2 bg-accent text-background text-[10px] px-2 py-1 rounded tracking-luxe uppercase">A/B: {b.ab_group}</span>}
+              </div>
+              <div className="p-5">
+                <p className="text-[10px] tracking-luxe uppercase text-accent mb-2">{b.position}</p>
+                <h3 className="font-display text-2xl leading-tight">{b.title}</h3>
+                <p className="text-xs text-muted-foreground mt-1">{b.subtitle}</p>
+
+                {/* A/B stats */}
+                <div className="grid grid-cols-3 gap-2 mt-4 text-center">
+                  <div className="bg-secondary/50 rounded p-2">
+                    <p className="text-[9px] tracking-luxe uppercase text-muted-foreground">Показы</p>
+                    <p className="font-display text-lg">{s.views}</p>
+                  </div>
+                  <div className="bg-secondary/50 rounded p-2">
+                    <p className="text-[9px] tracking-luxe uppercase text-muted-foreground">Клики</p>
+                    <p className="font-display text-lg">{s.clicks}</p>
+                  </div>
+                  <div className="bg-secondary/50 rounded p-2">
+                    <p className="text-[9px] tracking-luxe uppercase text-muted-foreground">CTR</p>
+                    <p className="font-display text-lg">{ctr}{s.views > 0 ? "%" : ""}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
+                  <button onClick={() => toggle(b)} className="text-[10px] tracking-luxe uppercase text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+                    {b.is_active ? <><Eye className="w-3 h-3" />Активен</> : <><EyeOff className="w-3 h-3" />Скрыт</>}
+                  </button>
+                  <div className="flex gap-2">
+                    <button onClick={() => setEditing(b)} className="text-[10px] tracking-luxe uppercase hover:text-accent">Изм.</button>
+                    <button onClick={() => remove(b)} className="text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {editing && (
