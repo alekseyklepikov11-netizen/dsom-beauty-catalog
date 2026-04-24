@@ -45,6 +45,14 @@ const ProductPage = () => {
   useEffect(() => {
     (async () => {
       if (!slug) return;
+      // Reset state when navigating to a different product to avoid stale images/links
+      setProduct(null);
+      setImages([]);
+      setLinks([]);
+      setStores([]);
+      setActiveImg(null);
+      setBrandName(null);
+
       const { data: p } = await supabase.from("products").select("*").eq("slug", slug).maybeSingle();
       if (!p) return;
       setProduct(p as Product);
