@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { track } from "@/lib/analytics";
 
 interface Result {
   id: string;
@@ -62,6 +63,8 @@ const SearchDialog = ({ open, onClose }: Props) => {
         }))
       );
       setLoading(false);
+      // Track search query (debounced via the same setTimeout)
+      track("search_query", { value: q, meta: { results: data?.length ?? 0 } });
     }, 220);
     return () => {
       cancelled = true;

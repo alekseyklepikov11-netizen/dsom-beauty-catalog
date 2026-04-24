@@ -14,8 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          banner_id: string | null
+          created_at: string
+          event_type: Database["public"]["Enums"]["analytics_event_type"]
+          id: string
+          meta: Json
+          path: string | null
+          product_id: string | null
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+          value: string | null
+        }
+        Insert: {
+          banner_id?: string | null
+          created_at?: string
+          event_type: Database["public"]["Enums"]["analytics_event_type"]
+          id?: string
+          meta?: Json
+          path?: string | null
+          product_id?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          value?: string | null
+        }
+        Update: {
+          banner_id?: string | null
+          created_at?: string
+          event_type?: Database["public"]["Enums"]["analytics_event_type"]
+          id?: string
+          meta?: Json
+          path?: string | null
+          product_id?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_events_banner_id_fkey"
+            columns: ["banner_id"]
+            isOneToOne: false
+            referencedRelation: "banners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analytics_events_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       banners: {
         Row: {
+          ab_group: string | null
           created_at: string
           cta_label: string | null
           cta_label_en: string | null
@@ -33,6 +94,7 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          ab_group?: string | null
           created_at?: string
           cta_label?: string | null
           cta_label_en?: string | null
@@ -50,6 +112,7 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          ab_group?: string | null
           created_at?: string
           cta_label?: string | null
           cta_label_en?: string | null
@@ -670,6 +733,15 @@ export type Database = {
       }
     }
     Enums: {
+      analytics_event_type:
+        | "product_view"
+        | "page_view"
+        | "marketplace_click"
+        | "banner_view"
+        | "banner_click"
+        | "search_query"
+        | "newsletter_signup"
+        | "favorite_add"
       app_role: "admin" | "editor" | "user"
       marketplace_kind:
         | "wildberries"
@@ -805,6 +877,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      analytics_event_type: [
+        "product_view",
+        "page_view",
+        "marketplace_click",
+        "banner_view",
+        "banner_click",
+        "search_query",
+        "newsletter_signup",
+        "favorite_add",
+      ],
       app_role: ["admin", "editor", "user"],
       marketplace_kind: [
         "wildberries",

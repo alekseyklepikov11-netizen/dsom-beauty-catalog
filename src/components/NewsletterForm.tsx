@@ -4,6 +4,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
+import { track } from "@/lib/analytics";
 
 const schema = z.object({
   email: z.string().trim().email().max(255),
@@ -39,6 +40,7 @@ const NewsletterForm = ({ source = "footer" }: { source?: string }) => {
       return;
     }
     setDone(true);
+    track("newsletter_signup", { value: source });
     toast.success(lang === "en" ? "Thanks for subscribing!" : "Спасибо за подписку!");
   };
 
