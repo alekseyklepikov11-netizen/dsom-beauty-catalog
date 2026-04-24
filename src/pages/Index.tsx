@@ -109,6 +109,7 @@ const Index = () => {
             {/* Primary — white pill with play */}
             <Link
               to={banner?.cta_url || "/catalog"}
+              onClick={() => banner && track("banner_click", { banner_id: banner.id, value: banner.ab_group || "default" })}
               className="group inline-flex items-center gap-3 bg-white text-[#111] rounded-full pl-2 pr-7 py-2 font-barlow font-medium text-[14px] hover:bg-white/90 transition-colors"
             >
               <span className="grid place-items-center w-10 h-10 rounded-full bg-[#111] text-white">
