@@ -69,7 +69,7 @@ const Catalog = () => {
       {/* Sticky horizontal category tabs */}
       <div className="sticky top-[68px] z-30 bg-background/90 backdrop-blur-xl border-b border-border/60">
         <div className="container flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-6 py-3 md:py-4">
-          <div className="flex items-center gap-1 min-w-0 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+          <div className="flex items-center gap-1 min-w-0 overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-1">
             {visibleCats.map((c) => {
               const label = lang === "en" && c.name_en ? c.name_en : c.name;
               const active = activeCat === c.slug;
