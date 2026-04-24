@@ -133,7 +133,7 @@ const SearchDialog = ({ open, onClose }: Props) => {
                     className="w-full flex items-center gap-4 px-5 py-3 hover:bg-secondary/60 text-left transition-colors"
                   >
                     <div className="w-12 h-14 bg-secondary shrink-0 overflow-hidden">
-                      {r.cover_image_url && <img src={r.cover_image_url} alt={name} className="w-full h-full object-cover" />}
+                      {r.cover_image_url && <img src={r.cover_image_url} alt={name} loading="lazy" decoding="async" className="w-full h-full object-cover" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       {r.brand && <p className="text-[10px] tracking-luxe uppercase text-accent">{r.brand}</p>}
