@@ -150,9 +150,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* RECENTLY VIEWED */}
-      <RecentlyViewed onQuickView={setQuickSlug} />
-
       {/* PROMO CODES */}
       <PromoStrip />
 
@@ -170,6 +167,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* RECENTLY VIEWED — at the very bottom */}
+      <RecentlyViewed onQuickView={setQuickSlug} />
 
       <Footer />
 
