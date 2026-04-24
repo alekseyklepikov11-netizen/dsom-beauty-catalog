@@ -153,7 +153,10 @@ const Index = () => {
       {/* PROMO CODES */}
       <PromoStrip />
 
-      {/* BRANDS */}
+      {/* RECENTLY VIEWED */}
+      <RecentlyViewed />
+
+      {/* BRANDS — moved below recently viewed */}
       <section className="py-20 bg-secondary/40">
         <div className="container">
           <p className="text-[11px] tracking-luxe uppercase text-accent text-center mb-10">— {t("sections.brands")}</p>
@@ -167,9 +170,6 @@ const Index = () => {
           </div>
         </div>
       </section>
-
-      {/* RECENTLY VIEWED — at the very bottom */}
-      <RecentlyViewed />
 
       <Footer />
 
