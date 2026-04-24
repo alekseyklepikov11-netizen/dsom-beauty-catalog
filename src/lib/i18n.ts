@@ -4,7 +4,7 @@ import { initReactI18next } from "react-i18next";
 const resources = {
   ru: {
     translation: {
-      nav: { catalog: "Каталог", about: "О бренде", stores: "Где купить", contact: "Контакты", shop: "В магазин" },
+      nav: { catalog: "Каталог", about: "О бренде", stores: "Где купить", contact: "Контакты", shop: "В магазин", quiz: "Подбор ухода" },
       hero: { cta: "Открыть каталог", eyebrow: "DSOM · Лаборатория ухода", title1: "Чистая наука.", title2: "Бережный ритуал" },
       sections: { bestsellers: "Бестселлеры", brands: "Бренды", philosophy: "Философия", all: "Весь каталог", new: "Новинки" },
       catalog: {
@@ -37,7 +37,7 @@ const resources = {
   },
   en: {
     translation: {
-      nav: { catalog: "Catalog", about: "About", stores: "Where to buy", contact: "Contact", shop: "Shop" },
+      nav: { catalog: "Catalog", about: "About", stores: "Where to buy", contact: "Contact", shop: "Shop", quiz: "Find your routine" },
       hero: { cta: "Open catalog", eyebrow: "DSOM · Skincare laboratory", title1: "Pure science.", title2: "Gentle ritual" },
       sections: { bestsellers: "Bestsellers", brands: "Brands", philosophy: "Philosophy", all: "Full catalog", new: "New in" },
       catalog: {

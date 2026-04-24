@@ -7,6 +7,9 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MarketplaceButton from "@/components/MarketplaceButton";
 import SEO from "@/components/SEO";
+import ReviewsSection from "@/components/ReviewsSection";
+import RelatedProducts from "@/components/RelatedProducts";
+import QuickViewDialog from "@/components/QuickViewDialog";
 import { track } from "@/lib/analytics";
 
 interface Product {
@@ -18,6 +21,7 @@ interface Product {
   price: number; volume: string | null; cover_image_url: string | null;
   is_bestseller: boolean; is_new: boolean;
   brand_id: string | null;
+  category_id: string | null;
 }
 interface Img { id: string; url: string; alt: string | null }
 interface MLink { id: string; kind: string; url: string; label: string | null }
@@ -33,6 +37,7 @@ const ProductPage = () => {
   const [activeImg, setActiveImg] = useState<string | null>(null);
   const [tab, setTab] = useState<"description" | "ingredients" | "how_to_use">("description");
   const [brandName, setBrandName] = useState<string | null>(null);
+  const [quickSlug, setQuickSlug] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -206,9 +211,19 @@ const ProductPage = () => {
             )}
           </div>
         </div>
+
+        <ReviewsSection productId={product.id} />
       </section>
 
+      <RelatedProducts
+        productId={product.id}
+        categoryId={product.category_id}
+        brandId={product.brand_id}
+        onQuickView={setQuickSlug}
+      />
+
       <Footer />
+      <QuickViewDialog slug={quickSlug} onClose={() => setQuickSlug(null)} />
     </main>
   );
 };

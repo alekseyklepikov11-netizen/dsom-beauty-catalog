@@ -9,13 +9,16 @@ import ProductCard, { ProductLite } from "@/components/ProductCard";
 import QuickViewDialog from "@/components/QuickViewDialog";
 import PromoStrip from "@/components/PromoStrip";
 import SEO from "@/components/SEO";
+import { track } from "@/lib/analytics";
 
 interface Banner {
+  id: string;
   title: string; title_en: string | null;
   subtitle: string | null; subtitle_en: string | null;
   cta_label: string | null; cta_label_en: string | null;
   cta_url: string | null;
   image_url: string | null; video_url: string | null;
+  ab_group: string | null;
 }
 interface Brand { id: string; slug: string; name: string; country: string | null; }
 
@@ -31,11 +34,19 @@ const Index = () => {
   useEffect(() => {
     (async () => {
       const [b, p, br] = await Promise.all([
-        supabase.from("banners").select("*").eq("position", "home_hero").eq("is_active", true).order("sort_order").limit(1).maybeSingle(),
+        supabase.from("banners").select("id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group").eq("position", "home_hero").eq("is_active", true).order("sort_order"),
         supabase.from("products").select("id,slug,name,name_en,subtitle,subtitle_en,price,volume,cover_image_url,is_bestseller,is_new").eq("is_visible", true).eq("is_bestseller", true).order("sort_order").limit(6),
         supabase.from("brands").select("id,slug,name,country").eq("is_visible", true).order("sort_order"),
       ]);
-      setBanner(b.data as Banner | null);
+      // A/B: pick a random active banner for this position
+      const banners = (b.data || []) as Banner[];
+      let chosen: Banner | null = null;
+      if (banners.length > 0) {
+        chosen = banners[Math.floor(Math.random() * banners.length)];
+        // Fire-and-forget impression
+        track("banner_view", { banner_id: chosen.id, value: chosen.ab_group || "default" });
+      }
+      setBanner(chosen);
       setProducts((p.data || []) as ProductLite[]);
       setBrands((br.data || []) as Brand[]);
     })();
@@ -98,6 +109,7 @@ const Index = () => {
             {/* Primary — white pill with play */}
             <Link
               to={banner?.cta_url || "/catalog"}
+              onClick={() => banner && track("banner_click", { banner_id: banner.id, value: banner.ab_group || "default" })}
               className="group inline-flex items-center gap-3 bg-white text-[#111] rounded-full pl-2 pr-7 py-2 font-barlow font-medium text-[14px] hover:bg-white/90 transition-colors"
             >
               <span className="grid place-items-center w-10 h-10 rounded-full bg-[#111] text-white">
