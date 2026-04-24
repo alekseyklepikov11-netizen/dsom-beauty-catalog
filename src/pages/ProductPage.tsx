@@ -207,6 +207,8 @@ const ProductPage = () => {
             )}
           </div>
         </div>
+
+        <ReviewsSection productId={product.id} />
       </section>
 
       <Footer />
