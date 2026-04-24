@@ -112,6 +112,30 @@ const Catalog = () => {
           </div>
 
           <div className="flex items-center gap-3 md:gap-4 shrink-0 text-[11px] tracking-luxe uppercase self-end md:self-auto">
+            {/* Mobile-only density toggle */}
+            <div className="md:hidden flex items-center gap-0.5 mr-1">
+              <button
+                onClick={() => setMobileCols(1)}
+                aria-label={lang === "en" ? "One column" : "В один ряд"}
+                aria-pressed={mobileCols === 1}
+                className={`grid place-items-center w-7 h-7 rounded-full transition-colors ${
+                  mobileCols === 1 ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Square className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setMobileCols(2)}
+                aria-label={lang === "en" ? "Two columns" : "В два ряда"}
+                aria-pressed={mobileCols === 2}
+                className={`grid place-items-center w-7 h-7 rounded-full transition-colors ${
+                  mobileCols === 2 ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
             <select
               value={skin}
               onChange={(e) => setParam("skin", e.target.value)}
@@ -138,30 +162,6 @@ const Catalog = () => {
 
       <section className="py-16 md:py-20">
         <div className="container">
-          {/* Mobile-only density toggle */}
-          <div className="md:hidden flex items-center justify-end gap-1 mb-6">
-            <button
-              onClick={() => setMobileCols(1)}
-              aria-label={lang === "en" ? "One column" : "В один ряд"}
-              aria-pressed={mobileCols === 1}
-              className={`grid place-items-center w-9 h-9 rounded-full transition-colors ${
-                mobileCols === 1 ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Square className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setMobileCols(2)}
-              aria-label={lang === "en" ? "Two columns" : "В два ряда"}
-              aria-pressed={mobileCols === 2}
-              className={`grid place-items-center w-9 h-9 rounded-full transition-colors ${
-                mobileCols === 2 ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-          </div>
-
           {products.length === 0 ? (
             <p className="text-center text-muted-foreground italic font-display text-2xl py-24">{t("catalog.empty")}</p>
           ) : (
