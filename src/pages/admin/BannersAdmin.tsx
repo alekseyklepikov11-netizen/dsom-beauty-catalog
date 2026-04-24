@@ -183,6 +183,19 @@ const BannersAdmin = () => {
                   <input type="checkbox" checked={editing.is_active} onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })} /> Активен
                 </label>
               </div>
+
+              <Field label="A/B группа (необязательно)">
+                <input
+                  value={editing.ab_group || ""}
+                  onChange={(e) => setEditing({ ...editing, ab_group: e.target.value || null })}
+                  className={fieldCls}
+                  placeholder="например: A или B"
+                />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Если в одной позиции активны несколько баннеров с разными A/B группами, посетителю случайно показывается один из них (50/50).
+                  Сравните CTR в карточках выше.
+                </p>
+              </Field>
             </div>
             <div className="p-6 border-t border-border flex justify-end gap-3">
               <button onClick={() => setEditing(null)} className="text-[11px] tracking-luxe uppercase px-5 py-2.5">Отмена</button>
