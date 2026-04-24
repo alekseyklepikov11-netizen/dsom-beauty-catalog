@@ -87,8 +87,8 @@ const Catalog = () => {
             })}
           </div>
 
-          <div className="hidden md:flex items-center gap-3 shrink-0 text-[11px] tracking-luxe uppercase">
-            <span className="text-muted-foreground">{t("catalog.sort")}:</span>
+          <div className="flex items-center gap-2 md:gap-3 shrink-0 text-[11px] tracking-luxe uppercase">
+            <span className="hidden md:inline text-muted-foreground">{t("catalog.sort")}:</span>
             <select
               value={sort}
               onChange={(e) => setParam("sort", e.target.value)}
