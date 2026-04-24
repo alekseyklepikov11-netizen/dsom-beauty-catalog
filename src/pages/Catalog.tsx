@@ -68,8 +68,8 @@ const Catalog = () => {
 
       {/* Sticky horizontal category tabs */}
       <div className="sticky top-[68px] z-30 bg-background/90 backdrop-blur-xl border-b border-border/60">
-        <div className="container flex items-center justify-between gap-6 py-4 overflow-x-auto">
-          <div className="flex items-center gap-1 min-w-0">
+        <div className="container flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-6 py-3 md:py-4">
+          <div className="flex items-center gap-1 min-w-0 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
             {visibleCats.map((c) => {
               const label = lang === "en" && c.name_en ? c.name_en : c.name;
               const active = activeCat === c.slug;
@@ -77,7 +77,7 @@ const Catalog = () => {
                 <button
                   key={c.slug}
                   onClick={() => setParam("cat", c.slug)}
-                  className={`whitespace-nowrap px-4 py-2 rounded-full text-[11px] tracking-luxe uppercase transition-colors ${
+                  className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-[11px] tracking-luxe uppercase transition-colors ${
                     active ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -87,7 +87,7 @@ const Catalog = () => {
             })}
           </div>
 
-          <div className="flex items-center gap-2 md:gap-3 shrink-0 text-[11px] tracking-luxe uppercase">
+          <div className="flex items-center gap-2 md:gap-3 shrink-0 text-[11px] tracking-luxe uppercase self-end md:self-auto">
             <span className="hidden md:inline text-muted-foreground">{t("catalog.sort")}:</span>
             <select
               value={sort}
