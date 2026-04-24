@@ -215,7 +215,15 @@ const ProductPage = () => {
         <ReviewsSection productId={product.id} />
       </section>
 
+      <RelatedProducts
+        productId={product.id}
+        categoryId={product.category_id}
+        brandId={product.brand_id}
+        onQuickView={setQuickSlug}
+      />
+
       <Footer />
+      <QuickViewDialog slug={quickSlug} onClose={() => setQuickSlug(null)} />
     </main>
   );
 };
