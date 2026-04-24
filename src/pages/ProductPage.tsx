@@ -51,13 +51,13 @@ const ProductPage = () => {
       setImages([]);
       setLinks([]);
       setStores([]);
-      setActiveImg(null);
+      setActiveIdx(0);
       setBrandName(null);
+      if (galleryRef.current) galleryRef.current.scrollLeft = 0;
 
       const { data: p } = await supabase.from("products").select("*").eq("slug", slug).maybeSingle();
       if (!p) return;
       setProduct(p as Product);
-      setActiveImg((p as Product).cover_image_url);
 
       // Track product view + recently viewed (fire-and-forget)
       track("product_view", { product_id: (p as Product).id, value: (p as Product).slug });
