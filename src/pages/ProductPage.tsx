@@ -37,6 +37,7 @@ const ProductPage = () => {
   const [activeImg, setActiveImg] = useState<string | null>(null);
   const [tab, setTab] = useState<"description" | "ingredients" | "how_to_use">("description");
   const [brandName, setBrandName] = useState<string | null>(null);
+  const [quickSlug, setQuickSlug] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
