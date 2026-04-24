@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Package, Tag, Building2, Store, Image as ImageIcon,
-  Share2, FileText, Users, LogOut, ExternalLink, Mail, Ticket, MessageSquare,
+  Share2, FileText, Users, LogOut, ExternalLink, Mail, Ticket, MessageSquare, Bell,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -15,6 +15,7 @@ const NAV: NavItem[] = [
   { to: "/admin/stores", label: "Магазины", icon: Store },
   { to: "/admin/banners", label: "Баннеры", icon: ImageIcon },
   { to: "/admin/reviews", label: "Отзывы", icon: MessageSquare },
+  { to: "/admin/stock-alerts", label: "Уведомления", icon: Bell },
   { to: "/admin/social", label: "Соцсети", icon: Share2 },
   { to: "/admin/pages", label: "Страницы", icon: FileText },
   { to: "/admin/promo", label: "Промокоды", icon: Ticket },
