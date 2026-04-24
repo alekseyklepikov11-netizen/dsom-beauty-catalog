@@ -24,6 +24,7 @@ const MobileCtaBar = () => {
   const hidden =
     pathname.startsWith("/admin") ||
     pathname.startsWith("/auth") ||
+    pathname.startsWith("/catalog") ||
     pathname.startsWith("/product/"); // product page already has its own CTAs
   if (hidden) return null;
 
