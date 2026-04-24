@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MarketplaceButton from "@/components/MarketplaceButton";
 import SEO from "@/components/SEO";
+import ReviewsSection from "@/components/ReviewsSection";
 import { track } from "@/lib/analytics";
 
 interface Product {
