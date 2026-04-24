@@ -126,21 +126,57 @@ const ProductPage = () => {
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16">
           {/* Gallery */}
           <div>
-            <div className="relative bg-secondary aspect-[4/5] overflow-hidden">
-              {activeImg && <img src={activeImg} alt={name} className="w-full h-full object-cover" />}
+            <div
+              className="relative bg-secondary aspect-[4/5] overflow-hidden flex snap-x snap-mandatory overflow-x-auto scroll-smooth"
+              style={{ scrollbarWidth: "none" }}
+              onScroll={(e) => {
+                const el = e.currentTarget;
+                const idx = Math.round(el.scrollLeft / el.clientWidth);
+                if (gallery[idx] && gallery[idx] !== activeImg) setActiveImg(gallery[idx]);
+              }}
+              ref={(el) => {
+                if (!el || !activeImg) return;
+                const idx = gallery.indexOf(activeImg);
+                const target = idx * el.clientWidth;
+                if (Math.abs(el.scrollLeft - target) > 4) el.scrollTo({ left: target });
+              }}
+            >
+              {gallery.map((g) => (
+                <img
+                  key={g}
+                  src={g}
+                  alt={name}
+                  className="w-full h-full flex-none object-cover snap-center"
+                />
+              ))}
               {(product.is_bestseller || product.is_new) && (
-                <span className="absolute top-5 left-5 bg-background/90 backdrop-blur px-3 py-1 text-[10px] tracking-luxe uppercase">
+                <span className="absolute top-5 left-5 bg-background/90 backdrop-blur px-3 py-1 text-[10px] tracking-luxe uppercase z-10">
                   {product.is_new ? t("product.new") : t("product.bestseller")}
                 </span>
               )}
+              {gallery.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                  {gallery.map((g) => (
+                    <span
+                      key={g}
+                      className={`h-1 rounded-full transition-all ${activeImg === g ? "w-6 bg-foreground" : "w-1.5 bg-foreground/40"}`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
             {gallery.length > 1 && (
-              <div className="grid grid-cols-5 gap-3 mt-3">
+              <div className="grid grid-cols-5 gap-2 mt-3">
                 {gallery.map((g) => (
                   <button
                     key={g}
                     onClick={() => setActiveImg(g)}
-                    className={`relative aspect-square bg-secondary overflow-hidden border-2 transition ${activeImg === g ? "border-foreground" : "border-transparent hover:border-foreground/30"}`}
+                    aria-label="Show image"
+                    className={`relative aspect-square bg-secondary overflow-hidden rounded-sm transition-all ${
+                      activeImg === g
+                        ? "ring-1 ring-foreground opacity-100"
+                        : "opacity-60 hover:opacity-100"
+                    }`}
                   >
                     <img src={g} alt="" className="absolute inset-0 w-full h-full object-cover" />
                   </button>
