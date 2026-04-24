@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
+import { LayoutGrid, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -22,6 +23,7 @@ const Catalog = () => {
   const [cats, setCats] = useState<Cat[]>([]);
   const [products, setProducts] = useState<ProductLite[]>([]);
   const [quickSlug, setQuickSlug] = useState<string | null>(null);
+  const [mobileCols, setMobileCols] = useState<1 | 2>(1);
 
   useEffect(() => {
     supabase.from("categories").select("id,slug,name,name_en,parent_id").eq("is_visible", true).is("parent_id", null).order("sort_order")
@@ -136,10 +138,38 @@ const Catalog = () => {
 
       <section className="py-16 md:py-20">
         <div className="container">
+          {/* Mobile-only density toggle */}
+          <div className="md:hidden flex items-center justify-end gap-1 mb-6">
+            <button
+              onClick={() => setMobileCols(1)}
+              aria-label={lang === "en" ? "One column" : "В один ряд"}
+              aria-pressed={mobileCols === 1}
+              className={`grid place-items-center w-9 h-9 rounded-full transition-colors ${
+                mobileCols === 1 ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Square className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setMobileCols(2)}
+              aria-label={lang === "en" ? "Two columns" : "В два ряда"}
+              aria-pressed={mobileCols === 2}
+              className={`grid place-items-center w-9 h-9 rounded-full transition-colors ${
+                mobileCols === 2 ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+          </div>
+
           {products.length === 0 ? (
             <p className="text-center text-muted-foreground italic font-display text-2xl py-24">{t("catalog.empty")}</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+            <div
+              className={`grid ${
+                mobileCols === 2 ? "grid-cols-2 gap-x-4 gap-y-10" : "grid-cols-1 gap-y-16"
+              } sm:grid-cols-2 sm:gap-x-8 sm:gap-y-16 lg:grid-cols-3`}
+            >
               {products.map((p, i) => <ProductCard key={p.id} product={p} index={i} onQuickView={setQuickSlug} />)}
             </div>
           )}
