@@ -8,6 +8,8 @@ import Footer from "@/components/Footer";
 import MarketplaceButton from "@/components/MarketplaceButton";
 import SEO from "@/components/SEO";
 import ReviewsSection from "@/components/ReviewsSection";
+import RelatedProducts from "@/components/RelatedProducts";
+import QuickViewDialog from "@/components/QuickViewDialog";
 import { track } from "@/lib/analytics";
 
 interface Product {
