@@ -21,6 +21,7 @@ interface Product {
   price: number; volume: string | null; cover_image_url: string | null;
   is_bestseller: boolean; is_new: boolean;
   brand_id: string | null;
+  category_id: string | null;
 }
 interface Img { id: string; url: string; alt: string | null }
 interface MLink { id: string; kind: string; url: string; label: string | null }
