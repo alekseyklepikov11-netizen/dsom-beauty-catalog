@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import { MapPin } from "lucide-react";
@@ -37,7 +37,8 @@ const ProductPage = () => {
   const [images, setImages] = useState<Img[]>([]);
   const [links, setLinks] = useState<MLink[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
-  const [activeImg, setActiveImg] = useState<string | null>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const galleryRef = useRef<HTMLDivElement>(null);
   const [tab, setTab] = useState<"description" | "ingredients" | "how_to_use">("description");
   const [brandName, setBrandName] = useState<string | null>(null);
   const [quickSlug, setQuickSlug] = useState<string | null>(null);
@@ -50,13 +51,13 @@ const ProductPage = () => {
       setImages([]);
       setLinks([]);
       setStores([]);
-      setActiveImg(null);
+      setActiveIdx(0);
       setBrandName(null);
+      if (galleryRef.current) galleryRef.current.scrollLeft = 0;
 
       const { data: p } = await supabase.from("products").select("*").eq("slug", slug).maybeSingle();
       if (!p) return;
       setProduct(p as Product);
-      setActiveImg((p as Product).cover_image_url);
 
       // Track product view + recently viewed (fire-and-forget)
       track("product_view", { product_id: (p as Product).id, value: (p as Product).slug });
@@ -137,23 +138,18 @@ const ProductPage = () => {
           {/* Gallery */}
           <div>
             <div
+              ref={galleryRef}
               className="relative bg-secondary aspect-[4/5] overflow-hidden flex snap-x snap-mandatory overflow-x-auto scroll-smooth"
               style={{ scrollbarWidth: "none" }}
               onScroll={(e) => {
                 const el = e.currentTarget;
                 const idx = Math.round(el.scrollLeft / el.clientWidth);
-                if (gallery[idx] && gallery[idx] !== activeImg) setActiveImg(gallery[idx]);
-              }}
-              ref={(el) => {
-                if (!el || !activeImg) return;
-                const idx = gallery.indexOf(activeImg);
-                const target = idx * el.clientWidth;
-                if (Math.abs(el.scrollLeft - target) > 4) el.scrollTo({ left: target });
+                if (idx !== activeIdx && idx >= 0 && idx < gallery.length) setActiveIdx(idx);
               }}
             >
-              {gallery.map((g) => (
+              {gallery.map((g, i) => (
                 <img
-                  key={g}
+                  key={`${g}-${i}`}
                   src={g}
                   alt={name}
                   className="w-full h-full flex-none object-cover snap-center"
@@ -165,11 +161,11 @@ const ProductPage = () => {
                 </span>
               )}
               {gallery.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                  {gallery.map((g) => (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 pointer-events-none">
+                  {gallery.map((g, i) => (
                     <span
-                      key={g}
-                      className={`h-1 rounded-full transition-all ${activeImg === g ? "w-6 bg-foreground" : "w-1.5 bg-foreground/40"}`}
+                      key={`dot-${i}`}
+                      className={`h-1 rounded-full transition-all duration-300 ${activeIdx === i ? "w-6 bg-foreground" : "w-1.5 bg-foreground/40"}`}
                     />
                   ))}
                 </div>
@@ -177,13 +173,17 @@ const ProductPage = () => {
             </div>
             {gallery.length > 1 && (
               <div className="grid grid-cols-5 gap-2 mt-3">
-                {gallery.map((g) => (
+                {gallery.map((g, i) => (
                   <button
-                    key={g}
-                    onClick={() => setActiveImg(g)}
+                    key={`thumb-${i}`}
+                    onClick={() => {
+                      setActiveIdx(i);
+                      const el = galleryRef.current;
+                      if (el) el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+                    }}
                     aria-label="Show image"
                     className={`relative aspect-square bg-secondary overflow-hidden rounded-sm transition-all ${
-                      activeImg === g
+                      activeIdx === i
                         ? "ring-1 ring-foreground opacity-100"
                         : "opacity-60 hover:opacity-100"
                     }`}
