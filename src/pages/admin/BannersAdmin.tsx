@@ -23,14 +23,35 @@ const empty = (): Banner => ({
   image_url: null, video_url: "", is_active: true, sort_order: 0, ab_group: null,
 });
 
+interface BannerStats { views: number; clicks: number }
+
 const BannersAdmin = () => {
   const [rows, setRows] = useState<Banner[]>([]);
   const [editing, setEditing] = useState<Banner | null>(null);
   const [saving, setSaving] = useState(false);
+  const [stats, setStats] = useState<Record<string, BannerStats>>({});
 
   const load = async () => {
     const { data } = await supabase.from("banners").select("*").order("position").order("sort_order");
-    setRows((data || []) as Banner[]);
+    const list = (data || []) as Banner[];
+    setRows(list);
+
+    // Load A/B stats
+    const ids = list.map((b) => b.id).filter(Boolean) as string[];
+    if (ids.length === 0) return;
+    const { data: ev } = await supabase
+      .from("analytics_events")
+      .select("banner_id, event_type")
+      .in("banner_id", ids)
+      .in("event_type", ["banner_view", "banner_click"]);
+    const acc: Record<string, BannerStats> = {};
+    (ev || []).forEach((e: any) => {
+      if (!e.banner_id) return;
+      acc[e.banner_id] = acc[e.banner_id] || { views: 0, clicks: 0 };
+      if (e.event_type === "banner_view") acc[e.banner_id].views++;
+      else if (e.event_type === "banner_click") acc[e.banner_id].clicks++;
+    });
+    setStats(acc);
   };
   useEffect(() => { load(); }, []);
 
