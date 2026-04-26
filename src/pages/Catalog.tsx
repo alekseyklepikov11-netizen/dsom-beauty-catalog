@@ -23,7 +23,19 @@ const Catalog = () => {
   const [cats, setCats] = useState<Cat[]>([]);
   const [products, setProducts] = useState<ProductLite[]>([]);
   const [quickSlug, setQuickSlug] = useState<string | null>(null);
-  const [mobileCols, setMobileCols] = useState<1 | 2>(1);
+  const [mobileCols, setMobileCols] = useState<1 | 2>(() => {
+    if (typeof window === "undefined") return 1;
+    const saved = window.localStorage.getItem("catalog:mobileCols");
+    return saved === "2" ? 2 : 1;
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("catalog:mobileCols", String(mobileCols));
+    } catch {
+      // ignore (private mode / storage disabled)
+    }
+  }, [mobileCols]);
 
   useEffect(() => {
     supabase.from("categories").select("id,slug,name,name_en,parent_id").eq("is_visible", true).is("parent_id", null).order("sort_order")
