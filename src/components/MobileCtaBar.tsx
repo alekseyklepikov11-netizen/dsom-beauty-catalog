@@ -11,15 +11,29 @@ const MobileCtaBar = () => {
   const { t, i18n } = useTranslation();
   const { pathname } = useLocation();
   const [visible, setVisible] = useState(false);
+  const [overDark, setOverDark] = useState(false);
 
   useEffect(() => {
     const onScroll = () => {
       setVisible(window.scrollY > 400);
+      const footer = document.querySelector("footer");
+      if (footer) {
+        const rect = footer.getBoundingClientRect();
+        // CTA sits ~bottom-4 (16px) + button height (~56px) → check ~90px from bottom
+        const ctaY = window.innerHeight - 90;
+        setOverDark(rect.top <= ctaY);
+      } else {
+        setOverDark(false);
+      }
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [pathname]);
 
   const hidden =
     pathname.startsWith("/admin") ||
