@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowUpRight, Search, Heart } from "lucide-react";
+import { ArrowUpRight, Search, Heart, User } from "lucide-react";
 import SearchDialog from "@/components/SearchDialog";
+import { useAuth } from "@/hooks/useAuth";
 
 const Header = ({ floating = false }: { floating?: boolean }) => {
   const { t, i18n } = useTranslation();
   const { pathname } = useLocation();
+  const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const accountHref = user ? "/account" : "/auth";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -62,6 +65,9 @@ const Header = ({ floating = false }: { floating?: boolean }) => {
               <Link to="/favorites" aria-label="Favorites" className="p-2 text-[#111] hover:opacity-60 transition-opacity">
                 <Heart className="w-4 h-4" />
               </Link>
+              <Link to={accountHref} aria-label={user ? "Личный кабинет" : "Войти"} className="p-2 text-[#111] hover:opacity-60 transition-opacity">
+                <User className="w-4 h-4" />
+              </Link>
               <div className="hidden sm:flex items-center gap-1.5 font-barlow text-[12px] text-[#111] px-1">
                 <button onClick={() => switchLang("ru")} className={i18n.language === "ru" ? "font-semibold" : "opacity-50 hover:opacity-100"}>RU</button>
                 <span className="opacity-30">/</span>
@@ -107,6 +113,9 @@ const Header = ({ floating = false }: { floating?: boolean }) => {
             </button>
             <Link to="/favorites" aria-label="Favorites" className="p-1 text-muted-foreground hover:text-foreground transition-colors">
               <Heart className="w-4 h-4" />
+            </Link>
+            <Link to={accountHref} aria-label={user ? "Личный кабинет" : "Войти"} className="p-1 text-muted-foreground hover:text-foreground transition-colors">
+              <User className="w-4 h-4" />
             </Link>
             <span className="text-border">·</span>
             <button onClick={() => switchLang("ru")} className={i18n.language === "ru" ? "text-accent" : "text-muted-foreground hover:text-foreground"}>RU</button>
