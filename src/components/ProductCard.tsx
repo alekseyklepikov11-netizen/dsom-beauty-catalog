@@ -145,15 +145,15 @@ const ProductCard = ({ product, index, onQuickView }: Props) => {
           </button>
         )}
       </div>
-      <Link to={`/product/${product.slug}`} className="block">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="font-display text-2xl leading-tight">{name}</h3>
-            {subtitle && <p className="text-sm text-muted-foreground mt-1 italic font-display">{subtitle}</p>}
+      <Link to={`/product/${product.slug}`} className="block overflow-hidden">
+        <div className="flex items-start justify-between gap-2 sm:gap-4">
+          <div className="min-w-0 flex-1">
+            <h3 className="font-display text-lg sm:text-2xl leading-tight break-words hyphens-auto">{name}</h3>
+            {subtitle && <p className="text-xs sm:text-sm text-muted-foreground mt-1 italic font-display break-words">{subtitle}</p>}
           </div>
           <div className="text-right shrink-0">
-            <p className="font-display text-xl">{Number(product.price).toLocaleString(lang === "en" ? "en-US" : "ru-RU")} ₽</p>
-            {product.volume && <p className="text-[11px] text-muted-foreground mt-1">{product.volume}</p>}
+            <p className="font-display text-base sm:text-xl whitespace-nowrap">{Number(product.price).toLocaleString(lang === "en" ? "en-US" : "ru-RU")} ₽</p>
+            {product.volume && <p className="text-[11px] text-muted-foreground mt-1 whitespace-nowrap">{product.volume}</p>}
           </div>
         </div>
       </Link>
