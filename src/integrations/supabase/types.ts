@@ -226,6 +226,108 @@ export type Database = {
           },
         ]
       }
+      email_campaign_recipients: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          email: string
+          error: string | null
+          id: string
+          sent_at: string | null
+          status: string
+          subscriber_id: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          email: string
+          error?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          subscriber_id?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          email?: string
+          error?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          subscriber_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaign_recipients_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_campaign_recipients_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_campaigns: {
+        Row: {
+          content_html: string
+          content_text: string | null
+          created_at: string
+          created_by: string | null
+          delivered_count: number
+          id: string
+          preheader: string | null
+          recipients_count: number
+          scheduled_at: string | null
+          segment: string
+          sent_at: string | null
+          status: string
+          subject: string
+          unsubscribed_count: number
+          updated_at: string
+        }
+        Insert: {
+          content_html: string
+          content_text?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivered_count?: number
+          id?: string
+          preheader?: string | null
+          recipients_count?: number
+          scheduled_at?: string | null
+          segment?: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+          unsubscribed_count?: number
+          updated_at?: string
+        }
+        Update: {
+          content_html?: string
+          content_text?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivered_count?: number
+          id?: string
+          preheader?: string | null
+          recipients_count?: number
+          scheduled_at?: string | null
+          segment?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          unsubscribed_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
@@ -295,25 +397,43 @@ export type Database = {
       }
       newsletter_subscribers: {
         Row: {
+          consent_at: string | null
+          consent_ip: string | null
+          consent_source: string | null
           created_at: string
           email: string
           id: string
           is_active: boolean
           source: string | null
+          unsubscribe_token: string | null
+          unsubscribed_at: string | null
+          user_id: string | null
         }
         Insert: {
+          consent_at?: string | null
+          consent_ip?: string | null
+          consent_source?: string | null
           created_at?: string
           email: string
           id?: string
           is_active?: boolean
           source?: string | null
+          unsubscribe_token?: string | null
+          unsubscribed_at?: string | null
+          user_id?: string | null
         }
         Update: {
+          consent_at?: string | null
+          consent_ip?: string | null
+          consent_source?: string | null
           created_at?: string
           email?: string
           id?: string
           is_active?: boolean
           source?: string | null
+          unsubscribe_token?: string | null
+          unsubscribed_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -503,6 +623,9 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          marketing_consent: boolean
+          marketing_consent_at: string | null
+          pdn_consent_at: string | null
           updated_at: string
         }
         Insert: {
@@ -510,6 +633,9 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          marketing_consent?: boolean
+          marketing_consent_at?: string | null
+          pdn_consent_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -517,6 +643,9 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          marketing_consent?: boolean
+          marketing_consent_at?: string | null
+          pdn_consent_at?: string | null
           updated_at?: string
         }
         Relationships: []

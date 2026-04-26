@@ -27,7 +27,13 @@ const NewsletterForm = ({ source = "footer" }: { source?: string }) => {
     setLoading(true);
     const { error } = await supabase
       .from("newsletter_subscribers")
-      .insert({ email: parsed.data.email.toLowerCase(), source, is_active: true });
+      .insert({
+        email: parsed.data.email.toLowerCase(),
+        source,
+        consent_source: source,
+        consent_at: new Date().toISOString(),
+        is_active: true,
+      });
     setLoading(false);
 
     if (error) {
