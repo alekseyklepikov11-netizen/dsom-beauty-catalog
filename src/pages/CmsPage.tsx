@@ -247,6 +247,30 @@ const CmsPage = () => {
             ) : (
               <p className="italic text-muted-foreground">—</p>
             )}
+
+            {slug === "contacts" && (
+              <div className="mt-16 pt-10 border-t border-foreground/10">
+                <p className="text-[11px] tracking-luxe uppercase text-muted-foreground mb-5">
+                  {lang === "en" ? "On the map" : "На карте"}
+                </p>
+                <div className="relative w-full overflow-hidden rounded-sm border border-foreground/10 bg-muted">
+                  <iframe
+                    title={lang === "en" ? "DSOM office on map" : "Офис DSOM на карте"}
+                    src="https://yandex.ru/map-widget/v1/?ll=37.598%2C55.778&z=16&pt=37.598,55.778,pm2rdm&l=map"
+                    width="100%"
+                    height="420"
+                    frameBorder={0}
+                    loading="lazy"
+                    className="block w-full"
+                  />
+                </div>
+                <p className="mt-4 text-xs text-muted-foreground leading-relaxed">
+                  {lang === "en"
+                    ? "7 Krasnoproletarskaya street, room 1n, Tverskoy district, Moscow, 127006."
+                    : "г. Москва, ул. Краснопролетарская, д. 7, помещение 1н, Тверской район, 127006."}
+                </p>
+              </div>
+            )}
           </>
         )}
       </article>
