@@ -11,7 +11,7 @@ interface Props {
 
 const SITE_NAME = "DSOM";
 const DEFAULT_DESCRIPTION =
-  "DSOM — кураторская косметика. Уход с архитектурой формул. Бестселлеры мировых брендов в Москве и Санкт-Петербурге.";
+  "DSOM — кураторский магазин нишевой косметики. Уход за лицом и телом от мировых брендов. Доставка по России и за рубеж.";
 
 const SEO = ({ title, description, image, type = "website", jsonLd, canonical }: Props) => {
   const fullTitle = title ? `${title} — ${SITE_NAME}` : `${SITE_NAME} — Уход, рождённый наукой`;
