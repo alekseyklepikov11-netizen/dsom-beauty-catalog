@@ -39,6 +39,90 @@ const renderBody = (body: any): string => {
   return "";
 };
 
+// Section heading: short ALL-CAPS line, no terminal punctuation
+const isHeading = (line: string) => {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.length > 60) return false;
+  if (/[.!?:;]$/.test(trimmed)) return false;
+  const letters = trimmed.match(/\p{L}/gu);
+  if (!letters || letters.length < 2) return false;
+  return letters.every((ch) => ch === ch.toUpperCase() && ch !== ch.toLowerCase());
+};
+
+const isEpigraph = (block: string) => /^[«"].+[»"]$/.test(block.trim()) && block.length < 400;
+
+const FormattedBody = ({ text }: { text: string }) => {
+  const blocks = text.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
+  return (
+    <div className="space-y-8">
+      {blocks.map((block, idx) => {
+        const lines = block.split("\n");
+        const first = lines[0].trim();
+
+        if (lines.length === 1 && isHeading(first)) {
+          return (
+            <h2
+              key={idx}
+              className="font-display text-2xl md:text-3xl tracking-luxe uppercase pt-8 mt-4 border-t border-foreground/10 text-foreground"
+            >
+              {first}
+            </h2>
+          );
+        }
+
+        if (idx === 0 && isEpigraph(block)) {
+          return (
+            <blockquote
+              key={idx}
+              className="font-display text-2xl md:text-3xl leading-snug text-foreground/90 border-l-2 border-accent pl-6 italic"
+            >
+              {block}
+            </blockquote>
+          );
+        }
+
+        if (lines.every((l) => /^[—–-]\s/.test(l.trim()))) {
+          return (
+            <ul key={idx} className="space-y-2 text-foreground/85">
+              {lines.map((l, i) => (
+                <li key={i} className="flex gap-3">
+                  <span className="text-accent select-none">—</span>
+                  <span className="flex-1">{l.replace(/^[—–-]\s+/, "")}</span>
+                </li>
+              ))}
+            </ul>
+          );
+        }
+
+        const listStart = lines.findIndex((l) => /^[—–-]\s/.test(l.trim()));
+        if (listStart > 0 && lines.slice(listStart).every((l) => /^[—–-]\s/.test(l.trim()) || !l.trim())) {
+          const intro = lines.slice(0, listStart).join(" ").trim();
+          const items = lines.slice(listStart).filter((l) => l.trim());
+          return (
+            <div key={idx} className="space-y-3">
+              <p className="text-foreground/85 leading-relaxed">{intro}</p>
+              <ul className="space-y-2 text-foreground/85">
+                {items.map((l, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span className="text-accent select-none">—</span>
+                    <span className="flex-1">{l.replace(/^[—–-]\s+/, "")}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        }
+
+        return (
+          <p key={idx} className="text-foreground/85 leading-relaxed text-[15px] md:text-base">
+            {block}
+          </p>
+        );
+      })}
+    </div>
+  );
+};
+
 const CmsPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { i18n } = useTranslation();
