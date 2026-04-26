@@ -242,9 +242,11 @@ const CmsPage = () => {
             {!banner && (
               <h1 className="font-display text-5xl md:text-7xl leading-[0.95] mb-12">{title}</h1>
             )}
-            <div className="prose prose-lg max-w-none text-foreground/90 leading-relaxed whitespace-pre-line font-light">
-              {body || <p className="italic text-muted-foreground">—</p>}
-            </div>
+            {body ? (
+              <FormattedBody text={body} />
+            ) : (
+              <p className="italic text-muted-foreground">—</p>
+            )}
           </>
         )}
       </article>
