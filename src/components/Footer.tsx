@@ -28,7 +28,10 @@ const Footer = () => {
 
         <div>
           <p className="text-[11px] tracking-luxe uppercase text-background/50 mb-4">{t("footer.contacts")}</p>
-          <a href="mailto:science@dsom.ru" className="block text-sm hover:text-accent transition-colors">science@dsom.ru</a>
+          <Link to="/page/contacts" className="block text-sm hover:text-accent transition-colors">
+            {lang === "en" ? "Contacts & details" : "Контакты и реквизиты"}
+          </Link>
+          <a href="mailto:hello@dsom.ru" className="block text-sm hover:text-accent transition-colors mt-1">hello@dsom.ru</a>
           <p className="text-sm text-background/70 mt-1">@DSOM</p>
         </div>
 
@@ -41,7 +44,9 @@ const Footer = () => {
             <Link to="/page/about" className="hover:text-accent transition-colors">{t("nav.about")}</Link>
             <Link to="/page/philosophy" className="hover:text-accent transition-colors">{lang === "en" ? "Philosophy" : "Философия"}</Link>
             <Link to="/page/delivery" className="hover:text-accent transition-colors">{lang === "en" ? "Where to buy" : "Где купить"}</Link>
-            <Link to="/page/delivery-returns" className="hover:text-accent transition-colors">{lang === "en" ? "Delivery & returns" : "Доставка и возврат"}</Link>
+            <Link to="/page/delivery-returns" className="hover:text-accent transition-colors">{lang === "en" ? "Delivery" : "Доставка"}</Link>
+            <Link to="/page/care" className="hover:text-accent transition-colors">{lang === "en" ? "Client care" : "Забота о клиентах"}</Link>
+            <Link to="/page/contacts" className="hover:text-accent transition-colors">{lang === "en" ? "Contacts" : "Контакты"}</Link>
             <Link to="/favorites" className="hover:text-accent transition-colors">{lang === "en" ? "Favorites" : "Избранное"}</Link>
           </div>
         </div>
