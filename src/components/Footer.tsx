@@ -39,7 +39,9 @@ const Footer = () => {
           <div className="flex flex-col gap-2 text-sm">
             <Link to="/catalog" className="hover:text-accent transition-colors">{t("nav.catalog")}</Link>
             <Link to="/page/about" className="hover:text-accent transition-colors">{t("nav.about")}</Link>
-            <Link to="/page/delivery" className="hover:text-accent transition-colors">{lang === "en" ? "Delivery" : "Доставка"}</Link>
+            <Link to="/page/philosophy" className="hover:text-accent transition-colors">{lang === "en" ? "Philosophy" : "Философия"}</Link>
+            <Link to="/page/delivery" className="hover:text-accent transition-colors">{lang === "en" ? "Where to buy" : "Где купить"}</Link>
+            <Link to="/page/delivery-returns" className="hover:text-accent transition-colors">{lang === "en" ? "Delivery & returns" : "Доставка и возврат"}</Link>
             <Link to="/favorites" className="hover:text-accent transition-colors">{lang === "en" ? "Favorites" : "Избранное"}</Link>
           </div>
         </div>
