@@ -17,6 +17,8 @@ import NotFound from "./pages/NotFound.tsx";
 import Favorites from "./pages/Favorites.tsx";
 import CmsPage from "./pages/CmsPage.tsx";
 import Quiz from "./pages/Quiz.tsx";
+import Account from "./pages/Account.tsx";
+import Unsubscribe from "./pages/Unsubscribe.tsx";
 
 import AdminLogin from "./pages/admin/AdminLogin.tsx";
 import Dashboard from "./pages/admin/Dashboard.tsx";
@@ -31,6 +33,8 @@ import SocialAdmin from "./pages/admin/SocialAdmin.tsx";
 import PagesAdmin from "./pages/admin/PagesAdmin.tsx";
 import UsersAdmin from "./pages/admin/UsersAdmin.tsx";
 import NewsletterAdmin from "./pages/admin/NewsletterAdmin.tsx";
+import CampaignsAdmin from "./pages/admin/CampaignsAdmin.tsx";
+import CampaignEdit from "./pages/admin/CampaignEdit.tsx";
 import PromoCodesAdmin from "./pages/admin/PromoCodesAdmin.tsx";
 import ReviewsAdmin from "./pages/admin/ReviewsAdmin.tsx";
 import StockAlertsAdmin from "./pages/admin/StockAlertsAdmin.tsx";
@@ -57,6 +61,8 @@ const App = () => (
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/page/:slug" element={<CmsPage />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/account" element={<Account />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
 
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<Protected><Dashboard /></Protected>} />
@@ -71,6 +77,8 @@ const App = () => (
             <Route path="/admin/pages" element={<Protected><PagesAdmin /></Protected>} />
             <Route path="/admin/users" element={<Protected admin><UsersAdmin /></Protected>} />
             <Route path="/admin/newsletter" element={<Protected><NewsletterAdmin /></Protected>} />
+            <Route path="/admin/campaigns" element={<Protected><CampaignsAdmin /></Protected>} />
+            <Route path="/admin/campaigns/:id" element={<Protected><CampaignEdit /></Protected>} />
             <Route path="/admin/promo" element={<Protected><PromoCodesAdmin /></Protected>} />
             <Route path="/admin/reviews" element={<Protected><ReviewsAdmin /></Protected>} />
             <Route path="/admin/stock-alerts" element={<Protected><StockAlertsAdmin /></Protected>} />
