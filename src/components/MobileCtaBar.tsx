@@ -11,15 +11,29 @@ const MobileCtaBar = () => {
   const { t, i18n } = useTranslation();
   const { pathname } = useLocation();
   const [visible, setVisible] = useState(false);
+  const [overDark, setOverDark] = useState(false);
 
   useEffect(() => {
     const onScroll = () => {
       setVisible(window.scrollY > 400);
+      const footer = document.querySelector("footer");
+      if (footer) {
+        const rect = footer.getBoundingClientRect();
+        // CTA sits ~bottom-4 (16px) + button height (~56px) → check ~90px from bottom
+        const ctaY = window.innerHeight - 90;
+        setOverDark(rect.top <= ctaY);
+      } else {
+        setOverDark(false);
+      }
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [pathname]);
 
   const hidden =
     pathname.startsWith("/admin") ||
@@ -38,7 +52,11 @@ const MobileCtaBar = () => {
     >
       <Link
         to="/catalog"
-        className="flex items-center justify-center gap-3 w-full bg-foreground text-background rounded-full py-4 text-[12px] tracking-luxe uppercase shadow-lg hover:bg-accent transition-colors"
+        className={`flex items-center justify-center gap-3 w-full rounded-full py-4 text-[12px] tracking-luxe uppercase shadow-lg transition-colors duration-500 ${
+          overDark
+            ? "bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+            : "bg-foreground text-background hover:bg-accent hover:text-accent-foreground"
+        }`}
       >
         <ShoppingBag className="w-4 h-4" />
         <span>{label}</span>
