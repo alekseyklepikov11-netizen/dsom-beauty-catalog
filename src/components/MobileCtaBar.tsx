@@ -52,7 +52,11 @@ const MobileCtaBar = () => {
     >
       <Link
         to="/catalog"
-        className="flex items-center justify-center gap-3 w-full bg-foreground text-background rounded-full py-4 text-[12px] tracking-luxe uppercase shadow-lg hover:bg-accent transition-colors"
+        className={`flex items-center justify-center gap-3 w-full rounded-full py-4 text-[12px] tracking-luxe uppercase shadow-lg transition-colors duration-500 ${
+          overDark
+            ? "bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+            : "bg-foreground text-background hover:bg-accent hover:text-accent-foreground"
+        }`}
       >
         <ShoppingBag className="w-4 h-4" />
         <span>{label}</span>
