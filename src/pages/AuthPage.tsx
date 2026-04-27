@@ -1,10 +1,24 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Check } from "lucide-react";
 import Header from "@/components/Header";
+
+// Public site key — safe to expose in client code
+const TURNSTILE_SITE_KEY = "0x4AAAAAADESddF-sUahSVGU";
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (el: HTMLElement, opts: Record<string, unknown>) => string;
+      reset: (id?: string) => void;
+      remove: (id?: string) => void;
+    };
+    onTurnstileLoad?: () => void;
+  }
+}
 
 const AuthPage = () => {
   const { t } = useTranslation();
@@ -17,18 +31,95 @@ const AuthPage = () => {
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+
+  const captchaRef = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef<string | null>(null);
+
+  // Load Turnstile script + render widget on signup mode
+  useEffect(() => {
+    if (mode !== "signup") {
+      // cleanup widget when leaving signup mode
+      if (widgetIdRef.current && window.turnstile) {
+        try { window.turnstile.remove(widgetIdRef.current); } catch {}
+        widgetIdRef.current = null;
+      }
+      setCaptchaToken(null);
+      return;
+    }
+
+    const renderWidget = () => {
+      if (!captchaRef.current || !window.turnstile || widgetIdRef.current) return;
+      widgetIdRef.current = window.turnstile.render(captchaRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        theme: "light",
+        callback: (token: string) => setCaptchaToken(token),
+        "expired-callback": () => setCaptchaToken(null),
+        "error-callback": () => setCaptchaToken(null),
+      });
+    };
+
+    if (window.turnstile) {
+      renderWidget();
+      return;
+    }
+
+    const existing = document.querySelector('script[data-turnstile]');
+    if (!existing) {
+      const s = document.createElement("script");
+      s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad";
+      s.async = true;
+      s.defer = true;
+      s.setAttribute("data-turnstile", "1");
+      window.onTurnstileLoad = renderWidget;
+      document.head.appendChild(s);
+    } else {
+      window.onTurnstileLoad = renderWidget;
+    }
+
+    return () => {
+      if (widgetIdRef.current && window.turnstile) {
+        try { window.turnstile.remove(widgetIdRef.current); } catch {}
+        widgetIdRef.current = null;
+      }
+    };
+  }, [mode]);
+
+  const resetCaptcha = () => {
+    setCaptchaToken(null);
+    if (widgetIdRef.current && window.turnstile) {
+      try { window.turnstile.reset(widgetIdRef.current); } catch {}
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (mode === "signup" && !pdnConsent) {
-      toast.error("Необходимо согласие на обработку персональных данных");
-      return;
+    if (mode === "signup") {
+      if (!pdnConsent) {
+        toast.error("Необходимо согласие на обработку персональных данных");
+        return;
+      }
+      if (!captchaToken) {
+        toast.error("Пожалуйста, подтвердите, что вы не робот");
+        return;
+      }
     }
 
     setLoading(true);
     try {
       if (mode === "signup") {
+        // 1) Verify captcha server-side
+        const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
+          "verify-turnstile",
+          { body: { token: captchaToken } },
+        );
+        if (verifyError || !verifyData?.success) {
+          resetCaptcha();
+          throw new Error("Проверка капчи не пройдена. Попробуйте ещё раз.");
+        }
+
+        // 2) Sign up
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -50,6 +141,7 @@ const AuthPage = () => {
       }
     } catch (err: any) {
       toast.error(err.message || "Что-то пошло не так");
+      if (mode === "signup") resetCaptcha();
     } finally {
       setLoading(false);
     }
@@ -163,6 +255,11 @@ const AuthPage = () => {
                   Хочу получать новости, специальные предложения и информацию о новинках DSOM на email. Отписаться можно в любой момент.
                 </span>
               </label>
+
+              {/* Cloudflare Turnstile widget */}
+              <div className="pt-2 flex justify-center">
+                <div ref={captchaRef} />
+              </div>
             </div>
           )}
 
