@@ -59,6 +59,33 @@ const rewriteConfirmationUrl = (rawUrl: string | undefined, emailType: string) =
   }
 }
 
+const getStringValue = (value: unknown) => (typeof value === 'string' ? value : '')
+
+const buildConfirmationUrl = (data: Record<string, unknown>, emailType: string) => {
+  if (emailType !== 'recovery') {
+    return rewriteConfirmationUrl(getStringValue(data.url), emailType)
+  }
+
+  const tokenHash = getStringValue(data.token_hash)
+  const token = getStringValue(data.token)
+  const email = getStringValue(data.email)
+  const recoveryUrl = new URL(getRedirectUrl(emailType))
+  recoveryUrl.searchParams.set('type', 'recovery')
+
+  if (tokenHash) {
+    recoveryUrl.searchParams.set('token_hash', tokenHash)
+    return recoveryUrl.toString()
+  }
+
+  if (token && email) {
+    recoveryUrl.searchParams.set('token', token)
+    recoveryUrl.searchParams.set('email', email)
+    return recoveryUrl.toString()
+  }
+
+  return rewriteConfirmationUrl(getStringValue(data.url), emailType)
+}
+
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
 // The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
@@ -243,7 +270,7 @@ async function handleWebhook(req: Request): Promise<Response> {
     siteName: SITE_NAME,
     siteUrl: PRIMARY_APP_URL,
     recipient: payload.data.email,
-    confirmationUrl: rewriteConfirmationUrl(payload.data.url, emailType),
+    confirmationUrl: buildConfirmationUrl(payload.data, emailType),
     token: payload.data.token,
     email: payload.data.email,
     newEmail: payload.data.new_email,
