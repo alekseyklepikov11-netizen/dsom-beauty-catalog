@@ -12,10 +12,46 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [ready, setReady] = useState(false);
+  const [linkError, setLinkError] = useState("");
 
   // Supabase auto-creates a recovery session from the magic link in URL hash.
   // We listen for it before allowing the form.
   useEffect(() => {
+    const prepareRecoverySession = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const tokenHash = params.get("token_hash");
+      const token = params.get("token");
+      const email = params.get("email");
+
+      try {
+        if (tokenHash) {
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: "recovery",
+          });
+          if (error) throw error;
+          window.history.replaceState(null, "", "/reset-password");
+          setReady(true);
+          return;
+        }
+
+        if (token && email) {
+          const { error } = await supabase.auth.verifyOtp({
+            email,
+            token,
+            type: "recovery",
+          });
+          if (error) throw error;
+          window.history.replaceState(null, "", "/reset-password");
+          setReady(true);
+        }
+      } catch {
+        setLinkError("Ссылка восстановления устарела или уже была использована. Запросите новую ссылку.");
+      }
+    };
+
+    prepareRecoverySession();
+
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
         setReady(true);
@@ -80,7 +116,17 @@ const ResetPassword = () => {
           Придумайте новый пароль для вашего аккаунта
         </p>
 
-        {!ready ? (
+        {linkError ? (
+          <div className="text-center space-y-6">
+            <p className="text-sm text-muted-foreground leading-relaxed">{linkError}</p>
+            <Link
+              to="/auth"
+              className="inline-flex bg-foreground text-background py-3.5 px-8 rounded-full text-[11px] tracking-luxe uppercase hover:bg-accent transition-colors"
+            >
+              Запросить новую ссылку
+            </Link>
+          </div>
+        ) : !ready ? (
           <p className="text-center text-sm text-muted-foreground">
             Проверяем ссылку восстановления…
           </p>
