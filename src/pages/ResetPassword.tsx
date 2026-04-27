@@ -66,8 +66,8 @@ const ResetPassword = () => {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 8) {
-      toast.error("Минимум 8 символов");
+    if (!password) {
+      toast.error("Введите новый пароль");
       return;
     }
     if (password !== confirm) {
@@ -78,6 +78,7 @@ const ResetPassword = () => {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
+      toast.success("Пароль успешно создан. Теперь войдите с новым паролем");
       setDone(true);
       // log out so user signs in with new password
       setTimeout(async () => {
@@ -85,7 +86,10 @@ const ResetPassword = () => {
         navigate("/auth");
       }, 2000);
     } catch (err: any) {
-      toast.error(err.message || "Не удалось обновить пароль");
+      const message = (err.message || "").toLowerCase().includes("password should be at least")
+        ? "Пароль слишком короткий"
+        : err.message || "Не удалось обновить пароль";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -139,11 +143,9 @@ const ResetPassword = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={8}
                 autoComplete="new-password"
                 className="mt-1.5 w-full bg-transparent border-b border-border focus:border-foreground outline-none py-2 text-sm"
               />
-              <p className="text-[10px] text-muted-foreground/70 mt-2">Минимум 8 символов</p>
             </div>
             <div>
               <label className="text-[10px] tracking-luxe uppercase text-muted-foreground">Повторите пароль</label>
@@ -152,7 +154,6 @@ const ResetPassword = () => {
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 required
-                minLength={8}
                 autoComplete="new-password"
                 className="mt-1.5 w-full bg-transparent border-b border-border focus:border-foreground outline-none py-2 text-sm"
               />
