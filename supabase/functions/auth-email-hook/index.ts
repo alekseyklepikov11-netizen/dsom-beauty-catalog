@@ -39,14 +39,32 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 const SITE_NAME = "DSOM"
 const SENDER_DOMAIN = "notify.dsom.ru"
 const ROOT_DOMAIN = "dsom.ru"
+const PRIMARY_APP_URL = `https://${ROOT_DOMAIN}`
 const FROM_DOMAIN = "dsom.ru" // Domain shown in From address (may be root or sender subdomain)
+
+const getRedirectUrl = (emailType: string) => {
+  if (emailType === 'recovery') return `${PRIMARY_APP_URL}/reset-password`
+  return `${PRIMARY_APP_URL}/`
+}
+
+const rewriteConfirmationUrl = (rawUrl: string | undefined, emailType: string) => {
+  if (!rawUrl) return getRedirectUrl(emailType)
+
+  try {
+    const url = new URL(rawUrl)
+    url.searchParams.set('redirect_to', getRedirectUrl(emailType))
+    return url.toString()
+  } catch {
+    return rawUrl
+  }
+}
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
 // The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
 // can always find-and-replace it with the actual recipient when sending test emails,
 // even if the project's domain has changed since the template was scaffolded.
-const SAMPLE_PROJECT_URL = "https://dsom-beauty-catalog.lovable.app"
+const SAMPLE_PROJECT_URL = PRIMARY_APP_URL
 const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, object> = {
   signup: {
@@ -223,9 +241,9 @@ async function handleWebhook(req: Request): Promise<Response> {
   // Build template props from payload.data (HookData structure)
   const templateProps = {
     siteName: SITE_NAME,
-    siteUrl: `https://${ROOT_DOMAIN}`,
+    siteUrl: PRIMARY_APP_URL,
     recipient: payload.data.email,
-    confirmationUrl: payload.data.url,
+    confirmationUrl: rewriteConfirmationUrl(payload.data.url, emailType),
     token: payload.data.token,
     email: payload.data.email,
     newEmail: payload.data.new_email,
