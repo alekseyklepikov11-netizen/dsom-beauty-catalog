@@ -915,6 +915,113 @@ export type Database = {
         }
         Relationships: []
       }
+      support_channels: {
+        Row: {
+          created_at: string
+          description: string | null
+          description_en: string | null
+          email: string
+          id: string
+          is_active: boolean
+          label: string
+          label_en: string | null
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          description_en?: string | null
+          email: string
+          id?: string
+          is_active?: boolean
+          label: string
+          label_en?: string | null
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          description_en?: string | null
+          email?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          label_en?: string | null
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      support_tickets: {
+        Row: {
+          channel_id: string | null
+          channel_slug: string | null
+          conversation_excerpt: string | null
+          created_at: string
+          email_error: string | null
+          email_sent: boolean
+          forwarded_to: string | null
+          id: string
+          message: string
+          meta: Json
+          status: string
+          subject: string | null
+          updated_at: string
+          user_email: string
+          user_id: string | null
+          user_name: string | null
+        }
+        Insert: {
+          channel_id?: string | null
+          channel_slug?: string | null
+          conversation_excerpt?: string | null
+          created_at?: string
+          email_error?: string | null
+          email_sent?: boolean
+          forwarded_to?: string | null
+          id?: string
+          message: string
+          meta?: Json
+          status?: string
+          subject?: string | null
+          updated_at?: string
+          user_email: string
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          channel_id?: string | null
+          channel_slug?: string | null
+          conversation_excerpt?: string | null
+          created_at?: string
+          email_error?: string | null
+          email_sent?: boolean
+          forwarded_to?: string | null
+          id?: string
+          message?: string
+          meta?: Json
+          status?: string
+          subject?: string | null
+          updated_at?: string
+          user_email?: string
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "support_channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
