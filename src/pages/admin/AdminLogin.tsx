@@ -22,10 +22,14 @@ const AdminLogin = () => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      toast.success("Вы успешно вошли в аккаунт");
       // wait a tick for roles
       setTimeout(() => navigate("/admin", { replace: true }), 200);
     } catch (err: any) {
-      toast.error(err.message || "Ошибка входа");
+      const message = (err.message || "").toLowerCase().includes("invalid login credentials")
+        ? "Неверный email или пароль"
+        : err.message || "Ошибка входа";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
