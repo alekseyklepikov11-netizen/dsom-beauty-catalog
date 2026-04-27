@@ -1,0 +1,1 @@
+UPDATE public.banners SET cta_url = '/catalog' WHERE position = 'home_hero' AND (cta_url IS NULL OR cta_url = '' OR cta_url = '/about');
