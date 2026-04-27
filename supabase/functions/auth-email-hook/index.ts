@@ -38,8 +38,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 // Configuration
 const SITE_NAME = "DSOM"
 const SENDER_DOMAIN = "notify.dsom.ru"
-const ROOT_DOMAIN = "dsom.ru"
-const PRIMARY_APP_URL = `https://${ROOT_DOMAIN}`
+const PRIMARY_APP_URL = "https://dsom-beauty-catalog.lovable.app"
 const FROM_DOMAIN = "dsom.ru" // Domain shown in From address (may be root or sender subdomain)
 
 const getRedirectUrl = (emailType: string) => {

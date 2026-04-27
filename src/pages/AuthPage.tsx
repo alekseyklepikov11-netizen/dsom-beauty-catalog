@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 
 // Public site key — safe to expose in client code
 const TURNSTILE_SITE_KEY = "0x4AAAAAADESddF-sUahSVGU";
+const APP_URL = "https://dsom-beauty-catalog.lovable.app";
 
 declare global {
   interface Window {
@@ -135,7 +136,7 @@ const AuthPage = () => {
               full_name: name,
               marketing_consent: marketingConsent,
             },
-            emailRedirectTo: "https://dsom.ru/",
+            emailRedirectTo: `${APP_URL}/`,
           },
         });
         if (error) throw error;
@@ -156,7 +157,7 @@ const AuthPage = () => {
         navigate("/");
       } else if (mode === "forgot") {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: "https://dsom.ru/reset-password",
+          redirectTo: `${APP_URL}/reset-password`,
         });
         if (error) throw error;
         setSubmitted("forgot");
@@ -301,15 +302,6 @@ const AuthPage = () => {
             <div>
               <div className="flex items-center justify-between">
                 <label className="text-[10px] tracking-luxe uppercase text-muted-foreground">Пароль</label>
-                {mode === "signin" && (
-                  <button
-                    type="button"
-                    onClick={() => switchMode("forgot")}
-                    className="text-[10px] tracking-luxe uppercase text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Забыли?
-                  </button>
-                )}
               </div>
               <input
                 type="password"
@@ -375,15 +367,25 @@ const AuthPage = () => {
 
         <div className="text-center text-xs text-muted-foreground mt-8 space-y-2">
           {mode === "signin" && (
-            <p>
-              Ещё нет аккаунта?{" "}
-              <button
-                onClick={() => switchMode("signup")}
-                className="text-foreground border-b border-foreground hover:text-accent hover:border-accent transition-colors"
-              >
-                Регистрация
-              </button>
-            </p>
+            <>
+              <p>
+                <button
+                  onClick={() => switchMode("forgot")}
+                  className="text-foreground border-b border-foreground hover:text-accent hover:border-accent transition-colors"
+                >
+                  Забыли пароль?
+                </button>
+              </p>
+              <p>
+                Ещё нет аккаунта?{" "}
+                <button
+                  onClick={() => switchMode("signup")}
+                  className="text-foreground border-b border-foreground hover:text-accent hover:border-accent transition-colors"
+                >
+                  Регистрация
+                </button>
+              </p>
+            </>
           )}
           {mode === "signup" && (
             <p>
