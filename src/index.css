@@ -87,6 +87,22 @@
   .tracking-luxe {
     letter-spacing: 0.28em;
   }
+
+  /* Убираем подсветку при тапе и фокусе от клика/скролла на мобильных.
+     Видимый focus-ring остаётся только при навигации с клавиатуры (focus-visible). */
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  a, button, [role="button"], input, textarea, select, label, summary {
+    -webkit-tap-highlight-color: transparent;
+  }
+  a:focus:not(:focus-visible),
+  button:focus:not(:focus-visible),
+  [role="button"]:focus:not(:focus-visible),
+  [tabindex]:focus:not(:focus-visible) {
+    outline: none;
+    box-shadow: none;
+  }
 }
 
 @layer utilities {
