@@ -17,12 +17,12 @@ const corsHeaders = {
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Confirm your email',
-  invite: "You've been invited",
-  magiclink: 'Your login link',
-  recovery: 'Reset your password',
-  email_change: 'Confirm your new email',
-  reauthentication: 'Your verification code',
+  signup: 'Подтвердите email — DSOM',
+  invite: 'Приглашение в DSOM',
+  magiclink: 'Ссылка для входа в DSOM',
+  recovery: 'Сброс пароля — DSOM',
+  email_change: 'Подтвердите новый email — DSOM',
+  reauthentication: 'Код подтверждения — DSOM',
 }
 
 // Template mapping
@@ -36,7 +36,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "dsom-beauty-catalog"
+const SITE_NAME = "DSOM"
 const SENDER_DOMAIN = "notify.dsom.ru"
 const ROOT_DOMAIN = "dsom.ru"
 const FROM_DOMAIN = "dsom.ru" // Domain shown in From address (may be root or sender subdomain)
@@ -57,10 +57,12 @@ const SAMPLE_DATA: Record<string, object> = {
   },
   magiclink: {
     siteName: SITE_NAME,
+    siteUrl: SAMPLE_PROJECT_URL,
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   recovery: {
     siteName: SITE_NAME,
+    siteUrl: SAMPLE_PROJECT_URL,
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   invite: {
@@ -70,6 +72,7 @@ const SAMPLE_DATA: Record<string, object> = {
   },
   email_change: {
     siteName: SITE_NAME,
+    siteUrl: SAMPLE_PROJECT_URL,
     email: SAMPLE_EMAIL,
     newEmail: SAMPLE_EMAIL,
     confirmationUrl: SAMPLE_PROJECT_URL,
