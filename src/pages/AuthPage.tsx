@@ -135,7 +135,7 @@ const AuthPage = () => {
               full_name: name,
               marketing_consent: marketingConsent,
             },
-            emailRedirectTo: `${window.location.origin}/`,
+            emailRedirectTo: "https://dsom.ru/",
           },
         });
         if (error) throw error;
@@ -156,7 +156,7 @@ const AuthPage = () => {
         navigate("/");
       } else if (mode === "forgot") {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`,
+          redirectTo: "https://dsom.ru/reset-password",
         });
         if (error) throw error;
         setSubmitted("forgot");
