@@ -10,6 +10,14 @@ import Header from "@/components/Header";
 const TURNSTILE_SITE_KEY = "0x4AAAAAADESddF-sUahSVGU";
 const APP_URL = "https://dsom.ru";
 
+const getAuthErrorMessage = (message?: string) => {
+  const normalized = (message || "").toLowerCase();
+  if (normalized.includes("invalid login credentials")) return "Неверный email или пароль";
+  if (normalized.includes("email not confirmed")) return "Подтвердите email перед входом";
+  if (normalized.includes("password should be at least")) return "Пароль слишком короткий";
+  return message || "Что-то пошло не так";
+};
+
 declare global {
   interface Window {
     turnstile?: {
@@ -153,7 +161,7 @@ const AuthPage = () => {
       } else if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        toast.success("С возвращением.");
+        toast.success("Вы успешно вошли в аккаунт");
         navigate("/");
       } else if (mode === "forgot") {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -163,7 +171,7 @@ const AuthPage = () => {
         setSubmitted("forgot");
       }
     } catch (err: any) {
-      toast.error(err.message || "Что-то пошло не так");
+      toast.error(getAuthErrorMessage(err.message));
       if (mode === "signup") resetCaptcha();
     } finally {
       setLoading(false);
@@ -307,13 +315,10 @@ const AuthPage = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required minLength={8}
+                required
                 autoComplete={mode === "signup" ? "new-password" : "current-password"}
                 className="mt-1.5 w-full bg-transparent border-b border-border focus:border-foreground outline-none py-2 text-sm"
               />
-              {mode === "signup" && (
-                <p className="text-[10px] text-muted-foreground/70 mt-2">Минимум 8 символов</p>
-              )}
             </div>
           )}
 
