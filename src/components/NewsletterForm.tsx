@@ -48,6 +48,18 @@ const NewsletterForm = ({ source = "footer" }: { source?: string }) => {
     setDone(true);
     track("newsletter_signup", { value: source });
     toast.success(lang === "en" ? "Thanks for subscribing!" : "Спасибо за подписку!");
+
+    // Send branded confirmation email (best-effort, don't block UX)
+    supabase.functions
+      .invoke("send-transactional-email", {
+        body: {
+          templateName: "newsletter-confirmation",
+          recipientEmail: parsed.data.email.toLowerCase(),
+          idempotencyKey: `newsletter-confirm-${parsed.data.email.toLowerCase()}`,
+          templateData: { recipient: parsed.data.email.toLowerCase() },
+        },
+      })
+      .catch((err) => console.error("Failed to send confirmation email", err));
   };
 
   if (done) {
