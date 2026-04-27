@@ -110,7 +110,7 @@ const Index = () => {
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             {/* Primary — white pill with play */}
             <Link
-              to={banner?.cta_url || "/catalog"}
+              to={banner?.cta_url && banner.cta_url.trim() ? banner.cta_url : "/catalog"}
               onClick={() => banner && track("banner_click", { banner_id: banner.id, value: banner.ab_group || "default" })}
               className="group inline-flex items-center gap-3 bg-white text-[#111] rounded-full pl-2 pr-7 py-2 font-barlow font-medium text-[14px] hover:bg-white/90 transition-colors"
             >
@@ -121,9 +121,12 @@ const Index = () => {
             </Link>
 
             {/* Secondary — ghost outlined */}
-            <button className="inline-flex items-center gap-2 bg-transparent text-white rounded-full px-6 py-3 font-barlow font-medium text-[14px] border border-white/40 hover:bg-white/10 transition-colors">
+            <Link
+              to="/quiz"
+              className="inline-flex items-center gap-2 bg-transparent text-white rounded-full px-6 py-3 font-barlow font-medium text-[14px] border border-white/40 hover:bg-white/10 transition-colors"
+            >
               <span>{lang === "en" ? "Watch the ritual" : "Посмотреть ритуал"}</span>
-            </button>
+            </Link>
           </div>
         </div>
 
