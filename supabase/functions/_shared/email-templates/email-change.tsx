@@ -8,14 +8,17 @@ import {
   Container,
   Head,
   Heading,
+  Hr,
   Html,
   Link,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
 interface EmailChangeEmailProps {
   siteName: string
+  siteUrl: string
   email: string
   newEmail: string
   confirmationUrl: string
@@ -23,36 +26,53 @@ interface EmailChangeEmailProps {
 
 export const EmailChangeEmail = ({
   siteName,
+  siteUrl,
   email,
   newEmail,
   confirmationUrl,
 }: EmailChangeEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="ru" dir="ltr">
     <Head />
-    <Preview>Confirm your email change for {siteName}</Preview>
+    <Preview>Подтвердите смену email — DSOM</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm your email change</Heading>
+        <Section style={brand}>
+          <Text style={brandMark}>— DSOM</Text>
+        </Section>
+        <Heading style={h1}>Подтвердите смену email</Heading>
         <Text style={text}>
-          You requested to change your email address for {siteName} from{' '}
+          Вы запросили смену адреса электронной почты в DSOM с{' '}
           <Link href={`mailto:${email}`} style={link}>
             {email}
           </Link>{' '}
-          to{' '}
+          на{' '}
           <Link href={`mailto:${newEmail}`} style={link}>
             {newEmail}
           </Link>
-          .
+          . Нажмите кнопку ниже, чтобы подтвердить изменение.
         </Text>
-        <Text style={text}>
-          Click the button below to confirm this change:
+        <Section style={buttonWrap}>
+          <Button style={button} href={confirmationUrl}>
+            Подтвердить смену
+          </Button>
+        </Section>
+        <Text style={smallText}>
+          Если кнопка не работает, скопируйте ссылку:
+          <br />
+          <Link href={confirmationUrl} style={link}>
+            {confirmationUrl}
+          </Link>
         </Text>
-        <Button style={button} href={confirmationUrl}>
-          Confirm Email Change
-        </Button>
+        <Hr style={hr} />
         <Text style={footer}>
-          If you didn't request this change, please secure your account
-          immediately.
+          Если вы не запрашивали это изменение, немедленно защитите свой
+          аккаунт — смените пароль.
+        </Text>
+        <Text style={footerBrand}>
+          <Link href={siteUrl} style={footerLink}>
+            {siteName}
+          </Link>
+          {' · '}Уход за кожей с характером
         </Text>
       </Container>
     </Body>
@@ -61,27 +81,87 @@ export const EmailChangeEmail = ({
 
 export default EmailChangeEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
+const main = {
+  backgroundColor: '#ffffff',
+  fontFamily: "'Inter', Arial, sans-serif",
+  margin: 0,
+  padding: 0,
+}
+const container = {
+  maxWidth: '560px',
+  margin: '0 auto',
+  padding: '40px 32px',
+  backgroundColor: 'hsl(36, 33%, 96%)',
+}
+const brand = { marginBottom: '32px' }
+const brandMark = {
+  fontSize: '11px',
+  letterSpacing: '0.2em',
+  textTransform: 'uppercase' as const,
+  color: 'hsl(18, 38%, 52%)',
+  margin: 0,
+  fontWeight: 500 as const,
+}
 const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
+  fontFamily: "'Cormorant Garamond', Georgia, serif",
+  fontSize: '40px',
+  fontWeight: 400 as const,
+  color: 'hsl(30, 12%, 14%)',
+  margin: '0 0 24px',
+  lineHeight: 1.1,
+  letterSpacing: '-0.01em',
 }
 const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
+  fontSize: '15px',
+  color: 'hsl(30, 12%, 14%)',
+  lineHeight: 1.6,
+  margin: '0 0 28px',
+  fontWeight: 300 as const,
 }
-const link = { color: 'inherit', textDecoration: 'underline' }
+const buttonWrap = { margin: '0 0 32px' }
 const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
+  backgroundColor: 'hsl(30, 12%, 14%)',
+  color: 'hsl(36, 33%, 96%)',
+  fontSize: '11px',
+  letterSpacing: '0.2em',
+  textTransform: 'uppercase' as const,
+  borderRadius: '999px',
+  padding: '14px 32px',
+  textDecoration: 'none',
+  display: 'inline-block',
+  fontWeight: 500 as const,
+}
+const link = {
+  color: 'hsl(18, 38%, 52%)',
+  textDecoration: 'underline',
+  textUnderlineOffset: '2px',
+}
+const smallText = {
+  fontSize: '12px',
+  color: 'hsl(30, 8%, 40%)',
+  lineHeight: 1.6,
+  margin: '0 0 32px',
+  wordBreak: 'break-all' as const,
+}
+const hr = {
+  border: 'none',
+  borderTop: '1px solid hsl(32, 14%, 84%)',
+  margin: '32px 0 24px',
+}
+const footer = {
+  fontSize: '12px',
+  color: 'hsl(30, 8%, 40%)',
+  lineHeight: 1.6,
+  margin: '0 0 12px',
+}
+const footerBrand = {
+  fontSize: '10px',
+  letterSpacing: '0.15em',
+  textTransform: 'uppercase' as const,
+  color: 'hsl(30, 8%, 40%)',
+  margin: 0,
+}
+const footerLink = {
+  color: 'hsl(30, 12%, 14%)',
   textDecoration: 'none',
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
