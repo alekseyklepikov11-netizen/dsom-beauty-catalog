@@ -13,6 +13,7 @@ import Index from "./pages/Index.tsx";
 import Catalog from "./pages/Catalog.tsx";
 import ProductPage from "./pages/ProductPage.tsx";
 import AuthPage from "./pages/AuthPage.tsx";
+import ResetPassword from "./pages/ResetPassword.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Favorites from "./pages/Favorites.tsx";
 import CmsPage from "./pages/CmsPage.tsx";
@@ -62,6 +63,7 @@ const App = () => (
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/page/:slug" element={<CmsPage />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/account" element={<Account />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/email-unsubscribe" element={<EmailUnsubscribe />} />

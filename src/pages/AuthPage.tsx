@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Check } from "lucide-react";
+import { Loader2, Check, Mail } from "lucide-react";
 import Header from "@/components/Header";
 
 // Public site key — safe to expose in client code
@@ -20,17 +20,19 @@ declare global {
   }
 }
 
+type Mode = "signin" | "signup" | "forgot";
+
 const AuthPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [pdnConsent, setPdnConsent] = useState(false);
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState<null | "signup" | "forgot" | "exists">(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const captchaRef = useRef<HTMLDivElement>(null);
@@ -39,7 +41,6 @@ const AuthPage = () => {
   // Load Turnstile script + render widget on signup mode
   useEffect(() => {
     if (mode !== "signup") {
-      // cleanup widget when leaving signup mode
       if (widgetIdRef.current && window.turnstile) {
         try { window.turnstile.remove(widgetIdRef.current); } catch {}
         widgetIdRef.current = null;
@@ -92,6 +93,12 @@ const AuthPage = () => {
     }
   };
 
+  const switchMode = (m: Mode) => {
+    setMode(m);
+    setSubmitted(null);
+    setPassword("");
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -120,7 +127,7 @@ const AuthPage = () => {
         }
 
         // 2) Sign up
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -132,12 +139,27 @@ const AuthPage = () => {
           },
         });
         if (error) throw error;
-        setSubmitted(true);
-      } else {
+
+        // Supabase signal for "user already exists":
+        // returns a user object, but identities array is empty.
+        const identities = data.user?.identities ?? [];
+        if (data.user && identities.length === 0) {
+          setSubmitted("exists");
+          return;
+        }
+
+        setSubmitted("signup");
+      } else if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("С возвращением.");
         navigate("/");
+      } else if (mode === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        setSubmitted("forgot");
       }
     } catch (err: any) {
       toast.error(err.message || "Что-то пошло не так");
@@ -147,7 +169,8 @@ const AuthPage = () => {
     }
   };
 
-  if (submitted) {
+  // ---------- Success / info screens ----------
+  if (submitted === "signup") {
     return (
       <main className="min-h-screen bg-background">
         <Header />
@@ -163,10 +186,7 @@ const AuthPage = () => {
           <p className="text-xs text-muted-foreground/70">
             Если письмо не пришло в течение пары минут, проверьте папку «Спам».
           </p>
-          <Link
-            to="/"
-            className="inline-block mt-12 text-[10px] tracking-luxe uppercase text-muted-foreground/70 hover:text-foreground transition-colors"
-          >
+          <Link to="/" className="inline-block mt-12 text-[10px] tracking-luxe uppercase text-muted-foreground/70 hover:text-foreground transition-colors">
             ← На главную
           </Link>
         </section>
@@ -174,17 +194,83 @@ const AuthPage = () => {
     );
   }
 
+  if (submitted === "forgot") {
+    return (
+      <main className="min-h-screen bg-background">
+        <Header />
+        <section className="container max-w-md py-20 md:py-28 text-center">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-foreground text-background mb-6">
+            <Mail className="w-6 h-6" strokeWidth={1.5} />
+          </div>
+          <h1 className="font-display text-4xl leading-[1.1] mb-3">Письмо отправлено</h1>
+          <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+            Если аккаунт с адресом <span className="text-foreground">{email}</span> существует,
+            мы отправили на него ссылку для восстановления пароля.
+          </p>
+          <p className="text-xs text-muted-foreground/70">
+            Не пришло за пару минут? Проверьте папку «Спам».
+          </p>
+          <button
+            onClick={() => switchMode("signin")}
+            className="inline-block mt-12 text-[10px] tracking-luxe uppercase text-muted-foreground/70 hover:text-foreground transition-colors"
+          >
+            ← К входу
+          </button>
+        </section>
+      </main>
+    );
+  }
+
+  if (submitted === "exists") {
+    return (
+      <main className="min-h-screen bg-background">
+        <Header />
+        <section className="container max-w-md py-20 md:py-28 text-center">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full border border-foreground text-foreground mb-6">
+            <Mail className="w-6 h-6" strokeWidth={1.5} />
+          </div>
+          <h1 className="font-display text-4xl leading-[1.1] mb-3">Аккаунт уже существует</h1>
+          <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+            Пользователь с email <span className="text-foreground">{email}</span> уже зарегистрирован.
+            Войдите в свой аккаунт или восстановите пароль, если забыли его.
+          </p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => switchMode("signin")}
+              className="w-full bg-foreground text-background py-3.5 rounded-full text-[11px] tracking-luxe uppercase hover:bg-accent transition-colors"
+            >
+              Войти в аккаунт
+            </button>
+            <button
+              onClick={() => switchMode("forgot")}
+              className="w-full border border-border text-foreground py-3.5 rounded-full text-[11px] tracking-luxe uppercase hover:border-foreground transition-colors"
+            >
+              Забыли пароль?
+            </button>
+          </div>
+          <Link to="/" className="inline-block mt-12 text-[10px] tracking-luxe uppercase text-muted-foreground/70 hover:text-foreground transition-colors">
+            ← На главную
+          </Link>
+        </section>
+      </main>
+    );
+  }
+
+  // ---------- Form ----------
+  const titles: Record<Mode, { title: string; subtitle: string; cta: string }> = {
+    signin: { title: "Войти", subtitle: "Войдите в аккаунт DSOM", cta: "Войти" },
+    signup: { title: "Регистрация", subtitle: "Создайте аккаунт DSOM", cta: "Создать аккаунт" },
+    forgot: { title: "Восстановление", subtitle: "Введите email — мы отправим ссылку для сброса пароля", cta: "Отправить ссылку" },
+  };
+  const { title, subtitle, cta } = titles[mode];
+
   return (
     <main className="min-h-screen bg-background">
       <Header />
       <section className="container max-w-md py-20 md:py-28">
         <p className="text-[11px] tracking-luxe uppercase text-accent text-center mb-4">— DSOM</p>
-        <h1 className="font-display text-5xl text-center leading-[1] mb-2">
-          {mode === "signin" ? "Войти" : "Регистрация"}
-        </h1>
-        <p className="text-sm text-muted-foreground text-center mb-10">
-          {mode === "signin" ? "Войдите в аккаунт DSOM" : "Создайте аккаунт DSOM"}
-        </p>
+        <h1 className="font-display text-5xl text-center leading-[1] mb-2">{title}</h1>
+        <p className="text-sm text-muted-foreground text-center mb-10">{subtitle}</p>
 
         <form onSubmit={submit} className="space-y-5">
           {mode === "signup" && (
@@ -210,20 +296,34 @@ const AuthPage = () => {
               className="mt-1.5 w-full bg-transparent border-b border-border focus:border-foreground outline-none py-2 text-sm"
             />
           </div>
-          <div>
-            <label className="text-[10px] tracking-luxe uppercase text-muted-foreground">Пароль</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required minLength={8}
-              autoComplete={mode === "signup" ? "new-password" : "current-password"}
-              className="mt-1.5 w-full bg-transparent border-b border-border focus:border-foreground outline-none py-2 text-sm"
-            />
-            {mode === "signup" && (
-              <p className="text-[10px] text-muted-foreground/70 mt-2">Минимум 8 символов</p>
-            )}
-          </div>
+
+          {mode !== "forgot" && (
+            <div>
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] tracking-luxe uppercase text-muted-foreground">Пароль</label>
+                {mode === "signin" && (
+                  <button
+                    type="button"
+                    onClick={() => switchMode("forgot")}
+                    className="text-[10px] tracking-luxe uppercase text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Забыли?
+                  </button>
+                )}
+              </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required minLength={8}
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                className="mt-1.5 w-full bg-transparent border-b border-border focus:border-foreground outline-none py-2 text-sm"
+              />
+              {mode === "signup" && (
+                <p className="text-[10px] text-muted-foreground/70 mt-2">Минимум 8 символов</p>
+              )}
+            </div>
+          )}
 
           {mode === "signup" && (
             <div className="space-y-3 pt-2">
@@ -269,19 +369,45 @@ const AuthPage = () => {
             className="w-full mt-4 bg-foreground text-background py-3.5 rounded-full text-[11px] tracking-luxe uppercase hover:bg-accent transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
           >
             {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-            {mode === "signin" ? "Войти" : "Создать аккаунт"}
+            {cta}
           </button>
         </form>
 
-        <p className="text-center text-xs text-muted-foreground mt-8">
-          {mode === "signin" ? "Ещё нет аккаунта?" : "Уже есть аккаунт?"}{" "}
-          <button
-            onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-            className="text-foreground border-b border-foreground hover:text-accent hover:border-accent transition-colors"
-          >
-            {mode === "signin" ? "Регистрация" : "Войти"}
-          </button>
-        </p>
+        <div className="text-center text-xs text-muted-foreground mt-8 space-y-2">
+          {mode === "signin" && (
+            <p>
+              Ещё нет аккаунта?{" "}
+              <button
+                onClick={() => switchMode("signup")}
+                className="text-foreground border-b border-foreground hover:text-accent hover:border-accent transition-colors"
+              >
+                Регистрация
+              </button>
+            </p>
+          )}
+          {mode === "signup" && (
+            <p>
+              Уже есть аккаунт?{" "}
+              <button
+                onClick={() => switchMode("signin")}
+                className="text-foreground border-b border-foreground hover:text-accent hover:border-accent transition-colors"
+              >
+                Войти
+              </button>
+            </p>
+          )}
+          {mode === "forgot" && (
+            <p>
+              Вспомнили пароль?{" "}
+              <button
+                onClick={() => switchMode("signin")}
+                className="text-foreground border-b border-foreground hover:text-accent hover:border-accent transition-colors"
+              >
+                Войти
+              </button>
+            </p>
+          )}
+        </div>
 
         <p className="text-center text-[10px] tracking-luxe uppercase text-muted-foreground/50 mt-12">
           <Link to="/" className="hover:text-foreground transition-colors">← На главную</Link>
