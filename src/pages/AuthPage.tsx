@@ -8,7 +8,7 @@ import Header from "@/components/Header";
 
 // Public site key — safe to expose in client code
 const TURNSTILE_SITE_KEY = "0x4AAAAAADESddF-sUahSVGU";
-const APP_URL = "https://dsom-beauty-catalog.lovable.app";
+const APP_URL = "https://dsom.ru";
 
 declare global {
   interface Window {
