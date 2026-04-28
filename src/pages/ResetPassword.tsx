@@ -13,6 +13,30 @@ const ResetPassword = () => {
   const [done, setDone] = useState(false);
   const [ready, setReady] = useState(false);
   const [linkError, setLinkError] = useState("");
+  const [resendEmail, setResendEmail] = useState("");
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
+
+  const requestNewLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resendEmail) {
+      toast.error("Введите ваш email");
+      return;
+    }
+    setResending(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resendEmail, {
+        redirectTo: "https://dsom.ru/reset-password",
+      });
+      if (error) throw error;
+      setResent(true);
+      toast.success("Новая ссылка отправлена на почту");
+    } catch (err: any) {
+      toast.error(err.message || "Не удалось отправить ссылку");
+    } finally {
+      setResending(false);
+    }
+  };
 
   // Supabase auto-creates a recovery session from the magic link in URL hash.
   // We listen for it before allowing the form.
@@ -121,14 +145,42 @@ const ResetPassword = () => {
         </p>
 
         {linkError ? (
-          <div className="text-center space-y-6">
-            <p className="text-sm text-muted-foreground leading-relaxed">{linkError}</p>
-            <Link
-              to="/auth"
-              className="inline-flex bg-foreground text-background py-3.5 px-8 rounded-full text-[11px] tracking-luxe uppercase hover:bg-accent transition-colors"
-            >
-              Запросить новую ссылку
-            </Link>
+          <div className="space-y-6">
+            <p className="text-sm text-muted-foreground leading-relaxed text-center">{linkError}</p>
+            {resent ? (
+              <div className="text-center space-y-3">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-foreground text-background">
+                  <Check className="w-5 h-5" strokeWidth={1.5} />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Письмо отправлено на <span className="text-foreground">{resendEmail}</span>.
+                  Проверьте почту (включая папку «Спам»).
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={requestNewLink} className="space-y-5">
+                <div>
+                  <label className="text-[10px] tracking-luxe uppercase text-muted-foreground">Email</label>
+                  <input
+                    type="email"
+                    value={resendEmail}
+                    onChange={(e) => setResendEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    className="mt-1.5 w-full bg-transparent border-b border-border focus:border-foreground outline-none py-2 text-sm"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={resending}
+                  className="w-full bg-foreground text-background py-3.5 rounded-full text-[11px] tracking-luxe uppercase hover:bg-accent transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  {resending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  Запросить новую ссылку
+                </button>
+              </form>
+            )}
           </div>
         ) : !ready ? (
           <p className="text-center text-sm text-muted-foreground">
