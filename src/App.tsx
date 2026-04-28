@@ -8,6 +8,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import CookieBanner from "@/components/CookieBanner";
 import MobileCtaBar from "@/components/MobileCtaBar";
 import ScrollToTop from "@/components/ScrollToTop";
+import SupportChat from "@/components/SupportChat";
+import { useLocation } from "react-router-dom";
 
 import Index from "./pages/Index.tsx";
 import Catalog from "./pages/Catalog.tsx";
@@ -92,10 +94,18 @@ const App = () => (
           </Routes>
           <CookieBanner />
           <MobileCtaBar />
+          <SupportChatGate />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
+
+// Чат не показываем в админке.
+const SupportChatGate = () => {
+  const { pathname } = useLocation();
+  if (pathname.startsWith("/admin")) return null;
+  return <SupportChat />;
+};
 
 export default App;
