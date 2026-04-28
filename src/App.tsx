@@ -8,6 +8,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import CookieBanner from "@/components/CookieBanner";
 import MobileCtaBar from "@/components/MobileCtaBar";
 import ScrollToTop from "@/components/ScrollToTop";
+import SupportChat from "@/components/SupportChat";
+import { useLocation } from "react-router-dom";
 
 import Index from "./pages/Index.tsx";
 import Catalog from "./pages/Catalog.tsx";
@@ -40,6 +42,7 @@ import CampaignEdit from "./pages/admin/CampaignEdit.tsx";
 import PromoCodesAdmin from "./pages/admin/PromoCodesAdmin.tsx";
 import ReviewsAdmin from "./pages/admin/ReviewsAdmin.tsx";
 import StockAlertsAdmin from "./pages/admin/StockAlertsAdmin.tsx";
+import SupportAdmin from "./pages/admin/SupportAdmin.tsx";
 
 const queryClient = new QueryClient();
 
@@ -86,16 +89,25 @@ const App = () => (
             <Route path="/admin/promo" element={<Protected><PromoCodesAdmin /></Protected>} />
             <Route path="/admin/reviews" element={<Protected><ReviewsAdmin /></Protected>} />
             <Route path="/admin/stock-alerts" element={<Protected><StockAlertsAdmin /></Protected>} />
+            <Route path="/admin/support" element={<Protected><SupportAdmin /></Protected>} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CookieBanner />
           <MobileCtaBar />
+          <SupportChatGate />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
+
+// Чат не показываем в админке.
+const SupportChatGate = () => {
+  const { pathname } = useLocation();
+  if (pathname.startsWith("/admin")) return null;
+  return <SupportChat />;
+};
 
 export default App;

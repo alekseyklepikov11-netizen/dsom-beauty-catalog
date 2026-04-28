@@ -15,3 +15,5 @@ project_id = "wfnncbctifiudaptxyap"
     verify_jwt = false
   [functions.verify-turnstile]
     verify_jwt = false
+  [functions.support-chat]
+    verify_jwt = false
