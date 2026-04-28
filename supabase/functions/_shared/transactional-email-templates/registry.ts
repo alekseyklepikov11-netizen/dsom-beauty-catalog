@@ -10,7 +10,9 @@ export interface TemplateEntry {
 }
 
 import { template as newsletterConfirmation } from './newsletter-confirmation.tsx'
+import { template as supportEscalation } from './support-escalation.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'newsletter-confirmation': newsletterConfirmation,
+  'support-escalation': supportEscalation,
 }
