@@ -5,6 +5,20 @@ import { toast } from "sonner";
 import { Loader2, Check } from "lucide-react";
 import Header from "@/components/Header";
 
+const RECOVERY_SESSION_KEY = "dsom-password-recovery-active";
+
+const getResetErrorMessage = (message?: string) => {
+  const normalized = (message || "").toLowerCase();
+  if (normalized.includes("password should be at least")) return "Пароль должен быть не короче 6 символов";
+  if (normalized.includes("same as the old password") || normalized.includes("different from the old password")) {
+    return "Новый пароль должен отличаться от старого";
+  }
+  if (normalized.includes("session") || normalized.includes("jwt")) {
+    return "Сессия восстановления истекла. Запросите новую ссылку";
+  }
+  return message || "Не удалось обновить пароль";
+};
+
 const ResetPassword = () => {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
@@ -38,14 +52,28 @@ const ResetPassword = () => {
     }
   };
 
-  // Supabase auto-creates a recovery session from the magic link in URL hash.
-  // We listen for it before allowing the form.
+  // Allow password changes only from a real recovery link/session.
+  // A regular signed-in session must not unlock this form, otherwise the wrong account can be updated.
   useEffect(() => {
+    let mounted = true;
+
+    const markRecoveryReady = () => {
+      sessionStorage.setItem(RECOVERY_SESSION_KEY, "true");
+      if (!mounted) return;
+      window.history.replaceState(null, "", "/reset-password");
+      setLinkError("");
+      setReady(true);
+    };
+
     const prepareRecoverySession = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const tokenHash = params.get("token_hash");
-      const token = params.get("token");
-      const email = params.get("email");
+      const searchParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const tokenHash = searchParams.get("token_hash") || hashParams.get("token_hash");
+      const token = searchParams.get("token") || hashParams.get("token");
+      const email = searchParams.get("email") || hashParams.get("email");
+      const code = searchParams.get("code") || hashParams.get("code");
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
 
       try {
         if (tokenHash) {
@@ -54,8 +82,7 @@ const ResetPassword = () => {
             type: "recovery",
           });
           if (error) throw error;
-          window.history.replaceState(null, "", "/reset-password");
-          setReady(true);
+          markRecoveryReady();
           return;
         }
 
@@ -66,10 +93,37 @@ const ResetPassword = () => {
             type: "recovery",
           });
           if (error) throw error;
-          window.history.replaceState(null, "", "/reset-password");
+          markRecoveryReady();
+          return;
+        }
+
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+          markRecoveryReady();
+          return;
+        }
+
+        if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (error) throw error;
+          markRecoveryReady();
+          return;
+        }
+
+        const hasRecoverySession = sessionStorage.getItem(RECOVERY_SESSION_KEY) === "true";
+        const { data } = await supabase.auth.getSession();
+        if (hasRecoverySession && data.session) {
+          if (!mounted) return;
           setReady(true);
+          return;
         }
       } catch {
+        sessionStorage.removeItem(RECOVERY_SESSION_KEY);
+        if (!mounted) return;
         setLinkError("Ссылка восстановления устарела или уже была использована. Запросите новую ссылку.");
       }
     };
@@ -77,15 +131,18 @@ const ResetPassword = () => {
     prepareRecoverySession();
 
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
-        setReady(true);
+      if (event === "PASSWORD_RECOVERY") {
+        markRecoveryReady();
+      }
+      if (event === "SIGNED_OUT") {
+        sessionStorage.removeItem(RECOVERY_SESSION_KEY);
       }
     });
-    // also check if already a session exists (user opened link, then page reloaded)
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true);
-    });
-    return () => sub.subscription.unsubscribe();
+
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const submit = async (e: React.FormEvent) => {
@@ -100,9 +157,15 @@ const ResetPassword = () => {
     }
     setLoading(true);
     try {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session || sessionStorage.getItem(RECOVERY_SESSION_KEY) !== "true") {
+        throw new Error("Сессия восстановления истекла. Запросите новую ссылку");
+      }
+
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      toast.success("Пароль успешно создан. Теперь войдите с новым паролем");
+      sessionStorage.removeItem(RECOVERY_SESSION_KEY);
+      toast.success("Пароль успешно обновлён. Теперь войдите с новым паролем");
       setDone(true);
       // log out so user signs in with new password
       setTimeout(async () => {
@@ -110,10 +173,7 @@ const ResetPassword = () => {
         navigate("/auth");
       }, 2000);
     } catch (err: any) {
-      const message = (err.message || "").toLowerCase().includes("password should be at least")
-        ? "Пароль слишком короткий"
-        : err.message || "Не удалось обновить пароль";
-      toast.error(message);
+      toast.error(getResetErrorMessage(err.message));
     } finally {
       setLoading(false);
     }
