@@ -13,6 +13,30 @@ const ResetPassword = () => {
   const [done, setDone] = useState(false);
   const [ready, setReady] = useState(false);
   const [linkError, setLinkError] = useState("");
+  const [resendEmail, setResendEmail] = useState("");
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
+
+  const requestNewLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resendEmail) {
+      toast.error("Введите ваш email");
+      return;
+    }
+    setResending(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resendEmail, {
+        redirectTo: "https://dsom.ru/reset-password",
+      });
+      if (error) throw error;
+      setResent(true);
+      toast.success("Новая ссылка отправлена на почту");
+    } catch (err: any) {
+      toast.error(err.message || "Не удалось отправить ссылку");
+    } finally {
+      setResending(false);
+    }
+  };
 
   // Supabase auto-creates a recovery session from the magic link in URL hash.
   // We listen for it before allowing the form.
