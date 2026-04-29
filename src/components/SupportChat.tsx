@@ -140,23 +140,31 @@ const SupportChat = () => {
 
   return (
     <>
-      {/* Кнопка */}
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-label={open ? "Закрыть чат поддержки" : "Открыть чат поддержки"}
-        className={cn(
-          "fixed bottom-24 right-4 z-50 w-12 h-12 rounded-full",
-          "shadow-lg flex items-center justify-center",
-          "transition-all duration-500 hover:scale-105 active:scale-95",
-          "lg:bottom-6 lg:right-6 lg:w-13 lg:h-13",
-          overDark
-            ? "bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
-            : "bg-foreground text-background hover:bg-accent hover:text-accent-foreground",
-        )}
-      >
-        {open ? <X className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
-      </button>
+      {/* Скрытый ярлык — узкая вкладка у правого края, разворачивается в чат */}
+      {!open && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Открыть чат поддержки"
+          className={cn(
+            "fixed right-0 top-1/2 -translate-y-1/2 z-50",
+            "flex items-center gap-2 px-2 py-4",
+            "rounded-l-md shadow-md",
+            "transition-all duration-500 hover:px-3 hover:gap-2.5",
+            overDark
+              ? "bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+              : "bg-foreground text-background hover:bg-accent hover:text-accent-foreground",
+          )}
+        >
+          <MessageCircle className="w-4 h-4" />
+          <span
+            className="text-[10px] tracking-luxe uppercase"
+            style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+          >
+            Чат
+          </span>
+        </button>
+      )}
 
       {/* Окно */}
       {open && (
