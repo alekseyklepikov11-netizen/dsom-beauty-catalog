@@ -28,6 +28,30 @@ const SupportChat = () => {
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [overDark, setOverDark] = useState(false);
+
+  // Отслеживаем, попала ли кнопка на тёмный футер — меняем цвет.
+  useEffect(() => {
+    const onScroll = () => {
+      const footer = document.querySelector("footer");
+      if (footer) {
+        const rect = footer.getBoundingClientRect();
+        const isLg = window.matchMedia("(min-width: 1024px)").matches;
+        // Центр кнопки от низа: mobile ~120px (bottom-24 + h-12/2), desktop ~48px
+        const btnY = window.innerHeight - (isLg ? 48 : 120);
+        setOverDark(rect.top <= btnY);
+      } else {
+        setOverDark(false);
+      }
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
 
   // Загрузка истории.
   useEffect(() => {
@@ -123,10 +147,12 @@ const SupportChat = () => {
         aria-label={open ? "Закрыть чат поддержки" : "Открыть чат поддержки"}
         className={cn(
           "fixed bottom-24 right-4 z-50 w-12 h-12 rounded-full",
-          "bg-foreground text-background shadow-lg",
-          "flex items-center justify-center transition-all",
-          "hover:scale-105 active:scale-95",
+          "shadow-lg flex items-center justify-center",
+          "transition-all duration-500 hover:scale-105 active:scale-95",
           "lg:bottom-6 lg:right-6 lg:w-13 lg:h-13",
+          overDark
+            ? "bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+            : "bg-foreground text-background hover:bg-accent hover:text-accent-foreground",
         )}
       >
         {open ? <X className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
