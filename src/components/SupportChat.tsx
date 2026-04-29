@@ -28,6 +28,30 @@ const SupportChat = () => {
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [overDark, setOverDark] = useState(false);
+
+  // Отслеживаем, попала ли кнопка на тёмный футер — меняем цвет.
+  useEffect(() => {
+    const onScroll = () => {
+      const footer = document.querySelector("footer");
+      if (footer) {
+        const rect = footer.getBoundingClientRect();
+        const isLg = window.matchMedia("(min-width: 1024px)").matches;
+        // Центр кнопки от низа: mobile ~120px (bottom-24 + h-12/2), desktop ~48px
+        const btnY = window.innerHeight - (isLg ? 48 : 120);
+        setOverDark(rect.top <= btnY);
+      } else {
+        setOverDark(false);
+      }
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
 
   // Загрузка истории.
   useEffect(() => {
