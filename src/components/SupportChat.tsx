@@ -147,10 +147,12 @@ const SupportChat = () => {
         aria-label={open ? "Закрыть чат поддержки" : "Открыть чат поддержки"}
         className={cn(
           "fixed bottom-24 right-4 z-50 w-12 h-12 rounded-full",
-          "bg-foreground text-background shadow-lg",
-          "flex items-center justify-center transition-all",
-          "hover:scale-105 active:scale-95",
+          "shadow-lg flex items-center justify-center",
+          "transition-all duration-500 hover:scale-105 active:scale-95",
           "lg:bottom-6 lg:right-6 lg:w-13 lg:h-13",
+          overDark
+            ? "bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+            : "bg-foreground text-background hover:bg-accent hover:text-accent-foreground",
         )}
       >
         {open ? <X className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
