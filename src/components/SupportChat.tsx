@@ -122,7 +122,7 @@ const SupportChat = () => {
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Закрыть чат поддержки" : "Открыть чат поддержки"}
         className={cn(
-          "fixed bottom-5 right-5 z-50 w-12 h-12 rounded-full",
+          "fixed bottom-24 right-4 z-50 w-12 h-12 rounded-full",
           "bg-foreground text-background shadow-lg",
           "flex items-center justify-center transition-all",
           "hover:scale-105 active:scale-95",
