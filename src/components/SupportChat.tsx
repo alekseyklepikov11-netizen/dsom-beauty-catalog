@@ -36,9 +36,8 @@ const SupportChat = () => {
       const footer = document.querySelector("footer");
       if (footer) {
         const rect = footer.getBoundingClientRect();
-        const isLg = window.matchMedia("(min-width: 1024px)").matches;
-        // Центр кнопки от низа: mobile ~120px (bottom-24 + h-12/2), desktop ~48px
-        const btnY = window.innerHeight - (isLg ? 48 : 120);
+        // Ярлык по центру экрана справа
+        const btnY = window.innerHeight / 2;
         setOverDark(rect.top <= btnY);
       } else {
         setOverDark(false);
