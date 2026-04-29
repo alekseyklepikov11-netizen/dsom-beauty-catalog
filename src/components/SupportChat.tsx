@@ -180,14 +180,24 @@ const SupportChat = () => {
                 Консультант
               </p>
             </div>
-            <button
-              type="button"
-              onClick={reset}
-              className="text-[10px] tracking-luxe uppercase opacity-60 hover:opacity-100 transition-opacity"
-              aria-label="Очистить диалог"
-            >
-              Сброс
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={reset}
+                className="text-[10px] tracking-luxe uppercase opacity-60 hover:opacity-100 transition-opacity"
+                aria-label="Очистить диалог"
+              >
+                Сброс
+              </button>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="opacity-60 hover:opacity-100 transition-opacity"
+                aria-label="Закрыть чат"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
