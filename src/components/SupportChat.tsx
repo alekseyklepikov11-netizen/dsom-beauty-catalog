@@ -139,7 +139,7 @@ const SupportChat = () => {
 
   return (
     <>
-      {/* Скрытый ярлык — узкая вкладка у правого края, разворачивается в чат */}
+      {/* Скрытый ярлык — узкая вкладка-иконка у правого края */}
       {!open && (
         <button
           type="button"
@@ -147,21 +147,15 @@ const SupportChat = () => {
           aria-label="Открыть чат поддержки"
           className={cn(
             "fixed right-0 top-1/2 -translate-y-1/2 z-50",
-            "flex items-center gap-2 px-2 py-4",
+            "flex items-center justify-center p-2",
             "rounded-l-md shadow-md",
-            "transition-all duration-500 hover:px-3 hover:gap-2.5",
+            "transition-all duration-500 hover:pr-3",
             overDark
               ? "bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
               : "bg-foreground text-background hover:bg-accent hover:text-accent-foreground",
           )}
         >
           <MessageCircle className="w-4 h-4" />
-          <span
-            className="text-[10px] tracking-luxe uppercase"
-            style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
-          >
-            Чат
-          </span>
         </button>
       )}
 
