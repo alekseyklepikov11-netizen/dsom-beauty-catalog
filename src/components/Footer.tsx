@@ -19,10 +19,10 @@ const Footer = () => {
       <div className="container grid md:grid-cols-4 gap-10">
         <div>
           <p className="font-display text-3xl tracking-[0.3em]">DSOM</p>
-          <p className="text-xs text-background/50 mt-4 leading-relaxed">
+          <p className="text-xs text-background/50 mt-4 leading-relaxed whitespace-pre-line">
             {lang === "en"
-              ? "Skincare born from science.\nMoscow · Saint Petersburg."
-              : "Уход, рождённый наукой.\nМосква · Санкт-Петербург."}
+              ? "Derma Science Of Modernity\nThe science of modern skin."
+              : "Derma Science Of Modernity\nНаука о коже современности"}
           </p>
         </div>
 
