@@ -98,6 +98,11 @@ const ProductEdit = () => {
   const [links, setLinks] = useState<MLink[]>([]);
   const [images, setImages] = useState<Img[]>([]);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+  );
+
   useEffect(() => {
     (async () => {
       const [b, c] = await Promise.all([
