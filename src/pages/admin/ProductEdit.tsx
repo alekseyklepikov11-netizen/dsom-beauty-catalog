@@ -236,20 +236,41 @@ const ProductEdit = () => {
           </div>
 
           <div>
-            <p className="text-[10px] tracking-luxe uppercase text-muted-foreground mb-3">Дополнительные фото (галерея)</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {images.map((im, i) => (
-                <div key={i} className="relative">
-                  <ImageUpload bucket="product-images" value={im.url} onChange={(url) => {
-                    if (!url) setImages((arr) => arr.filter((_, idx) => idx !== i));
-                    else setImages((arr) => arr.map((x, idx) => idx === i ? { ...x, url } : x));
-                  }} label="" aspect="aspect-square" />
+            <p className="text-[10px] tracking-luxe uppercase text-muted-foreground mb-3">Дополнительные фото (галерея) — зажмите ручку, чтобы переставить</p>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={(e: DragEndEvent) => {
+                const { active, over } = e;
+                if (!over || active.id === over.id) return;
+                setImages((arr) => {
+                  const ids = arr.map((x, idx) => x.id || `tmp-${idx}`);
+                  const oldIndex = ids.indexOf(String(active.id));
+                  const newIndex = ids.indexOf(String(over.id));
+                  if (oldIndex < 0 || newIndex < 0) return arr;
+                  return arrayMove(arr, oldIndex, newIndex);
+                });
+              }}
+            >
+              <SortableContext items={images.map((x, idx) => x.id || `tmp-${idx}`)} strategy={rectSortingStrategy}>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {images.map((im, i) => (
+                    <SortableImage
+                      key={im.id || `tmp-${i}`}
+                      id={im.id || `tmp-${i}`}
+                      url={im.url}
+                      onChange={(url) => {
+                        if (!url) setImages((arr) => arr.filter((_, idx) => idx !== i));
+                        else setImages((arr) => arr.map((x, idx) => idx === i ? { ...x, url } : x));
+                      }}
+                    />
+                  ))}
+                  <button onClick={() => setImages((arr) => [...arr, { url: "", sort_order: arr.length }])} className="aspect-square border border-dashed border-border rounded-md grid place-items-center text-[10px] tracking-luxe uppercase text-muted-foreground hover:text-foreground hover:border-foreground transition-colors">
+                    <Plus className="w-4 h-4" />
+                  </button>
                 </div>
-              ))}
-              <button onClick={() => setImages((arr) => [...arr, { url: "", sort_order: arr.length }])} className="aspect-square border border-dashed border-border rounded-md grid place-items-center text-[10px] tracking-luxe uppercase text-muted-foreground hover:text-foreground hover:border-foreground transition-colors">
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
+              </SortableContext>
+            </DndContext>
           </div>
         </div>
 
