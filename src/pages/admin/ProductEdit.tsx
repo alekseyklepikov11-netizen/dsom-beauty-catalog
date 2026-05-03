@@ -1,12 +1,60 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, GripVertical, Loader2, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AdminLayout from "@/components/admin/AdminLayout";
 import I18nField, { Field, fieldCls } from "@/components/admin/I18nField";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { SKIN_TYPES } from "@/lib/skinTypes";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+const SortableImage = ({
+  id,
+  url,
+  onChange,
+}: {
+  id: string;
+  url: string;
+  onChange: (url: string | null) => void;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : "auto" as const,
+  };
+  return (
+    <div ref={setNodeRef} style={style} className="relative touch-none">
+      <ImageUpload bucket="product-images" value={url} onChange={onChange} label="" aspect="aspect-square" />
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        title="Перетащить"
+        className="absolute top-1 left-1 z-10 grid place-items-center w-7 h-7 rounded bg-background/80 backdrop-blur border border-border text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing"
+      >
+        <GripVertical className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+};
 
 interface Brand { id: string; name: string }
 interface Cat { id: string; name: string; parent_id: string | null }
