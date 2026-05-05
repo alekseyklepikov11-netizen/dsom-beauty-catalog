@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import MarketplaceButton from "./MarketplaceButton";
 
@@ -86,7 +86,7 @@ const QuickViewDialog = ({ slug, onClose }: QuickViewProps) => {
           <div className="p-20 text-center text-muted-foreground text-sm tracking-luxe uppercase">…</div>
         ) : (
           <div className="grid md:grid-cols-2">
-            <div className="relative bg-secondary aspect-square md:aspect-auto md:min-h-[560px] overflow-hidden">
+            <div className="group relative bg-secondary aspect-square md:aspect-auto md:min-h-[560px] overflow-hidden">
               <div
                 ref={galleryRef}
                 className="h-full snap-x snap-mandatory overflow-x-auto scroll-smooth flex"
@@ -108,14 +108,42 @@ const QuickViewDialog = ({ slug, onClose }: QuickViewProps) => {
                 ))}
               </div>
               {gallery.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 pointer-events-none">
-                  {gallery.map((_, i) => (
-                    <span
-                      key={`qv-dot-${i}`}
-                      className={`h-1 rounded-full transition-all duration-300 ${activeIdx === i ? "w-6 bg-foreground" : "w-1.5 bg-foreground/40"}`}
-                    />
-                  ))}
-                </div>
+                <>
+                  <button
+                    type="button"
+                    aria-label="Previous image"
+                    onClick={() => {
+                      const el = galleryRef.current;
+                      if (!el) return;
+                      el.scrollTo({ left: Math.max(0, activeIdx - 1) * el.clientWidth, behavior: "smooth" });
+                    }}
+                    disabled={activeIdx === 0}
+                    className="hidden md:grid absolute top-1/2 -translate-y-1/2 left-3 z-10 place-items-center w-10 h-10 rounded-full bg-background/85 backdrop-blur-md text-foreground opacity-0 group-hover:opacity-100 transition hover:bg-background disabled:opacity-30"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Next image"
+                    onClick={() => {
+                      const el = galleryRef.current;
+                      if (!el) return;
+                      el.scrollTo({ left: Math.min(gallery.length - 1, activeIdx + 1) * el.clientWidth, behavior: "smooth" });
+                    }}
+                    disabled={activeIdx === gallery.length - 1}
+                    className="hidden md:grid absolute top-1/2 -translate-y-1/2 right-3 z-10 place-items-center w-10 h-10 rounded-full bg-background/85 backdrop-blur-md text-foreground opacity-0 group-hover:opacity-100 transition hover:bg-background disabled:opacity-30"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 pointer-events-none">
+                    {gallery.map((_, i) => (
+                      <span
+                        key={`qv-dot-${i}`}
+                        className={`h-1 rounded-full transition-all duration-300 ${activeIdx === i ? "w-6 bg-foreground" : "w-1.5 bg-foreground/40"}`}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
             </div>
             <div className="p-8 md:p-12 flex flex-col">
