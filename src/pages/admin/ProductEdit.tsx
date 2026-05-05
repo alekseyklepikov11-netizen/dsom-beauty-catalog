@@ -10,8 +10,10 @@ import { SKIN_TYPES } from "@/lib/skinTypes";
 import {
   DndContext,
   closestCenter,
+  MouseSensor,
   PointerSensor,
   TouchSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -33,7 +35,7 @@ const SortableImage = ({
   url: string;
   onChange: (url: string | null) => void;
 }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -44,6 +46,7 @@ const SortableImage = ({
     <div ref={setNodeRef} style={style} className="relative touch-none">
       <ImageUpload bucket="product-images" value={url} onChange={onChange} label="" aspect="aspect-square" />
       <button
+        ref={setActivatorNodeRef}
         type="button"
         {...attributes}
         {...listeners}
@@ -99,8 +102,10 @@ const ProductEdit = () => {
   const [images, setImages] = useState<Img[]>([]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(KeyboardSensor),
   );
 
   useEffect(() => {
