@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Eye, Heart } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { useFavorites } from "@/hooks/useFavorites";
 
@@ -123,16 +123,48 @@ const ProductCard = ({ product, index, onQuickView }: Props) => {
         </button>
 
         {hasMultiple && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex gap-1.5 pointer-events-none">
-            {gallery.map((_, i) => (
-              <span
-                key={`pc-dot-${i}`}
-                className={`h-1 rounded-full transition-all duration-300 ${
-                  activeIdx === i ? "w-5 bg-foreground" : "w-1.5 bg-foreground/40"
-                }`}
-              />
-            ))}
-          </div>
+          <>
+            <button
+              type="button"
+              aria-label="Previous image"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const el = galleryRef.current;
+                if (!el) return;
+                el.scrollTo({ left: Math.max(0, activeIdx - 1) * el.clientWidth, behavior: "smooth" });
+              }}
+              className="hidden md:grid absolute top-1/2 -translate-y-1/2 left-2 z-20 place-items-center w-9 h-9 rounded-full bg-background/80 backdrop-blur-md text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background disabled:opacity-30"
+              disabled={activeIdx === 0}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              aria-label="Next image"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const el = galleryRef.current;
+                if (!el) return;
+                el.scrollTo({ left: Math.min(gallery.length - 1, activeIdx + 1) * el.clientWidth, behavior: "smooth" });
+              }}
+              className="hidden md:grid absolute top-1/2 -translate-y-1/2 right-2 z-20 place-items-center w-9 h-9 rounded-full bg-background/80 backdrop-blur-md text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background disabled:opacity-30"
+              disabled={activeIdx === gallery.length - 1}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex gap-1.5 pointer-events-none">
+              {gallery.map((_, i) => (
+                <span
+                  key={`pc-dot-${i}`}
+                  className={`h-1 rounded-full transition-all duration-300 ${
+                    activeIdx === i ? "w-5 bg-foreground" : "w-1.5 bg-foreground/40"
+                  }`}
+                />
+              ))}
+            </div>
+          </>
         )}
 
         {onQuickView && (
