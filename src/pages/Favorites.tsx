@@ -31,10 +31,16 @@ const Favorites = () => {
       }
       const { data } = await supabase
         .from("products")
-        .select("id,slug,name,name_en,subtitle,subtitle_en,price,volume,cover_image_url,is_bestseller,is_new")
+        .select("id,slug,name,name_en,subtitle,subtitle_en,price,volume,cover_image_url,is_bestseller,is_new,product_images(url,sort_order)")
         .in("id", Array.from(ids))
         .eq("is_visible", true);
-      setProducts((data || []) as ProductLite[]);
+      const mapped = ((data || []) as any[]).map((p) => ({
+        ...p,
+        images: (p.product_images || [])
+          .sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+          .map((x: any) => x.url),
+      })) as ProductLite[];
+      setProducts(mapped);
       setLoading(false);
     })();
   }, [ids, favLoading, authLoading]);
