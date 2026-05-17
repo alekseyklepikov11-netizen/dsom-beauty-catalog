@@ -22,23 +22,19 @@ interface Banner {
   image_url: string | null; video_url: string | null;
   ab_group: string | null;
 }
-interface Brand { id: string; slug: string; name: string; country: string | null; }
-
 const FALLBACK_VIDEO = "https://cdn.coverr.co/videos/coverr-pouring-cosmetic-cream-into-a-jar-9419/1080p.mp4";
 
 const Index = () => {
   const { t, i18n } = useTranslation();
   const [banner, setBanner] = useState<Banner | null>(null);
   const [products, setProducts] = useState<ProductLite[]>([]);
-  const [brands, setBrands] = useState<Brand[]>([]);
   const [quickSlug, setQuickSlug] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
-      const [b, p, br] = await Promise.all([
+      const [b, p] = await Promise.all([
         supabase.from("banners").select("id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group").eq("position", "home_hero").eq("is_active", true).order("sort_order"),
         supabase.from("products").select("id,slug,name,name_en,subtitle,subtitle_en,price,volume,cover_image_url,is_bestseller,is_new").eq("is_visible", true).eq("is_bestseller", true).order("sort_order").limit(6),
-        supabase.from("brands").select("id,slug,name,country").eq("is_visible", true).order("sort_order"),
       ]);
       // A/B: pick a random active banner for this position
       const banners = (b.data || []) as Banner[];
@@ -50,7 +46,6 @@ const Index = () => {
       }
       setBanner(chosen);
       setProducts((p.data || []) as ProductLite[]);
-      setBrands((br.data || []) as Brand[]);
     })();
   }, []);
 
@@ -92,40 +87,40 @@ const Index = () => {
           {/* Headline — two lines, mixed typography */}
           <h1 className="text-white max-w-5xl mx-auto">
             <span className="block font-barlow font-medium text-[clamp(2.5rem,7vw,5.5rem)] leading-[1] tracking-[-0.04em]">
-              {lang === "en" ? "Beauty rituals that" : "Ритуал красоты,"}
+              {lang === "en" ? "Active cosmetics" : "Активная косметика"}
             </span>
             <span className="block font-serif italic text-[clamp(3rem,9vw,7rem)] leading-[1.05] -mt-1 md:-mt-2">
-              {lang === "en" ? "go viral & timeless" : "что становится культом"}
+              {lang === "en" ? "with transparent formulas" : "с прозрачным составом"}
             </span>
           </h1>
 
           {/* Subtext */}
           <p className="mt-8 font-barlow font-medium text-[16px] md:text-[18px] text-white/85 max-w-2xl mx-auto leading-relaxed">
             {lang === "en"
-              ? "Curated cosmetics for those who treat skincare as a daily ritual — not a routine."
-              : "Кураторская косметика для тех, кто относится к уходу как к ритуалу, а не рутине."}
+              ? "Vitamin C 2000 ppm. Retinol 0.3%. PDRN 0.1%. Concentrations on the label — no marketing tricks. Launch in June 2026, available on Ozon."
+              : "Vitamin C 2000 ppm. Ретинол 0.3%. PDRN 0.1%. Концентрации указаны — без маркетинговых уловок. Запуск в июне 2026, стартуем на Ozon."}
           </p>
 
           {/* CTAs */}
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             {/* Primary — white pill with play */}
             <Link
-              to={banner?.cta_url && banner.cta_url.trim() ? banner.cta_url : "/catalog"}
+              to={banner?.cta_url && banner.cta_url.trim() ? banner.cta_url : "/quiz"}
               onClick={() => banner && track("banner_click", { banner_id: banner.id, value: banner.ab_group || "default" })}
               className="group inline-flex items-center gap-3 bg-white text-[#111] rounded-full pl-2 pr-7 py-2 font-barlow font-medium text-[14px] hover:bg-white/90 transition-colors"
             >
               <span className="grid place-items-center w-10 h-10 rounded-full bg-[#111] text-white">
                 <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
               </span>
-              <span>{lang === "en" ? "See our catalogue" : "Смотреть каталог"}</span>
+              <span>{lang === "en" ? "Get 5% launch promo" : "Получить промокод 5%"}</span>
             </Link>
 
             {/* Secondary — ghost outlined */}
             <Link
-              to="/quiz"
+              to="/catalog"
               className="inline-flex items-center gap-2 bg-transparent text-white rounded-full px-6 py-3 font-barlow font-medium text-[14px] border border-white/40 hover:bg-white/10 transition-colors"
             >
-              <span>{lang === "en" ? "Watch the ritual" : "Посмотреть ритуал"}</span>
+              <span>{lang === "en" ? "View formulas" : "Посмотреть формулы"}</span>
             </Link>
           </div>
         </div>
@@ -141,7 +136,7 @@ const Index = () => {
         <div className="container">
           <div className="text-center mb-14">
             <p className="text-[11px] tracking-luxe uppercase text-accent mb-5">— {t("sections.bestsellers")}</p>
-            <h2 className="font-display text-5xl md:text-6xl">{lang === "en" ? "Beloved formulas" : "Любимые формулы"}</h2>
+            <h2 className="font-display text-5xl md:text-6xl">{lang === "en" ? "Our line" : "Наша линейка"}</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
             {products.map((p, i) => <ProductCard key={p.id} product={p} index={i} onQuickView={setQuickSlug} />)}
@@ -163,20 +158,7 @@ const Index = () => {
       {/* RECENTLY VIEWED */}
       <RecentlyViewed />
 
-      {/* BRANDS — moved below recently viewed */}
-      <section className="py-20 bg-secondary/40">
-        <div className="container">
-          <p className="text-[11px] tracking-luxe uppercase text-accent text-center mb-10">— {t("sections.brands")}</p>
-          <div className="flex flex-wrap justify-center items-center gap-x-16 gap-y-8">
-            {brands.map((b) => (
-              <div key={b.id} className="text-center">
-                <p className="font-display text-3xl">{b.name}</p>
-                {b.country && <p className="text-[10px] tracking-luxe uppercase text-muted-foreground mt-2">{b.country}</p>}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* BRANDS section removed — DSOM is a mono-brand; multi-brand carousel was misleading */}
 
       <Footer />
 

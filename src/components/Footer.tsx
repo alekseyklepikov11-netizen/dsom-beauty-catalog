@@ -32,7 +32,7 @@ const Footer = () => {
             {lang === "en" ? "Contacts & details" : "Контакты и реквизиты"}
           </Link>
           <a href="mailto:hello@dsom.ru" className="block text-sm hover:text-accent transition-colors mt-1">hello@dsom.ru</a>
-          <p className="text-sm text-background/70 mt-1">@DSOM</p>
+          <a href="https://t.me/dsom_official" target="_blank" rel="noreferrer" className="block text-sm hover:text-accent transition-colors mt-1">Telegram @dsom_official</a>
         </div>
 
         <div>
@@ -76,8 +76,11 @@ const Footer = () => {
           )}
         </div>
       </div>
-      <div className="container mt-12 pt-8 border-t border-background/15 text-[11px] tracking-luxe uppercase text-background/40">
-        © 2026 DSOM. {t("footer.rights")}.
+      <div className="container mt-12 pt-8 border-t border-background/15 text-[11px] tracking-luxe uppercase text-background/40 flex flex-col md:flex-row justify-between gap-2">
+        <span>© 2026 ООО «ВАЛКЭНДВИР» · {t("footer.rights")}</span>
+        <span className="normal-case tracking-normal text-background/50">
+          ИНН 9707045838 · г. Москва, ул. Краснопролетарская, 7 · Произведено: г. Казань
+        </span>
       </div>
     </footer>
   );

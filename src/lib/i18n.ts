@@ -5,7 +5,7 @@ const resources = {
   ru: {
     translation: {
       nav: { catalog: "Каталог", about: "О бренде", stores: "Где купить", contact: "Контакты", shop: "В магазин", quiz: "Подбор ухода" },
-      hero: { cta: "Открыть каталог", eyebrow: "DSOM · Лаборатория ухода", title1: "Чистая наука.", title2: "Бережный ритуал" },
+      hero: { cta: "Получить промокод 5%", eyebrow: "DSOM · Лаборатория ухода", title1: "Активная косметика", title2: "с прозрачным составом" },
       sections: { bestsellers: "Бестселлеры", brands: "Бренды", philosophy: "Философия", all: "Весь каталог", new: "Новинки" },
       catalog: {
         title: "Каталог",
@@ -38,7 +38,7 @@ const resources = {
   en: {
     translation: {
       nav: { catalog: "Catalog", about: "About", stores: "Where to buy", contact: "Contact", shop: "Shop", quiz: "Find your routine" },
-      hero: { cta: "Open catalog", eyebrow: "DSOM · Skincare laboratory", title1: "Pure science.", title2: "Gentle ritual" },
+      hero: { cta: "Get 5% launch promo", eyebrow: "DSOM · Skincare laboratory", title1: "Active cosmetics", title2: "with transparent formulas" },
       sections: { bestsellers: "Bestsellers", brands: "Brands", philosophy: "Philosophy", all: "Full catalog", new: "New in" },
       catalog: {
         title: "Catalog",
