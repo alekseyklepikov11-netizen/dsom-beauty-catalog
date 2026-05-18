@@ -9,51 +9,179 @@ import ProductCard, { ProductLite } from "@/components/ProductCard";
 import QuickViewDialog from "@/components/QuickViewDialog";
 import SEO from "@/components/SEO";
 
+// Slugs of real DSOM products in the database.
+// Quiz answers map to scores per product; top-scoring 2-3 products are recommended.
+const SLUGS = {
+  RENEW: "retinol-palmitate-microneedles-serum",   // P2 Renew — Retinol 0.3% + microspicules
+  RENEW_NIGHT: "night-micro-needle-retinol-serum", // P2 Renew (alt night SKU)
+  LIFT: "pdrn-aloe-lifting-serum",                 // P3 Lift — PDRN 0.1% + peptide
+  HYDRO: "lamellar-cream-hyaluronic",              // P4 Hydro — lamellar cream
+};
+
+type Slug = typeof SLUGS[keyof typeof SLUGS];
+
+interface Option {
+  value: string;
+  label: { ru: string; en: string };
+  // Score delta per product slug (-2..+3)
+  scores: Partial<Record<Slug, number>>;
+}
+
 interface QuizQuestion {
   id: string;
   q: { ru: string; en: string };
-  options: { value: string; label: { ru: string; en: string }; tags: string[] }[];
+  options: Option[];
 }
 
 const QUESTIONS: QuizQuestion[] = [
   {
-    id: "skin_type",
-    q: { ru: "Какой у вас тип кожи?", en: "What's your skin type?" },
-    options: [
-      { value: "dry", label: { ru: "Сухая", en: "Dry" }, tags: ["dry", "moisturizing", "увлажнение"] },
-      { value: "oily", label: { ru: "Жирная", en: "Oily" }, tags: ["oily", "mattifying", "матирование"] },
-      { value: "combo", label: { ru: "Комбинированная", en: "Combination" }, tags: ["combo", "balance", "баланс"] },
-      { value: "sensitive", label: { ru: "Чувствительная", en: "Sensitive" }, tags: ["sensitive", "soothing", "успокаивающее"] },
-    ],
-  },
-  {
     id: "concern",
-    q: { ru: "Главная проблема, которую хотите решить?", en: "Main concern you want to address?" },
+    q: {
+      ru: "Что больше всего беспокоит в коже?",
+      en: "What concerns you most about your skin?",
+    },
     options: [
-      { value: "aging", label: { ru: "Признаки возраста", en: "Signs of aging" }, tags: ["anti-aging", "retinol", "ретинол", "антивозрастное"] },
-      { value: "acne", label: { ru: "Высыпания", en: "Acne" }, tags: ["acne", "acid", "кислоты", "акне"] },
-      { value: "dullness", label: { ru: "Тусклый цвет лица", en: "Dullness" }, tags: ["brightening", "vitamin c", "витамин с", "сияние"] },
-      { value: "dehydration", label: { ru: "Обезвоженность", en: "Dehydration" }, tags: ["hydration", "hyaluronic", "гиалурон", "увлажнение"] },
+      {
+        value: "wrinkles",
+        label: { ru: "Морщины, признаки возраста", en: "Wrinkles, signs of aging" },
+        scores: { [SLUGS.LIFT]: 3, [SLUGS.RENEW]: 2, [SLUGS.HYDRO]: 1 },
+      },
+      {
+        value: "dullness",
+        label: { ru: "Тусклость, нет сияния", en: "Dullness, lack of radiance" },
+        scores: { [SLUGS.HYDRO]: 2, [SLUGS.LIFT]: 1 },
+      },
+      {
+        value: "dryness",
+        label: { ru: "Сухость, обезвоженность", en: "Dryness, dehydration" },
+        scores: { [SLUGS.HYDRO]: 3, [SLUGS.LIFT]: 2 },
+      },
+      {
+        value: "texture",
+        label: { ru: "Неровный тон, текстура", en: "Uneven tone, texture" },
+        scores: { [SLUGS.RENEW]: 3, [SLUGS.RENEW_NIGHT]: 1, [SLUGS.HYDRO]: 1 },
+      },
     ],
   },
   {
-    id: "step",
-    q: { ru: "Какой шаг ухода ищете?", en: "Which skincare step are you looking for?" },
+    id: "skin_type",
+    q: {
+      ru: "Какой у вас тип кожи?",
+      en: "What's your skin type?",
+    },
     options: [
-      { value: "cleanse", label: { ru: "Очищение", en: "Cleansing" }, tags: ["cleanser", "очищение", "cleanse"] },
-      { value: "tone", label: { ru: "Тонизация", en: "Toning" }, tags: ["tonic", "toner", "тоник"] },
-      { value: "serum", label: { ru: "Сыворотка", en: "Serum" }, tags: ["serum", "сыворотка"] },
-      { value: "moisturize", label: { ru: "Увлажнение / крем", en: "Moisturizer" }, tags: ["cream", "крем", "moisturizer"] },
+      {
+        value: "normal",
+        label: { ru: "Нормальная", en: "Normal" },
+        scores: {},
+      },
+      {
+        value: "dry",
+        label: { ru: "Сухая", en: "Dry" },
+        scores: { [SLUGS.HYDRO]: 2, [SLUGS.LIFT]: 1, [SLUGS.RENEW]: -1 },
+      },
+      {
+        value: "oily",
+        label: { ru: "Жирная", en: "Oily" },
+        scores: { [SLUGS.RENEW]: 1 },
+      },
+      {
+        value: "combo",
+        label: { ru: "Комбинированная", en: "Combination" },
+        scores: { [SLUGS.RENEW]: 1, [SLUGS.HYDRO]: 1 },
+      },
+      {
+        value: "sensitive",
+        label: { ru: "Чувствительная", en: "Sensitive" },
+        scores: { [SLUGS.LIFT]: 2, [SLUGS.HYDRO]: 2, [SLUGS.RENEW]: -2, [SLUGS.RENEW_NIGHT]: -2 },
+      },
     ],
   },
   {
-    id: "texture",
-    q: { ru: "Какую текстуру предпочитаете?", en: "Preferred texture?" },
+    id: "retinol_experience",
+    q: {
+      ru: "Какой у вас опыт с ретинолом?",
+      en: "Your experience with retinol?",
+    },
     options: [
-      { value: "light", label: { ru: "Лёгкая, водянистая", en: "Light, watery" }, tags: ["light", "лёгкий", "water"] },
-      { value: "rich", label: { ru: "Плотная, питательная", en: "Rich, nourishing" }, tags: ["rich", "питательный", "nourishing"] },
-      { value: "gel", label: { ru: "Гель", en: "Gel" }, tags: ["gel", "гель"] },
-      { value: "any", label: { ru: "Не важно", en: "Doesn't matter" }, tags: [] },
+      {
+        value: "regular",
+        label: { ru: "Использую регулярно", en: "Use it regularly" },
+        scores: { [SLUGS.RENEW]: 2, [SLUGS.RENEW_NIGHT]: 1 },
+      },
+      {
+        value: "tried_irritation",
+        label: { ru: "Пробовала — раздражает кожу", en: "Tried it — caused irritation" },
+        scores: { [SLUGS.RENEW]: -2, [SLUGS.RENEW_NIGHT]: -2, [SLUGS.LIFT]: 2, [SLUGS.HYDRO]: 1 },
+      },
+      {
+        value: "never",
+        label: { ru: "Никогда не использовала", en: "Never used it" },
+        scores: { [SLUGS.LIFT]: 1, [SLUGS.HYDRO]: 1 },
+      },
+      {
+        value: "want_to_try",
+        label: { ru: "Хочу попробовать", en: "Want to try" },
+        scores: { [SLUGS.RENEW]: 2 },
+      },
+    ],
+  },
+  {
+    id: "time",
+    q: {
+      ru: "Когда вам удобно наносить уход?",
+      en: "When do you prefer to apply skincare?",
+    },
+    options: [
+      {
+        value: "morning",
+        label: { ru: "Только утром", en: "Only in the morning" },
+        scores: { [SLUGS.HYDRO]: 2, [SLUGS.LIFT]: 1, [SLUGS.RENEW]: -1, [SLUGS.RENEW_NIGHT]: -2 },
+      },
+      {
+        value: "evening",
+        label: { ru: "Только вечером", en: "Only in the evening" },
+        scores: { [SLUGS.RENEW]: 2, [SLUGS.RENEW_NIGHT]: 2, [SLUGS.LIFT]: 1, [SLUGS.HYDRO]: 1 },
+      },
+      {
+        value: "both",
+        label: { ru: "Утром и вечером", en: "Morning and evening" },
+        scores: { [SLUGS.HYDRO]: 2, [SLUGS.RENEW]: 1, [SLUGS.LIFT]: 1 },
+      },
+      {
+        value: "courses",
+        label: { ru: "Курсами, когда есть время", en: "In courses, when I have time" },
+        scores: { [SLUGS.LIFT]: 2 },
+      },
+    ],
+  },
+  {
+    id: "goal",
+    q: {
+      ru: "Какой результат хотите получить?",
+      en: "What result are you looking for?",
+    },
+    options: [
+      {
+        value: "lifting",
+        label: { ru: "Лифтинг и упругость", en: "Lifting and firmness" },
+        scores: { [SLUGS.LIFT]: 3, [SLUGS.RENEW]: 1 },
+      },
+      {
+        value: "renewal",
+        label: { ru: "Обновление, гладкость", en: "Renewal, smoothness" },
+        scores: { [SLUGS.RENEW]: 3, [SLUGS.RENEW_NIGHT]: 2 },
+      },
+      {
+        value: "hydration",
+        label: { ru: "Глубокое увлажнение", en: "Deep hydration" },
+        scores: { [SLUGS.HYDRO]: 3, [SLUGS.LIFT]: 1 },
+      },
+      {
+        value: "comfort",
+        label: { ru: "Восстановление и комфорт", en: "Recovery and comfort" },
+        scores: { [SLUGS.LIFT]: 2, [SLUGS.HYDRO]: 2 },
+      },
     ],
   },
 ];
@@ -70,51 +198,69 @@ const Quiz = () => {
   const total = QUESTIONS.length;
   const current = QUESTIONS[step];
 
-  const selectedTags = useMemo(() => {
-    const tags: string[] = [];
-    QUESTIONS.forEach((q) => {
-      const v = answers[q.id];
-      if (!v) return;
-      const opt = q.options.find((o) => o.value === v);
-      if (opt) tags.push(...opt.tags);
-    });
-    return tags;
+  // Compute scores per product slug from all answers.
+  const recommendedSlugs = useMemo<Slug[]>(() => {
+    const scores: Record<string, number> = {
+      [SLUGS.RENEW]: 0,
+      [SLUGS.RENEW_NIGHT]: 0,
+      [SLUGS.LIFT]: 0,
+      [SLUGS.HYDRO]: 0,
+    };
+    for (const q of QUESTIONS) {
+      const ans = answers[q.id];
+      if (!ans) continue;
+      const opt = q.options.find((o) => o.value === ans);
+      if (!opt) continue;
+      for (const [slug, delta] of Object.entries(opt.scores)) {
+        scores[slug] = (scores[slug] || 0) + (delta as number);
+      }
+    }
+    // Avoid recommending both retinol SKUs simultaneously: pick the higher one
+    if (scores[SLUGS.RENEW] > 0 && scores[SLUGS.RENEW_NIGHT] > 0) {
+      if (scores[SLUGS.RENEW] >= scores[SLUGS.RENEW_NIGHT]) {
+        scores[SLUGS.RENEW_NIGHT] = -10;
+      } else {
+        scores[SLUGS.RENEW] = -10;
+      }
+    }
+    // Sort slugs by score desc, keep those with positive score, take top 3
+    const sorted = Object.entries(scores)
+      .filter(([, s]) => s > 0)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([slug]) => slug as Slug);
+    // Always include Hydro as a finisher if recommending 1-2 actives and Hydro isn't there
+    if (sorted.length > 0 && !sorted.includes(SLUGS.HYDRO)) {
+      sorted.push(SLUGS.HYDRO);
+    }
+    return sorted;
   }, [answers]);
 
   const fetchResults = async () => {
     setLoading(true);
     try {
-      // Fetch products with at least one matching tag, fallback to bestsellers
+      const slugs = recommendedSlugs;
       let products: ProductLite[] = [];
-      if (selectedTags.length > 0) {
+      if (slugs.length > 0) {
         const { data } = await supabase
           .from("products")
-          .select("id,slug,name,name_en,subtitle,subtitle_en,price,volume,cover_image_url,is_bestseller,is_new,tags")
-          .eq("is_visible", true)
-          .overlaps("tags", selectedTags)
-          .limit(20);
-        products = ((data || []) as any[]).map((p) => p as ProductLite);
-        // Score by number of matching tags
-        const scored = ((data || []) as any[]).map((p) => {
-          const matches = (p.tags || []).filter((t: string) =>
-            selectedTags.some((st) => st.toLowerCase() === t.toLowerCase())
-          ).length;
-          return { p, matches };
-        });
-        scored.sort((a, b) => b.matches - a.matches);
-        products = scored.slice(0, 6).map((s) => s.p as ProductLite);
+          .select("id,slug,name,name_en,subtitle,subtitle_en,price,volume,cover_image_url,is_bestseller,is_new")
+          .in("slug", slugs)
+          .eq("is_visible", true);
+        const found = (data || []) as ProductLite[];
+        // Preserve order from recommendedSlugs
+        products = slugs
+          .map((s) => found.find((p) => p.slug === s))
+          .filter((p): p is ProductLite => Boolean(p));
       }
-      if (products.length < 3) {
+      // Fallback: if nothing matched (e.g. products renamed), show bestsellers
+      if (products.length === 0) {
         const { data } = await supabase
           .from("products")
           .select("id,slug,name,name_en,subtitle,subtitle_en,price,volume,cover_image_url,is_bestseller,is_new")
           .eq("is_visible", true)
-          .eq("is_bestseller", true)
-          .limit(6);
-        const ids = new Set(products.map((p) => p.id));
-        for (const p of (data || []) as ProductLite[]) {
-          if (!ids.has(p.id) && products.length < 6) products.push(p);
-        }
+          .limit(4);
+        products = (data || []) as ProductLite[];
       }
       setResults(products);
     } finally {
@@ -128,7 +274,6 @@ const Quiz = () => {
     if (step < total - 1) {
       setStep(step + 1);
     } else {
-      // Last question — fetch
       setTimeout(() => fetchResults(), 100);
     }
   };
@@ -139,7 +284,6 @@ const Quiz = () => {
     setResults(null);
   };
 
-  // Trigger fetch when entering results
   useEffect(() => {
     if (Object.keys(answers).length === total && results === null && !loading) {
       fetchResults();
@@ -150,10 +294,10 @@ const Quiz = () => {
   return (
     <main className="min-h-screen bg-background">
       <SEO
-        title={lang === "en" ? "Find your perfect skincare — DSOM Quiz" : "Подбор ухода — квиз DSOM"}
+        title={lang === "en" ? "Find your DSOM routine — Quiz" : "Подбор ритуала — квиз DSOM"}
         description={lang === "en"
-          ? "Take a 1-minute quiz to discover skincare products tailored to your skin type and concerns."
-          : "Пройдите минутный квиз и получите персональную подборку ухода под ваш тип кожи."}
+          ? "Take a 1-minute quiz to pick 2-3 DSOM serums and cream tailored to your skin and goals."
+          : "Пройдите минутный квиз — подберём 2-3 продукта DSOM под ваш тип кожи и цель."}
       />
       <Header />
 
@@ -162,16 +306,20 @@ const Quiz = () => {
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-12">
               <p className="text-[11px] tracking-luxe uppercase text-accent mb-4">
-                — {lang === "en" ? "Skincare quiz" : "Подбор ухода"}
+                — {lang === "en" ? "Skincare quiz" : "Подбор ритуала"}
               </p>
               <h1 className="font-display text-5xl md:text-6xl leading-[0.98]">
-                {lang === "en" ? "Find your" : "Найдите свой"}
+                {lang === "en" ? "Find your" : "Подберём"}
                 <br />
-                <span className="italic">{lang === "en" ? "perfect routine" : "идеальный ритуал"}</span>
+                <span className="italic">{lang === "en" ? "DSOM ritual" : "ваш ритуал"}</span>
               </h1>
+              <p className="mt-6 text-muted-foreground max-w-xl mx-auto leading-relaxed">
+                {lang === "en"
+                  ? "5 quick questions about your skin, your concerns and your routine. We'll recommend 2-3 products from the DSOM line."
+                  : "5 коротких вопросов о вашей коже, целях и привычках. Подберём 2-3 продукта из линейки DSOM."}
+              </p>
             </div>
 
-            {/* Progress */}
             <div className="flex items-center gap-1.5 mb-10">
               {QUESTIONS.map((_, i) => (
                 <div
@@ -217,20 +365,25 @@ const Quiz = () => {
           <div className="text-center py-32">
             <Sparkles className="w-8 h-8 mx-auto animate-pulse text-accent" />
             <p className="text-[11px] tracking-luxe uppercase text-muted-foreground mt-4">
-              {lang === "en" ? "Crafting your selection…" : "Подбираем для вас…"}
+              {lang === "en" ? "Crafting your selection…" : "Подбираем ритуал…"}
             </p>
           </div>
         ) : (
           <div>
             <div className="text-center mb-12">
               <p className="text-[11px] tracking-luxe uppercase text-accent mb-4">
-                — {lang === "en" ? "Your selection" : "Ваша подборка"}
+                — {lang === "en" ? "Your DSOM ritual" : "Ваш ритуал DSOM"}
               </p>
               <h1 className="font-display text-5xl md:text-6xl leading-[0.98]">
                 {lang === "en" ? "Curated for" : "Подобрано"}
                 <br />
-                <span className="italic">{lang === "en" ? "your skin" : "для вашей кожи"}</span>
+                <span className="italic">{lang === "en" ? "your skin" : "под вашу кожу"}</span>
               </h1>
+              <p className="mt-6 text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                {lang === "en"
+                  ? "These products work together. After launch, you'll be able to buy them on Ozon — get a 5% promo code by subscribing to our newsletter."
+                  : "Эти продукты работают вместе. После запуска вы сможете купить их на Ozon — оставьте email и получите промокод 5% к старту."}
+              </p>
               <button
                 onClick={restart}
                 className="mt-8 inline-flex items-center gap-2 text-[11px] tracking-luxe uppercase text-muted-foreground hover:text-foreground transition-colors"
@@ -243,8 +396,8 @@ const Quiz = () => {
             {results.length === 0 ? (
               <p className="text-center text-muted-foreground italic font-display text-2xl py-16">
                 {lang === "en"
-                  ? "We couldn't find a perfect match. Browse our full catalog."
-                  : "Точного совпадения не нашлось. Посмотрите весь каталог."}
+                  ? "We couldn't find a match. Browse our full catalog."
+                  : "Подходящего совпадения не нашлось. Посмотрите весь каталог."}
               </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16 max-w-6xl mx-auto">
