@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import ProductCard, { ProductLite } from "@/components/ProductCard";
 import QuickViewDialog from "@/components/QuickViewDialog";
 import PromoStrip from "@/components/PromoStrip";
+import PromoGate from "@/components/PromoGate";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import SocialProof from "@/components/SocialProof";
 import SEO from "@/components/SEO";
@@ -104,16 +105,20 @@ const Index = () => {
           {/* CTAs */}
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             {/* Primary — white pill with play */}
-            <Link
-              to={banner?.cta_url && banner.cta_url.trim() ? banner.cta_url : "/quiz"}
-              onClick={() => banner && track("banner_click", { banner_id: banner.id, value: banner.ab_group || "default" })}
+            <a
+              href="#promo"
+              onClick={(e) => {
+                banner && track("banner_click", { banner_id: banner.id, value: banner.ab_group || "default" });
+                e.preventDefault();
+                document.getElementById("promo")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
               className="group inline-flex items-center gap-3 bg-white text-[#111] rounded-full pl-2 pr-7 py-2 font-barlow font-medium text-[14px] hover:bg-white/90 transition-colors"
             >
               <span className="grid place-items-center w-10 h-10 rounded-full bg-[#111] text-white">
                 <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
               </span>
               <span>{lang === "en" ? "Get 5% launch promo" : "Получить промокод 5%"}</span>
-            </Link>
+            </a>
 
             {/* Secondary — ghost outlined */}
             <Link
@@ -146,6 +151,24 @@ const Index = () => {
               {t("sections.all")} →
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* PROMO GATE — Telegram + email funnel (собрание 19.05) */}
+      <section id="promo" className="py-20 md:py-28 bg-muted/30">
+        <div className="container max-w-2xl">
+          <div className="text-center mb-10">
+            <p className="text-[11px] tracking-luxe uppercase text-accent mb-5">— {lang === "en" ? "Welcome offer" : "Промокод 5%"}</p>
+            <h2 className="font-display text-4xl md:text-5xl mb-4">
+              {lang === "en" ? "Be the first on launch day" : "Будьте первыми на старте"}
+            </h2>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              {lang === "en"
+                ? "Get promocode DSOM5 for 5% off on Ozon. We'll notify you on launch — June 11, 2026."
+                : "Промокод DSOM5 — 5% на первый заказ на Ozon. Напомним за день до старта 11 июня."}
+            </p>
+          </div>
+          <PromoGate variant="card" source="hero" />
         </div>
       </section>
 

@@ -11,13 +11,36 @@ interface Props {
 
 const SITE_NAME = "DSOM";
 const DEFAULT_DESCRIPTION =
-  "DSOM — кураторский магазин нишевой косметики. Уход за лицом и телом от мировых брендов. Доставка по России и за рубеж.";
+  "Сыворотки и крем с указанными концентрациями: Vitamin C 2000 ppm, Ретинол 0,3%, PDRN 0,1%. Без маркетинговых уловок. Старт продаж на Ozon — июнь 2026.";
+
+const ORGANIZATION_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "DSOM",
+  legalName: "ООО «ВАЛКЭНДВИР»",
+  url: "https://dsom.ru",
+  logo: "https://dsom.ru/og-default.jpg",
+  taxID: "9707045838",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "ул. Краснопролетарская, 7",
+    addressLocality: "Москва",
+    addressCountry: "RU",
+  },
+  contactPoint: [
+    { "@type": "ContactPoint", contactType: "customer support", email: "hello@dsom.ru" },
+    { "@type": "ContactPoint", contactType: "sales", email: "b2b@dsom.ru" },
+  ],
+  sameAs: ["https://t.me/dsom_official"],
+};
 
 const SEO = ({ title, description, image, type = "website", jsonLd, canonical }: Props) => {
-  const fullTitle = title ? `${title} — ${SITE_NAME}` : `${SITE_NAME} — Уход, рождённый наукой`;
+  const fullTitle = title ? `${title} — ${SITE_NAME}` : `${SITE_NAME} — Активная косметика с прозрачным составом`;
   const desc = description || DEFAULT_DESCRIPTION;
   const url = canonical || (typeof window !== "undefined" ? window.location.href : "");
   const ogImage = image || "/og-default.jpg";
+  const ldArr = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+  const allLd = [ORGANIZATION_JSONLD, ...ldArr];
 
   return (
     <Helmet>
@@ -37,11 +60,11 @@ const SEO = ({ title, description, image, type = "website", jsonLd, canonical }:
       <meta name="twitter:description" content={desc} />
       {ogImage && <meta name="twitter:image" content={ogImage} />}
 
-      {jsonLd && (
-        <script type="application/ld+json">
-          {JSON.stringify(jsonLd)}
+      {allLd.map((ld, i) => (
+        <script key={i} type="application/ld+json">
+          {JSON.stringify(ld)}
         </script>
-      )}
+      ))}
     </Helmet>
   );
 };

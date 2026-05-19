@@ -4,6 +4,11 @@ Allow: /
 Disallow: /admin
 Disallow: /admin/
 Disallow: /auth
+Disallow: /studio
+Disallow: /api
+Disallow: /storage/
+Disallow: /rest/
+Disallow: /functions/
 
 # Major crawlers
 User-agent: Googlebot
