@@ -4,17 +4,13 @@ import { MessageCircle, Mail, Check, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import { ymGoal } from "@/lib/metrika";
+import { LAUNCH_CONFIG, currentPhase } from "@/lib/launchConfig";
 
 /**
  * Воронка промокода: Telegram-first + email-резерв.
- * Решение собрания 19.05.2026, Блок 1.
- *
- * Пропсы:
- *   variant — "inline" (компактно для футера/конца страниц) или "card" (полноразмерный блок).
- *   source  — UTM-метка-источник: 'hero' | 'catalog' | 'product' | 'footer'.
+ * Решение собрания 19.05.2026, Блок 1. Уточнение: 2 фазы (launch 10% / welcome 5%).
  */
-const TG_BOT_URL = "https://t.me/dsom_promo_bot?start=promo5";
-const PROMO_CODE = "DSOM5";
+const TG_BOT_URL = LAUNCH_CONFIG.telegramBotUrl;
 
 interface Props {
   variant?: "inline" | "card";
@@ -29,6 +25,11 @@ const PromoGate = ({ variant = "card", source }: Props) => {
   const [consent, setConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Текущая фаза: на старте 10%, далее welcome 5%
+  const phase = currentPhase();
+  const PROMO_CODE = phase === "launch" ? LAUNCH_CONFIG.launchCode : LAUNCH_CONFIG.welcomeCode;
+  const DISCOUNT = phase === "launch" ? LAUNCH_CONFIG.launchDiscountPercent : LAUNCH_CONFIG.welcomeDiscountPercent;
 
   const handleTelegram = () => {
     track("promo_click", { value: `tg:${source}` });
@@ -58,9 +59,9 @@ const PromoGate = ({ variant = "card", source }: Props) => {
         body: {
           to: email,
           template: "promo_welcome",
-          variables: { code: PROMO_CODE, ozon_url: `https://www.ozon.ru/seller/dsom?utm_source=site&utm_medium=email&utm_campaign=promo5` },
+          variables: { code: PROMO_CODE, discount: DISCOUNT, ozon_url: LAUNCH_CONFIG.ozonSellerUrl + `&utm_campaign=${PROMO_CODE.toLowerCase()}` },
         },
-      }).catch(() => null); // если фукнция отсутствует — не фейлим UX, лид всё равно сохранён
+      }).catch(() => null); // если функция отсутствует — не фейлим UX, лид всё равно сохранён
       track("email_submit", { value: `promo:${source}` });
       ymGoal("email_submit", { source });
       setMode("submitted");
@@ -130,9 +131,9 @@ const PromoGate = ({ variant = "card", source }: Props) => {
     <div className={variant === "card" ? "rounded-2xl border border-border bg-card p-6" : ""}>
       {variant === "card" && (
         <>
-          <p className="text-[10px] tracking-luxe uppercase text-accent mb-2">— {lang === "en" ? "Welcome offer" : "Промокод 5%"}</p>
+          <p className="text-[10px] tracking-luxe uppercase text-accent mb-2">— {lang === "en" ? (phase === "launch" ? "Launch offer" : "Welcome offer") : (phase === "launch" ? "Стартовая акция" : "Приветственная скидка")}</p>
           <p className="font-display text-xl mb-1">
-            {lang === "en" ? "Get 5% off on Ozon launch" : "5% на первый заказ на Ozon"}
+            {lang === "en" ? `Get ${DISCOUNT}% off on Ozon` : `${DISCOUNT}% на первый заказ на Ozon`}
           </p>
           <p className="text-sm text-muted-foreground mb-5">
             {lang === "en" ? "Choose where to receive it." : "Выберите, куда отправить промокод."}
