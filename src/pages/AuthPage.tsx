@@ -29,14 +29,14 @@ declare global {
   }
 }
 
-type Mode = "signin" | "signup" | "forgot";
+type Mode = "signin" | "signup" | "forgot" | "promo";
 
 const AuthPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isPromoFlow = searchParams.get("next") === "promo";
-  const [mode, setMode] = useState<Mode>(isPromoFlow ? "signup" : "signin");
+  const [mode, setMode] = useState<Mode>(isPromoFlow ? "promo" : "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -49,9 +49,9 @@ const AuthPage = () => {
   const captchaRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
 
-  // Load Turnstile script + render widget on signup mode
+  // Load Turnstile script + render widget on signup/promo mode
   useEffect(() => {
-    if (mode !== "signup") {
+    if (mode !== "signup" && mode !== "promo") {
       if (widgetIdRef.current && window.turnstile) {
         try { window.turnstile.remove(widgetIdRef.current); } catch {}
         widgetIdRef.current = null;
@@ -113,7 +113,7 @@ const AuthPage = () => {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (mode === "signup") {
+    if (mode === "signup" || mode === "promo") {
       if (!pdnConsent) {
         toast.error("Необходимо согласие на обработку персональных данных");
         return;
@@ -126,7 +126,28 @@ const AuthPage = () => {
 
     setLoading(true);
     try {
-      if (mode === "signup") {
+      if (mode === "promo") {
+        // Magic-link flow: только email (опционально имя), без пароля.
+        // Создаёт пользователя если не существует, иначе логинит существующего.
+        const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
+          "verify-turnstile",
+          { body: { token: captchaToken } },
+        );
+        if (verifyError || !verifyData?.success) {
+          resetCaptcha();
+          throw new Error("Проверка капчи не пройдена. Попробуйте ещё раз.");
+        }
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+          options: {
+            data: name ? { full_name: name } : undefined,
+            shouldCreateUser: true,
+            emailRedirectTo: `${APP_URL}/promo-claim`,
+          },
+        });
+        if (error) throw error;
+        setSubmitted("signup"); // переиспользуем экран «проверьте почту»
+      } else if (mode === "signup") {
         // 1) Verify captcha server-side
         const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
           "verify-turnstile",
@@ -174,7 +195,7 @@ const AuthPage = () => {
       }
     } catch (err: any) {
       toast.error(getAuthErrorMessage(err.message));
-      if (mode === "signup") resetCaptcha();
+      if (mode === "signup" || mode === "promo") resetCaptcha();
     } finally {
       setLoading(false);
     }
@@ -268,17 +289,12 @@ const AuthPage = () => {
   }
 
   // ---------- Form ----------
-  const titles: Record<Mode, { title: string; subtitle: string; cta: string }> = isPromoFlow
-    ? {
-        signin: { title: "Войти", subtitle: "Войдите чтобы получить промокод", cta: "Войти" },
-        signup: { title: "Получить промокод", subtitle: "Создайте аккаунт — пришлём промокод на почту после подтверждения email", cta: "Зарегистрироваться" },
-        forgot: { title: "Восстановление", subtitle: "Введите email — мы отправим ссылку для сброса пароля", cta: "Отправить ссылку" },
-      }
-    : {
-        signin: { title: "Войти", subtitle: "Войдите в аккаунт DSOM", cta: "Войти" },
-        signup: { title: "Регистрация", subtitle: "Создайте аккаунт DSOM", cta: "Создать аккаунт" },
-        forgot: { title: "Восстановление", subtitle: "Введите email — мы отправим ссылку для сброса пароля", cta: "Отправить ссылку" },
-      };
+  const titles: Record<Mode, { title: string; subtitle: string; cta: string }> = {
+    promo: { title: "Получить промокод", subtitle: "Введите email — пришлём ссылку. По клику получите промокод сразу.", cta: "Прислать ссылку" },
+    signin: { title: "Войти", subtitle: "Войдите в аккаунт DSOM", cta: "Войти" },
+    signup: { title: "Регистрация", subtitle: "Создайте аккаунт DSOM с паролем", cta: "Создать аккаунт" },
+    forgot: { title: "Восстановление", subtitle: "Введите email — мы отправим ссылку для сброса пароля", cta: "Отправить ссылку" },
+  };
   const { title, subtitle, cta } = titles[mode];
 
   return (
@@ -290,14 +306,16 @@ const AuthPage = () => {
         <p className="text-sm text-muted-foreground text-center mb-10">{subtitle}</p>
 
         <form onSubmit={submit} className="space-y-5">
-          {mode === "signup" && (
+          {(mode === "signup" || mode === "promo") && (
             <div>
-              <label className="text-[10px] tracking-luxe uppercase text-muted-foreground">Имя</label>
+              <label className="text-[10px] tracking-luxe uppercase text-muted-foreground">
+                Имя {mode === "promo" && <span className="opacity-50">(опционально)</span>}
+              </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                required
+                required={mode === "signup"}
                 maxLength={100}
                 className="mt-1.5 w-full bg-transparent border-b border-border focus:border-foreground outline-none py-2 text-sm"
               />
@@ -314,7 +332,7 @@ const AuthPage = () => {
             />
           </div>
 
-          {mode !== "forgot" && (
+          {mode !== "forgot" && mode !== "promo" && (
             <div>
               <div className="flex items-center justify-between">
                 <label className="text-[10px] tracking-luxe uppercase text-muted-foreground">Пароль</label>
@@ -330,7 +348,7 @@ const AuthPage = () => {
             </div>
           )}
 
-          {mode === "signup" && (
+          {(mode === "signup" || mode === "promo") && (
             <div className="space-y-3 pt-2">
               <label className="flex items-start gap-3 cursor-pointer group">
                 <input
@@ -349,17 +367,19 @@ const AuthPage = () => {
                 </span>
               </label>
 
-              <label className="flex items-start gap-3 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={marketingConsent}
-                  onChange={(e) => setMarketingConsent(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded border-border accent-foreground shrink-0"
-                />
-                <span className="text-xs text-muted-foreground leading-relaxed">
-                  Хочу получать новости, специальные предложения и информацию о новинках DSOM на email. Отписаться можно в любой момент.
-                </span>
-              </label>
+              {mode === "signup" && (
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={marketingConsent}
+                    onChange={(e) => setMarketingConsent(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-border accent-foreground shrink-0"
+                  />
+                  <span className="text-xs text-muted-foreground leading-relaxed">
+                    Хочу получать новости, специальные предложения и информацию о новинках DSOM на email. Отписаться можно в любой момент.
+                  </span>
+                </label>
+              )}
 
               {/* Cloudflare Turnstile widget */}
               <div className="pt-2 flex justify-center">
@@ -410,6 +430,23 @@ const AuthPage = () => {
                 Войти
               </button>
             </p>
+          )}
+          {mode === "promo" && (
+            <>
+              <p>
+                Уже есть аккаунт?{" "}
+                <button
+                  onClick={() => switchMode("signin")}
+                  className="text-foreground border-b border-foreground hover:text-accent hover:border-accent transition-colors"
+                >
+                  Войти и получить промокод
+                </button>
+              </p>
+              <p className="text-muted-foreground/70 mt-3">
+                Без пароля — мы пришлём одноразовую ссылку на email.<br/>
+                После клика по ссылке вы попадёте на страницу со своим промокодом.
+              </p>
+            </>
           )}
           {mode === "forgot" && (
             <p>
