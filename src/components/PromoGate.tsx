@@ -13,7 +13,7 @@ import { ymGoal } from "@/lib/metrika";
  *   variant — "inline" (компактно для футера/конца страниц) или "card" (полноразмерный блок).
  *   source  — UTM-метка-источник: 'hero' | 'catalog' | 'product' | 'footer'.
  */
-const TG_BOT_URL = "https://t.me/dsom_helper_bot?start=promo5";
+const TG_BOT_URL = "https://t.me/dsom_promo_bot?start=promo5";
 const PROMO_CODE = "DSOM5";
 
 interface Props {
