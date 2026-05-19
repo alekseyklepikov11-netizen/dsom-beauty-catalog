@@ -23,5 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 APPLY_MIGRATIONS.sql
+.env
 .env.production
 .env.lovable.bak
+.env.local
