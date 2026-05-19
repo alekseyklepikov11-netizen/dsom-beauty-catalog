@@ -23,6 +23,7 @@ import Quiz from "./pages/Quiz.tsx";
 import Account from "./pages/Account.tsx";
 import Unsubscribe from "./pages/Unsubscribe.tsx";
 import EmailUnsubscribe from "./pages/EmailUnsubscribe.tsx";
+import PromoClaim from "./pages/PromoClaim.tsx";
 
 import AdminLogin from "./pages/admin/AdminLogin.tsx";
 import Dashboard from "./pages/admin/Dashboard.tsx";
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/account" element={<Account />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/email-unsubscribe" element={<EmailUnsubscribe />} />
+            <Route path="/promo-claim" element={<PromoClaim />} />
 
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<Protected><Dashboard /></Protected>} />

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -34,7 +34,9 @@ type Mode = "signin" | "signup" | "forgot";
 const AuthPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<Mode>("signin");
+  const [searchParams] = useSearchParams();
+  const isPromoFlow = searchParams.get("next") === "promo";
+  const [mode, setMode] = useState<Mode>(isPromoFlow ? "signup" : "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -144,7 +146,7 @@ const AuthPage = () => {
               full_name: name,
               marketing_consent: marketingConsent,
             },
-            emailRedirectTo: `${APP_URL}/`,
+            emailRedirectTo: isPromoFlow ? `${APP_URL}/promo-claim` : `${APP_URL}/`,
           },
         });
         if (error) throw error;
@@ -162,7 +164,7 @@ const AuthPage = () => {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Вы успешно вошли в аккаунт");
-        navigate("/");
+        navigate(isPromoFlow ? "/promo-claim" : "/");
       } else if (mode === "forgot") {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${APP_URL}/reset-password`,
@@ -266,11 +268,17 @@ const AuthPage = () => {
   }
 
   // ---------- Form ----------
-  const titles: Record<Mode, { title: string; subtitle: string; cta: string }> = {
-    signin: { title: "Войти", subtitle: "Войдите в аккаунт DSOM", cta: "Войти" },
-    signup: { title: "Регистрация", subtitle: "Создайте аккаунт DSOM", cta: "Создать аккаунт" },
-    forgot: { title: "Восстановление", subtitle: "Введите email — мы отправим ссылку для сброса пароля", cta: "Отправить ссылку" },
-  };
+  const titles: Record<Mode, { title: string; subtitle: string; cta: string }> = isPromoFlow
+    ? {
+        signin: { title: "Войти", subtitle: "Войдите чтобы получить промокод", cta: "Войти" },
+        signup: { title: "Получить промокод", subtitle: "Создайте аккаунт — пришлём промокод на почту после подтверждения email", cta: "Зарегистрироваться" },
+        forgot: { title: "Восстановление", subtitle: "Введите email — мы отправим ссылку для сброса пароля", cta: "Отправить ссылку" },
+      }
+    : {
+        signin: { title: "Войти", subtitle: "Войдите в аккаунт DSOM", cta: "Войти" },
+        signup: { title: "Регистрация", subtitle: "Создайте аккаунт DSOM", cta: "Создать аккаунт" },
+        forgot: { title: "Восстановление", subtitle: "Введите email — мы отправим ссылку для сброса пароля", cta: "Отправить ссылку" },
+      };
   const { title, subtitle, cta } = titles[mode];
 
   return (
