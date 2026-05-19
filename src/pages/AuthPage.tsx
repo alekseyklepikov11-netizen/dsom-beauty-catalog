@@ -129,14 +129,8 @@ const AuthPage = () => {
       if (mode === "promo") {
         // Magic-link flow: только email (опционально имя), без пароля.
         // Создаёт пользователя если не существует, иначе логинит существующего.
-        const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
-          "verify-turnstile",
-          { body: { token: captchaToken } },
-        );
-        if (verifyError || !verifyData?.success) {
-          resetCaptcha();
-          throw new Error("Проверка капчи не пройдена. Попробуйте ещё раз.");
-        }
+        // TODO: восстановить серверную верификацию Turnstile когда починим pairing secret/sitekey
+        // Пока оставляем только клиентский виджет (отсекает простых ботов) + Supabase rate-limit.
         const { error } = await supabase.auth.signInWithOtp({
           email,
           options: {

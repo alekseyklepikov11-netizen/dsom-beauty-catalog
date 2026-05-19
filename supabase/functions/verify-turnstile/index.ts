@@ -14,6 +14,8 @@ Deno.serve(async (req) => {
   try {
     const { token } = await req.json();
 
+    console.log('[verify-turnstile] received token:', token ? `${token.substring(0, 20)}... (len=${token.length})` : 'NULL');
+
     if (!token || typeof token !== 'string') {
       return new Response(
         JSON.stringify({ success: false, error: 'missing_token' }),
@@ -22,6 +24,8 @@ Deno.serve(async (req) => {
     }
 
     const secret = Deno.env.get('TURNSTILE_SECRET_KEY');
+    console.log('[verify-turnstile] secret available:', secret ? `yes (len=${secret.length}, prefix=${secret.substring(0,4)})` : 'NO');
+
     if (!secret) {
       return new Response(
         JSON.stringify({ success: false, error: 'server_misconfigured' }),
