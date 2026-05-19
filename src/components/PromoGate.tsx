@@ -50,10 +50,18 @@ const PromoGate = ({ variant = "card", source }: Props) => {
     setLoading(true);
     setError(null);
     try {
-      await supabase.from("newsletter_subscribers").upsert(
-        { email: email.trim().toLowerCase(), source: `promo:${source}` },
+      const src = `promo:${source}`.slice(0, 50);
+      const { error: insErr } = await supabase.from("newsletter_subscribers").upsert(
+        {
+          email: email.trim().toLowerCase(),
+          source: src,
+          is_active: true,
+          consent_source: src,
+          consent_at: new Date().toISOString(),
+        },
         { onConflict: "email" }
       );
+      if (insErr) throw insErr;
       // Триггер транзакционного письма
       await supabase.functions.invoke("send-transactional-email", {
         body: {
@@ -65,8 +73,11 @@ const PromoGate = ({ variant = "card", source }: Props) => {
       track("email_submit", { value: `promo:${source}` });
       ymGoal("email_submit", { source });
       setMode("submitted");
-    } catch (err) {
-      setError(lang === "en" ? "Something went wrong" : "Что-то пошло не так");
+    } catch (err: any) {
+      console.error("[PromoGate] submit failed:", err);
+      setError(lang === "en"
+        ? `Save failed: ${err?.message || "unknown"}`
+        : `Не удалось сохранить: ${err?.message || "неизвестная ошибка"}`);
     } finally {
       setLoading(false);
     }
