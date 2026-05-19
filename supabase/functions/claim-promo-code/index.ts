@@ -56,6 +56,7 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
+    console.log("[claim-promo] auth header present:", !!authHeader);
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "no auth" }), { status: 401, headers: corsHeaders });
     }
@@ -63,15 +64,19 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const anon = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    console.log("[claim-promo] env:", { hasUrl: !!supabaseUrl, hasAnon: !!anon, hasService: !!serviceKey });
 
     // 1. Валидируем пользователя через JWT
-    const userClient = createClient(supabaseUrl, anon, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user }, error: userErr } = await userClient.auth.getUser();
+    // getUser() без аргумента читает локальную сессию (которой нет в edge-fn),
+    // поэтому достаём токен из Authorization header и передаём явно.
+    const jwt = authHeader.replace(/^Bearer\s+/i, "").trim();
+    const userClient = createClient(supabaseUrl, anon);
+    const { data: { user }, error: userErr } = await userClient.auth.getUser(jwt);
     if (userErr || !user) {
-      return new Response(JSON.stringify({ error: "invalid session" }), { status: 401, headers: corsHeaders });
+      console.error("[claim-promo] getUser failed:", userErr);
+      return new Response(JSON.stringify({ error: "invalid session", detail: userErr?.message }), { status: 401, headers: corsHeaders });
     }
+    console.log("[claim-promo] user:", { id: user.id, email: user.email, confirmed_at: user.email_confirmed_at || user.confirmed_at });
     if (!user.email) {
       return new Response(JSON.stringify({ error: "no email" }), { status: 400, headers: corsHeaders });
     }
@@ -103,6 +108,7 @@ serve(async (req) => {
       discount = phase === "launch" ? LAUNCH_CONFIG.launch_discount : LAUNCH_CONFIG.welcome_discount;
       validUntilDate = validUntil(phase);
 
+      console.log("[claim-promo] inserting lead:", { email: emailLower, phase, code, validUntilDate });
       const { error: insErr } = await admin.from("promo_leads").insert({
         email: emailLower,
         user_id: user.id,
@@ -113,11 +119,12 @@ serve(async (req) => {
         source: "site:registration",
       });
       if (insErr) {
-        console.error("[claim-promo] insert error:", insErr);
+        console.error("[claim-promo] insert error:", insErr.message, insErr.details, insErr.hint);
         return new Response(JSON.stringify({ error: "save failed", detail: insErr.message }), {
           status: 500, headers: corsHeaders,
         });
       }
+      console.log("[claim-promo] lead inserted OK");
 
       // Отправить welcome+promo письмо через единый канал транзакционной почты
       try {

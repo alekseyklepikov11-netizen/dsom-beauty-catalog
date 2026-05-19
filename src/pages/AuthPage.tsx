@@ -142,17 +142,8 @@ const AuthPage = () => {
         if (error) throw error;
         setSubmitted("signup"); // переиспользуем экран «проверьте почту»
       } else if (mode === "signup") {
-        // 1) Verify captcha server-side
-        const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
-          "verify-turnstile",
-          { body: { token: captchaToken } },
-        );
-        if (verifyError || !verifyData?.success) {
-          resetCaptcha();
-          throw new Error("Проверка капчи не пройдена. Попробуйте ещё раз.");
-        }
-
-        // 2) Sign up
+        // TODO: восстановить server-side verify-turnstile когда починим pairing.
+        // Пока клиентский виджет + Supabase rate-limit (4 signup/час/email).
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
