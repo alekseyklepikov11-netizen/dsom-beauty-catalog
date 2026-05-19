@@ -39,6 +39,7 @@ const AuthPage = () => {
   const [mode, setMode] = useState<Mode>(isPromoFlow ? "promo" : "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [name, setName] = useState("");
   const [pdnConsent, setPdnConsent] = useState(false);
   const [marketingConsent, setMarketingConsent] = useState(false);
@@ -120,6 +121,16 @@ const AuthPage = () => {
       }
       if (!captchaToken) {
         toast.error("Пожалуйста, подтвердите, что вы не робот");
+        return;
+      }
+    }
+    if (mode === "signup") {
+      if (password.length < 6) {
+        toast.error("Пароль должен быть не короче 6 символов");
+        return;
+      }
+      if (password !== passwordConfirm) {
+        toast.error("Пароли не совпадают");
         return;
       }
     }
@@ -318,19 +329,40 @@ const AuthPage = () => {
           </div>
 
           {mode !== "forgot" && mode !== "promo" && (
-            <div>
-              <div className="flex items-center justify-between">
-                <label className="text-[10px] tracking-luxe uppercase text-muted-foreground">Пароль</label>
+            <>
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] tracking-luxe uppercase text-muted-foreground">Пароль</label>
+                  {mode === "signup" && (
+                    <span className="text-[10px] text-muted-foreground/70">мин. 6 символов</span>
+                  )}
+                </div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={mode === "signup" ? 6 : undefined}
+                  autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                  className="mt-1.5 w-full bg-transparent border-b border-border focus:border-foreground outline-none py-2 text-sm"
+                />
               </div>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                className="mt-1.5 w-full bg-transparent border-b border-border focus:border-foreground outline-none py-2 text-sm"
-              />
-            </div>
+              {mode === "signup" && (
+                <div>
+                  <label className="text-[10px] tracking-luxe uppercase text-muted-foreground">Подтвердите пароль</label>
+                  <input
+                    type="password"
+                    value={passwordConfirm}
+                    onChange={(e) => setPasswordConfirm(e.target.value)}
+                    required minLength={6} autoComplete="new-password"
+                    className="mt-1.5 w-full bg-transparent border-b border-border focus:border-foreground outline-none py-2 text-sm"
+                  />
+                  {passwordConfirm && password !== passwordConfirm && (
+                    <p className="mt-1.5 text-[10px] text-destructive">Пароли не совпадают</p>
+                  )}
+                </div>
+              )}
+            </>
           )}
 
           {(mode === "signup" || mode === "promo") && (
