@@ -12,8 +12,27 @@ import RelatedProducts from "@/components/RelatedProducts";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import QuickViewDialog from "@/components/QuickViewDialog";
 import StockAlertDialog from "@/components/StockAlertDialog";
+import PromoGate from "@/components/PromoGate";
 import { track } from "@/lib/analytics";
 import { addRecentlyViewed } from "@/lib/recentlyViewed";
+
+// FAQ блок — короткий, общий для всех 4 продуктов DSOM
+const PRODUCT_FAQS_RU = [
+  { q: "Когда стартуют продажи?", a: "11 июня 2026 года, эксклюзивно на Ozon. Подпишитесь на промокод выше — напомним за день до старта." },
+  { q: "Где производится?", a: "На контрактном производстве в Казани, Технополис «Химград». Декларация ЕАЭС в процессе оформления." },
+  { q: "Есть ли отдушка?", a: "Да, в составе есть лёгкая отдушка. Мы не делаем «100% без отдушек» из принципа честной коммуникации." },
+  { q: "Можно ли использовать беременным и кормящим?", a: "Ретинол (P2 Renew) — нет. Vitamin C, PDRN, ламеллярный крем — возможно, но рекомендуем согласовать с врачом." },
+  { q: "Подходит ли для чувствительной кожи?", a: "P3 Lift и P4 Hydro — да. P1 Glow и P2 Renew — начинать постепенно (1-2 раза в неделю)." },
+  { q: "Сколько хватает одной упаковки?", a: "30 мл сыворотки — на 2-3 месяца при ежедневном использовании. 50 мл крема — на 1.5-2 месяца." },
+];
+const PRODUCT_FAQS_EN = [
+  { q: "When does it launch?", a: "June 11, 2026, exclusively on Ozon. Subscribe to the promo above — we'll remind you the day before." },
+  { q: "Where is it made?", a: "Contract manufacturing in Kazan, Technopolis Khimgrad. EAEU declaration in progress." },
+  { q: "Is there fragrance?", a: "Yes, a light fragrance is added. We don't claim '100% fragrance-free' on principle." },
+  { q: "Safe during pregnancy?", a: "Retinol (P2 Renew) — no. Vitamin C, PDRN, lamellar cream — possibly, but consult your doctor." },
+  { q: "Sensitive skin?", a: "P3 Lift and P4 Hydro — yes. P1 Glow and P2 Renew — start 1-2 times per week." },
+  { q: "How long does one bottle last?", a: "30 ml serum — 2-3 months at daily use. 50 ml cream — 1.5-2 months." },
+];
 
 interface Product {
   id: string; slug: string; name: string; name_en: string | null;
@@ -99,22 +118,33 @@ const ProductPage = () => {
     new Set([product.cover_image_url, ...images.map((i) => i.url)].filter(Boolean) as string[])
   );
 
-  const jsonLd = {
+  const faqList = lang === "en" ? PRODUCT_FAQS_EN : PRODUCT_FAQS_RU;
+  const productLd = {
     "@context": "https://schema.org/",
     "@type": "Product",
     name,
     description: description || subtitle || name,
     image: gallery,
     sku: product.slug,
-    brand: brandName ? { "@type": "Brand", name: brandName } : undefined,
+    brand: brandName ? { "@type": "Brand", name: brandName } : { "@type": "Brand", name: "DSOM" },
     offers: {
       "@type": "Offer",
       url: typeof window !== "undefined" ? window.location.href : undefined,
       priceCurrency: "RUB",
       price: Number(product.price),
-      availability: "https://schema.org/InStock",
+      availability: links.length > 0 ? "https://schema.org/InStock" : "https://schema.org/PreOrder",
     },
   };
+  const faqLd = {
+    "@context": "https://schema.org/",
+    "@type": "FAQPage",
+    mainEntity: faqList.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+  const jsonLd = [productLd, faqLd];
 
   return (
     <main className="min-h-screen bg-background">
@@ -244,13 +274,25 @@ const ProductPage = () => {
             {/* Marketplace buttons */}
             <div className="mt-8">
               <p className="text-[11px] tracking-luxe uppercase text-muted-foreground mb-4">{t("product.marketplaces")}</p>
-              <div className="flex flex-col gap-2.5 max-w-md">
-                {links.length === 0 && <p className="text-sm text-muted-foreground italic">—</p>}
-                {links.map((l) => <MarketplaceButton key={l.id} kind={l.kind} url={l.url} label={l.label} productId={product.id} />)}
-              </div>
-              <div className="max-w-md mt-3">
-                <StockAlertDialog productId={product.id} productName={name} />
-              </div>
+              {links.length > 0 ? (
+                <>
+                  <div className="flex flex-col gap-2.5 max-w-md">
+                    {links.map((l) => <MarketplaceButton key={l.id} kind={l.kind} url={l.url} label={l.label} productId={product.id} />)}
+                  </div>
+                  <div className="max-w-md mt-3">
+                    <StockAlertDialog productId={product.id} productName={name} />
+                  </div>
+                </>
+              ) : (
+                <div className="max-w-md">
+                  <p className="text-sm text-muted-foreground mb-4 italic">
+                    {lang === "en"
+                      ? "Launch on Ozon — June 11, 2026. Get a 5% promocode now."
+                      : "Старт продаж на Ozon — 11 июня 2026. Получите промокод 5% уже сейчас."}
+                  </p>
+                  <PromoGate variant="card" source={`product:${product.slug}`} />
+                </div>
+              )}
             </div>
 
             {/* Tabs */}
@@ -293,6 +335,25 @@ const ProductPage = () => {
                 </ul>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* FAQ — отдельный блок с FAQPage JSON-LD */}
+        <div className="max-w-3xl mx-auto mt-24 pt-12 border-t border-border">
+          <p className="text-[11px] tracking-luxe uppercase text-accent mb-4 text-center">— FAQ</p>
+          <h2 className="font-display text-3xl md:text-4xl text-center mb-10">
+            {lang === "en" ? "Frequently asked" : "Частые вопросы"}
+          </h2>
+          <div className="space-y-2">
+            {faqList.map((f, i) => (
+              <details key={i} className="group border border-border rounded-xl px-5 py-4 open:bg-muted/30 transition-colors">
+                <summary className="cursor-pointer list-none flex items-start justify-between gap-4 font-display text-lg leading-snug">
+                  {f.q}
+                  <span className="text-accent text-2xl leading-none transition-transform group-open:rotate-45">+</span>
+                </summary>
+                <p className="text-sm text-muted-foreground leading-relaxed mt-3">{f.a}</p>
+              </details>
+            ))}
           </div>
         </div>
 

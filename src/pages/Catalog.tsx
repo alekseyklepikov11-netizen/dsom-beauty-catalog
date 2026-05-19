@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard, { ProductLite } from "@/components/ProductCard";
 import QuickViewDialog from "@/components/QuickViewDialog";
+import PromoGate from "@/components/PromoGate";
 import { SKIN_TYPES } from "@/lib/skinTypes";
 
 interface Cat { id: string; slug: string; name: string; name_en: string | null; parent_id: string | null }
@@ -185,6 +186,24 @@ const Catalog = () => {
               {products.map((p, i) => <ProductCard key={p.id} product={p} index={i} onQuickView={setQuickSlug} />)}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Промокод-CTA в конце каталога */}
+      <section className="py-16 md:py-20 bg-muted/30">
+        <div className="container max-w-2xl">
+          <div className="text-center mb-8">
+            <p className="text-[11px] tracking-luxe uppercase text-accent mb-3">— {i18n.language === "en" ? "Welcome offer" : "Промокод 5%"}</p>
+            <h2 className="font-display text-3xl md:text-4xl mb-3">
+              {i18n.language === "en" ? "Get it on launch day" : "Заберите на старте продаж"}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {i18n.language === "en"
+                ? "Promocode DSOM5 on Ozon. Launch — June 11, 2026."
+                : "Промокод DSOM5 на Ozon. Старт — 11 июня 2026."}
+            </p>
+          </div>
+          <PromoGate variant="card" source="catalog" />
         </div>
       </section>
 
