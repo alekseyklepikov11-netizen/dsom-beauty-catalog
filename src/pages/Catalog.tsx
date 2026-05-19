@@ -195,7 +195,6 @@ const Catalog = () => {
         <div className="container max-w-2xl">
           {(() => {
             const ph = currentPhase();
-            const code = ph === "launch" ? LAUNCH_CONFIG.launchCode : LAUNCH_CONFIG.welcomeCode;
             const pct = ph === "launch" ? LAUNCH_CONFIG.launchDiscountPercent : LAUNCH_CONFIG.welcomeDiscountPercent;
             return (
               <div className="text-center mb-8">
@@ -204,9 +203,7 @@ const Catalog = () => {
                   {i18n.language === "en" ? "Get it on launch day" : "Заберите на старте продаж"}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  {i18n.language === "en"
-                    ? `Promocode ${code} — ${pct}% on Ozon.`
-                    : `Промокод ${code} — ${pct}% на Ozon.`}
+                  {i18n.language === "en" ? `Get ${pct}% on Ozon.` : `Скидка ${pct}% на Ozon.`}
                 </p>
               </div>
             );

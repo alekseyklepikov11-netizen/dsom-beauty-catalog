@@ -160,7 +160,6 @@ const Index = () => {
         <div className="container max-w-2xl">
           {(() => {
             const ph = currentPhase();
-            const code = ph === "launch" ? LAUNCH_CONFIG.launchCode : LAUNCH_CONFIG.welcomeCode;
             const pct = ph === "launch" ? LAUNCH_CONFIG.launchDiscountPercent : LAUNCH_CONFIG.welcomeDiscountPercent;
             return (
               <div className="text-center mb-10">
@@ -170,8 +169,8 @@ const Index = () => {
                 </h2>
                 <p className="text-muted-foreground max-w-md mx-auto">
                   {lang === "en"
-                    ? `Promocode ${code} — ${pct}% off on Ozon. We'll notify you on launch.`
-                    : `Промокод ${code} — ${pct}% на первый заказ на Ozon. Напомним за день до старта.`}
+                    ? `Get ${pct}% off on Ozon. We'll notify you on launch.`
+                    : `Скидка ${pct}% на первый заказ на Ozon. Напомним за день до старта.`}
                 </p>
               </div>
             );
