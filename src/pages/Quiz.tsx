@@ -381,8 +381,8 @@ const Quiz = () => {
               </h1>
               <p className="mt-6 text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 {lang === "en"
-                  ? "These products work together. After launch, you'll be able to buy them on Ozon — get a 5% promo code by subscribing to our newsletter."
-                  : "Эти продукты работают вместе. После запуска вы сможете купить их на Ozon — оставьте email и получите промокод 5% к старту."}
+                  ? "These products work together. After launch, you'll be able to buy them on Ozon — get a promocode by subscribing to our channel."
+                  : "Эти продукты работают вместе. После запуска вы сможете купить их на Ozon — получите промокод, подписавшись на канал."}
               </p>
               <button
                 onClick={restart}

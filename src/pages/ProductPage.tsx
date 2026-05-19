@@ -13,6 +13,7 @@ import RecentlyViewed from "@/components/RecentlyViewed";
 import QuickViewDialog from "@/components/QuickViewDialog";
 import StockAlertDialog from "@/components/StockAlertDialog";
 import PromoGate from "@/components/PromoGate";
+import { LAUNCH_CONFIG, currentPhase } from "@/lib/launchConfig";
 import { track } from "@/lib/analytics";
 import { addRecentlyViewed } from "@/lib/recentlyViewed";
 
@@ -286,9 +287,13 @@ const ProductPage = () => {
               ) : (
                 <div className="max-w-md">
                   <p className="text-sm text-muted-foreground mb-4 italic">
-                    {lang === "en"
-                      ? "Launch on Ozon — June 11, 2026. Get a 5% promocode now."
-                      : "Старт продаж на Ozon — 11 июня 2026. Получите промокод 5% уже сейчас."}
+                    {(() => {
+                      const ph = currentPhase();
+                      const pct = ph === "launch" ? LAUNCH_CONFIG.launchDiscountPercent : LAUNCH_CONFIG.welcomeDiscountPercent;
+                      return lang === "en"
+                        ? `Launch on Ozon. Get a ${pct}% promocode now.`
+                        : `Старт продаж на Ozon. Получите промокод ${pct}% уже сейчас.`;
+                    })()}
                   </p>
                   <PromoGate variant="card" source={`product:${product.slug}`} />
                 </div>

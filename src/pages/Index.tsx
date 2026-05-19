@@ -9,6 +9,7 @@ import ProductCard, { ProductLite } from "@/components/ProductCard";
 import QuickViewDialog from "@/components/QuickViewDialog";
 import PromoStrip from "@/components/PromoStrip";
 import PromoGate from "@/components/PromoGate";
+import { LAUNCH_CONFIG, currentPhase } from "@/lib/launchConfig";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import SocialProof from "@/components/SocialProof";
 import SEO from "@/components/SEO";
@@ -117,7 +118,7 @@ const Index = () => {
               <span className="grid place-items-center w-10 h-10 rounded-full bg-[#111] text-white">
                 <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
               </span>
-              <span>{lang === "en" ? "Get 5% launch promo" : "Получить промокод 5%"}</span>
+              <span>{lang === "en" ? `Get ${currentPhase() === "launch" ? LAUNCH_CONFIG.launchDiscountPercent : LAUNCH_CONFIG.welcomeDiscountPercent}% promocode` : `Получить промокод ${currentPhase() === "launch" ? LAUNCH_CONFIG.launchDiscountPercent : LAUNCH_CONFIG.welcomeDiscountPercent}%`}</span>
             </a>
 
             {/* Secondary — ghost outlined */}
@@ -155,19 +156,26 @@ const Index = () => {
       </section>
 
       {/* PROMO GATE — Telegram + email funnel (собрание 19.05) */}
-      <section id="promo" className="py-20 md:py-28 bg-muted/30">
+      <section id="promo" className="py-20 md:py-28 bg-muted/30 scroll-mt-20">
         <div className="container max-w-2xl">
-          <div className="text-center mb-10">
-            <p className="text-[11px] tracking-luxe uppercase text-accent mb-5">— {lang === "en" ? "Welcome offer" : "Промокод 5%"}</p>
-            <h2 className="font-display text-4xl md:text-5xl mb-4">
-              {lang === "en" ? "Be the first on launch day" : "Будьте первыми на старте"}
-            </h2>
-            <p className="text-muted-foreground max-w-md mx-auto">
-              {lang === "en"
-                ? "Get promocode DSOM5 for 5% off on Ozon. We'll notify you on launch — June 11, 2026."
-                : "Промокод DSOM5 — 5% на первый заказ на Ozon. Напомним за день до старта 11 июня."}
-            </p>
-          </div>
+          {(() => {
+            const ph = currentPhase();
+            const code = ph === "launch" ? LAUNCH_CONFIG.launchCode : LAUNCH_CONFIG.welcomeCode;
+            const pct = ph === "launch" ? LAUNCH_CONFIG.launchDiscountPercent : LAUNCH_CONFIG.welcomeDiscountPercent;
+            return (
+              <div className="text-center mb-10">
+                <p className="text-[11px] tracking-luxe uppercase text-accent mb-5">— {lang === "en" ? (ph === "launch" ? "Launch offer" : "Welcome offer") : (ph === "launch" ? "Стартовая акция" : "Приветственная скидка")}</p>
+                <h2 className="font-display text-4xl md:text-5xl mb-4">
+                  {lang === "en" ? "Be the first on launch day" : "Будьте первыми на старте"}
+                </h2>
+                <p className="text-muted-foreground max-w-md mx-auto">
+                  {lang === "en"
+                    ? `Promocode ${code} — ${pct}% off on Ozon. We'll notify you on launch.`
+                    : `Промокод ${code} — ${pct}% на первый заказ на Ozon. Напомним за день до старта.`}
+                </p>
+              </div>
+            );
+          })()}
           <PromoGate variant="card" source="hero" />
         </div>
       </section>
