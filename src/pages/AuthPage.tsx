@@ -155,6 +155,7 @@ const AuthPage = () => {
       } else if (mode === "signup") {
         // TODO: восстановить server-side verify-turnstile когда починим pairing.
         // Пока клиентский виджет + Supabase rate-limit (4 signup/час/email).
+        // Любая регистрация = подарок промокода. После подтверждения email — /promo-claim.
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -163,7 +164,7 @@ const AuthPage = () => {
               full_name: name,
               marketing_consent: marketingConsent,
             },
-            emailRedirectTo: isPromoFlow ? `${APP_URL}/promo-claim` : `${APP_URL}/`,
+            emailRedirectTo: `${APP_URL}/promo-claim`,
           },
         });
         if (error) throw error;
@@ -288,7 +289,7 @@ const AuthPage = () => {
   const titles: Record<Mode, { title: string; subtitle: string; cta: string }> = {
     promo: { title: "Получить промокод", subtitle: "Введите email — пришлём ссылку. По клику получите промокод сразу.", cta: "Прислать ссылку" },
     signin: { title: "Войти", subtitle: "Войдите в аккаунт DSOM", cta: "Войти" },
-    signup: { title: "Регистрация", subtitle: "Создайте аккаунт DSOM с паролем", cta: "Создать аккаунт" },
+    signup: { title: "Регистрация", subtitle: "Создайте аккаунт — после подтверждения email подарим промокод 10%", cta: "Создать аккаунт" },
     forgot: { title: "Восстановление", subtitle: "Введите email — мы отправим ссылку для сброса пароля", cta: "Отправить ссылку" },
   };
   const { title, subtitle, cta } = titles[mode];
