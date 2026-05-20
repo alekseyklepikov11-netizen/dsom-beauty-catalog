@@ -32,9 +32,19 @@ const PromoClaim = () => {
       return;
     }
 
+    let cancelled = false;
+    const timeout = setTimeout(() => {
+      if (cancelled) return;
+      setState((s) => s.stage === "loading"
+        ? { stage: "error", message: lang === "en" ? "Request timed out" : "Сервер не отвечает. Попробуйте обновить страницу." }
+        : s);
+    }, 15000);
+
     (async () => {
       try {
         const { data, error } = await supabase.functions.invoke("claim-promo-code", { body: {} });
+        if (cancelled) return;
+        clearTimeout(timeout);
         if (error) throw error;
         if (!data?.ok) throw new Error(data?.error || "claim failed");
         setState({
@@ -47,10 +57,14 @@ const PromoClaim = () => {
         track("promo_click", { value: `claimed:email:${data.code}` });
         ymGoal("email_promo_claimed", { code: data.code });
       } catch (err: any) {
+        if (cancelled) return;
+        clearTimeout(timeout);
+        console.error("[PromoClaim] claim failed:", err);
         setState({ stage: "error", message: err?.message || "unknown" });
       }
     })();
-  }, [user, authLoading]);
+    return () => { cancelled = true; clearTimeout(timeout); };
+  }, [user, authLoading, lang]);
 
   const formatDate = (iso: string) => {
     try {
