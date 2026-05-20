@@ -138,10 +138,14 @@ const AuthPage = () => {
     setLoading(true);
     try {
       if (mode === "promo") {
+        // PRE-FLIGHT: если confirmed user уже существует → попросим войти, а не слать magic-link заново
+        const { data: chk } = await supabase.rpc("check_user_email", { p_email: email });
+        const row = Array.isArray(chk) && chk.length > 0 ? chk[0] : null;
+        if (row?.user_exists && row?.is_confirmed) {
+          setSubmitted("exists");
+          return;
+        }
         // Magic-link flow: только email (опционально имя), без пароля.
-        // Создаёт пользователя если не существует, иначе логинит существующего.
-        // TODO: восстановить серверную верификацию Turnstile когда починим pairing secret/sitekey
-        // Пока оставляем только клиентский виджет (отсекает простых ботов) + Supabase rate-limit.
         const { error } = await supabase.auth.signInWithOtp({
           email,
           options: {
@@ -153,6 +157,16 @@ const AuthPage = () => {
         if (error) throw error;
         setSubmitted("signup"); // переиспользуем экран «проверьте почту»
       } else if (mode === "signup") {
+        // PRE-FLIGHT CHECK: существует ли юзер?
+        // Используем серверную RPC чтобы избежать Supabase quirks с identities/timing.
+        const { data: chk, error: chkErr } = await supabase.rpc("check_user_email", { p_email: email });
+        if (chkErr) console.warn("[signup] check_user_email failed:", chkErr);
+        const row = Array.isArray(chk) && chk.length > 0 ? chk[0] : null;
+        if (row?.user_exists) {
+          setSubmitted(row.is_confirmed ? "exists" : "already-sent");
+          return;
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -165,43 +179,6 @@ const AuthPage = () => {
           },
         });
         if (error) throw error;
-
-        // DIAGNOSTIC — temporary logging
-        console.log("[signup] response", {
-          hasUser: !!data.user,
-          hasSession: !!data.session,
-          identities: data.user?.identities,
-          identitiesLen: data.user?.identities?.length,
-          email_confirmed_at: data.user?.email_confirmed_at,
-          confirmation_sent_at: (data.user as any)?.confirmation_sent_at,
-          created_at: data.user?.created_at,
-          last_sign_in_at: data.user?.last_sign_in_at,
-        });
-
-        // Анализируем ответ Supabase:
-        // 1) identities = [] → юзер УЖЕ ПОДТВЕРЖДЁН (confirmed exists)
-        // 2) identities > 0 + user.created_at давний → unconfirmed существующий, письмо пересоздано
-        // 3) identities > 0 + user.created_at сейчас → первая регистрация
-        const identities = data.user?.identities ?? [];
-        if (data.user && identities.length === 0) {
-          setSubmitted("exists");
-          return;
-        }
-
-        // Если у юзера есть last_sign_in_at — он уже логинился раньше → точно существующий
-        if (data.user?.last_sign_in_at) {
-          setSubmitted("exists");
-          return;
-        }
-
-        const createdAt = data.user?.created_at ? new Date(data.user.created_at).getTime() : 0;
-        const ageSec = (Date.now() - createdAt) / 1000;
-        if (createdAt > 0 && ageSec > 60) {
-          // Юзер существует, но не подтвердил → Supabase отправил confirmation повторно
-          setSubmitted("already-sent");
-          return;
-        }
-
         setSubmitted("signup");
       } else if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
