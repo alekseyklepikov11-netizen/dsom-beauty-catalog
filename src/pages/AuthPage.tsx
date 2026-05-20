@@ -166,12 +166,30 @@ const AuthPage = () => {
         });
         if (error) throw error;
 
+        // DIAGNOSTIC — temporary logging
+        console.log("[signup] response", {
+          hasUser: !!data.user,
+          hasSession: !!data.session,
+          identities: data.user?.identities,
+          identitiesLen: data.user?.identities?.length,
+          email_confirmed_at: data.user?.email_confirmed_at,
+          confirmation_sent_at: (data.user as any)?.confirmation_sent_at,
+          created_at: data.user?.created_at,
+          last_sign_in_at: data.user?.last_sign_in_at,
+        });
+
         // Анализируем ответ Supabase:
         // 1) identities = [] → юзер УЖЕ ПОДТВЕРЖДЁН (confirmed exists)
         // 2) identities > 0 + user.created_at давний → unconfirmed существующий, письмо пересоздано
         // 3) identities > 0 + user.created_at сейчас → первая регистрация
         const identities = data.user?.identities ?? [];
         if (data.user && identities.length === 0) {
+          setSubmitted("exists");
+          return;
+        }
+
+        // Если у юзера есть last_sign_in_at — он уже логинился раньше → точно существующий
+        if (data.user?.last_sign_in_at) {
           setSubmitted("exists");
           return;
         }
