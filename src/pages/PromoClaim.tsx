@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Check, Loader2, AlertCircle } from "lucide-react";
+import { Check, Loader2, AlertCircle, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
@@ -22,6 +22,8 @@ const PromoClaim = () => {
   const lang = i18n.language;
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const fromSignup = searchParams.get("from") === "signup";
   const [state, setState] = useState<State>({ stage: "loading" });
 
   useEffect(() => {
@@ -104,16 +106,37 @@ const PromoClaim = () => {
 
         {state.stage === "success" && (
           <>
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-foreground text-background mb-6">
-              <Check className="w-6 h-6" strokeWidth={1.5} />
-            </div>
-            <h1 className="font-display text-4xl leading-[1.1] mb-3">
-              {lang === "en" ? "Your promocode" : "Ваш промокод"}
-            </h1>
-            <div className="inline-block bg-foreground text-background px-8 py-4 rounded-2xl my-6">
+            {fromSignup ? (
+              <>
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/15 text-accent mb-6">
+                  <Sparkles className="w-7 h-7" strokeWidth={1.5} />
+                </div>
+                <p className="text-[11px] tracking-luxe uppercase text-accent mb-3">
+                  {lang === "en" ? "— Welcome to DSOM" : "— Добро пожаловать в DSOM"}
+                </p>
+                <h1 className="font-display text-4xl md:text-5xl leading-[1.05] mb-4">
+                  {lang === "en" ? "You're registered" : "Поздравляем с регистрацией"}
+                </h1>
+                <p className="text-sm text-muted-foreground mb-8 max-w-sm mx-auto leading-relaxed">
+                  {lang === "en"
+                    ? "As our first customer who trusted the brand before the launch — please accept a gift promocode for your first order on Ozon."
+                    : "Как первому клиенту, доверившемуся бренду ещё до старта продаж — примите в подарок промокод на первый заказ на Ozon."}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-foreground text-background mb-6">
+                  <Check className="w-6 h-6" strokeWidth={1.5} />
+                </div>
+                <h1 className="font-display text-4xl leading-[1.1] mb-3">
+                  {lang === "en" ? "Your promocode" : "Ваш промокод"}
+                </h1>
+              </>
+            )}
+            <div className="inline-block bg-foreground text-background px-8 py-4 rounded-2xl my-2">
               <p className="font-display text-4xl tracking-[0.25em] font-semibold">{state.code}</p>
             </div>
-            <p className="text-sm text-muted-foreground mb-2">
+            <p className="text-sm text-muted-foreground mt-6 mb-2">
               {lang === "en"
                 ? `${state.discount}% off on first order on Ozon`
                 : `Скидка ${state.discount}% на первый заказ на Ozon`}

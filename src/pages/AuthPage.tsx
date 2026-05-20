@@ -164,7 +164,7 @@ const AuthPage = () => {
               full_name: name,
               marketing_consent: marketingConsent,
             },
-            emailRedirectTo: `${APP_URL}/promo-claim`,
+            emailRedirectTo: `${APP_URL}/promo-claim?from=signup`,
           },
         });
         if (error) throw error;
