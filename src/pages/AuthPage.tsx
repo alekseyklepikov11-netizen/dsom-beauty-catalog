@@ -145,7 +145,7 @@ const AuthPage = () => {
         const { error } = await supabase.auth.signInWithOtp({
           email,
           options: {
-            data: name ? { full_name: name } : undefined,
+            data: { ...(name ? { full_name: name } : {}), marketing_consent: marketingConsent },
             shouldCreateUser: true,
             emailRedirectTo: `${APP_URL}/promo-claim`,
           },
@@ -432,7 +432,7 @@ const AuthPage = () => {
                 </span>
               </label>
 
-              {mode === "signup" && (
+              {(mode === "signup" || mode === "promo") && (
                 <label className="flex items-start gap-3 cursor-pointer group">
                   <input
                     type="checkbox"
@@ -441,7 +441,7 @@ const AuthPage = () => {
                     className="mt-0.5 w-4 h-4 rounded border-border accent-foreground shrink-0"
                   />
                   <span className="text-xs text-muted-foreground leading-relaxed">
-                    Хочу получать новости, специальные предложения и информацию о новинках DSOM на email. Отписаться можно в любой момент.
+                    Хочу получать новости, разборы составов и анонсы DSOM на email. Отписаться можно в любой момент.
                   </span>
                 </label>
               )}
