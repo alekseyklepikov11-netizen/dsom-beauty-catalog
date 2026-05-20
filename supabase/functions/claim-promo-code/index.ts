@@ -4,6 +4,7 @@
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -126,17 +127,43 @@ serve(async (req) => {
       }
       console.log("[claim-promo] lead inserted OK");
 
-      // Отправить welcome+promo письмо через единый канал транзакционной почты
+      // Отправить welcome+promo письмо НАПРЯМУЮ через SMTP
+      // (минимум зависимостей, надёжнее цепочки через send-transactional-email)
       try {
-        await admin.functions.invoke("send-transactional-email", {
-          body: {
+        const tplResp = await fetch("https://dsom.ru/email-templates/promo-welcome.html");
+        let html = await tplResp.text();
+        const validUntilHuman = new Date(validUntilDate).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+        html = html
+          .replaceAll("{{CODE}}", code)
+          .replaceAll("{{CODE_LOWER}}", code.toLowerCase())
+          .replaceAll("{{DISCOUNT}}", String(discount))
+          .replaceAll("{{VALID_UNTIL}}", validUntilHuman);
+
+        const smtpUser = Deno.env.get("SMTP_USER") || "";
+        const smtpPass = Deno.env.get("SMTP_PASS") || "";
+        if (smtpUser && smtpPass) {
+          const client = new SMTPClient({
+            connection: {
+              hostname: Deno.env.get("SMTP_HOST") || "smtp.beget.com",
+              port: Number(Deno.env.get("SMTP_PORT") || 465),
+              tls: true,
+              auth: { username: smtpUser, password: smtpPass },
+            },
+          });
+          await client.send({
+            from: `DSOM <${smtpUser}>`,
             to: user.email,
-            template: "promo-welcome",
-            variables: { code, ozon_url: LAUNCH_CONFIG.ozon_seller_url, discount, valid_until: validUntilDate },
-          },
-        });
+            subject: "Ваш промокод DSOM",
+            content: "Ваш промокод " + code + ". Скидка " + discount + "% на первый заказ на Ozon. Действует до " + validUntilHuman + ".",
+            html,
+          });
+          await client.close();
+          console.log("[claim-promo] email sent to", user.email);
+        } else {
+          console.warn("[claim-promo] SMTP_USER/PASS missing, skip email");
+        }
       } catch (e) {
-        console.warn("[claim-promo] email send failed:", e);
+        console.warn("[claim-promo] email send failed:", String(e));
       }
     }
 
