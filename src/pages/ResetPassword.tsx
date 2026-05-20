@@ -114,13 +114,19 @@ const ResetPassword = () => {
           return;
         }
 
-        const hasRecoverySession = sessionStorage.getItem(RECOVERY_SESSION_KEY) === "true";
+        // Supabase JS v2 авто-парсит hash при detectSessionInUrl=true и сам ставит сессию.
+        // К моменту запуска нашего prepareRecoverySession URL уже может быть чистым.
+        // Принимаем любую активную сессию как валидную для смены пароля
+        // (если юзер не залогинен — getSession вернёт null, тогда показываем ошибку).
         const { data } = await supabase.auth.getSession();
-        if (hasRecoverySession && data.session) {
+        if (data.session) {
+          sessionStorage.setItem(RECOVERY_SESSION_KEY, "true");
           if (!mounted) return;
           setReady(true);
           return;
         }
+        if (!mounted) return;
+        setLinkError("Ссылка восстановления устарела или уже была использована. Запросите новую ссылку.");
       } catch {
         sessionStorage.removeItem(RECOVERY_SESSION_KEY);
         if (!mounted) return;
@@ -158,7 +164,7 @@ const ResetPassword = () => {
     setLoading(true);
     try {
       const { data } = await supabase.auth.getSession();
-      if (!data.session || sessionStorage.getItem(RECOVERY_SESSION_KEY) !== "true") {
+      if (!data.session) {
         throw new Error("Сессия восстановления истекла. Запросите новую ссылку");
       }
 
