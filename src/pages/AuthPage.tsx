@@ -259,23 +259,39 @@ const AuthPage = () => {
       <main className="min-h-screen bg-background">
         <Header />
         <section className="container max-w-md py-20 md:py-28 text-center">
+          <p className="text-[11px] tracking-luxe uppercase text-accent mb-4">— DSOM</p>
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-foreground text-background mb-6">
             <Mail className="w-6 h-6" strokeWidth={1.5} />
           </div>
-          <h1 className="font-display text-4xl leading-[1.1] mb-3">Письмо отправлено</h1>
-          <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
-            Если аккаунт с адресом <span className="text-foreground">{email}</span> существует,
-            мы отправили на него ссылку для восстановления пароля.
+          <h1 className="font-display text-4xl leading-[1.05] mb-4">Ссылку отправили</h1>
+          <p className="text-sm text-muted-foreground mb-2 leading-relaxed">
+            Если аккаунт с адресом <span className="text-foreground">{email}</span> у нас есть —<br/>
+            мы выслали ссылку для сброса пароля.
           </p>
-          <p className="text-xs text-muted-foreground/70">
-            Не пришло за пару минут? Проверьте папку «Спам».
+          <p className="text-xs text-muted-foreground/70 mt-4">
+            Ссылка действует 1 час. Не пришло — посмотрите в «Спам».
           </p>
-          <button
-            onClick={() => switchMode("signin")}
-            className="inline-block mt-12 text-[10px] tracking-luxe uppercase text-muted-foreground/70 hover:text-foreground transition-colors"
-          >
-            ← К входу
-          </button>
+
+          <div className="mt-10 rounded-2xl border border-border bg-muted/30 p-5 text-left">
+            <p className="text-[11px] tracking-luxe uppercase text-accent mb-3">— Пока ждёте</p>
+            <p className="text-sm text-foreground font-display italic leading-snug mb-3">
+              «Косметика начинается не с упаковки, а с того что внутри.»
+            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              На <a href="/catalog" className="text-foreground underline underline-offset-2 hover:text-accent">странице каталога</a> мы открываем полный INCI каждой формулы.
+              Можно посмотреть какие активы и в каких концентрациях работают у нас —
+              пока ждёте письмо.
+            </p>
+          </div>
+
+          <div className="mt-10 flex flex-col gap-2">
+            <button
+              onClick={() => switchMode("signin")}
+              className="w-full border border-border text-foreground py-3 rounded-full text-[11px] tracking-luxe uppercase hover:border-foreground transition-colors"
+            >
+              ← Вернуться ко входу
+            </button>
+          </div>
         </section>
       </main>
     );
