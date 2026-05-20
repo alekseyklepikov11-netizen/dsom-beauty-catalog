@@ -207,16 +207,45 @@ const AuthPage = () => {
         <Header />
         <section className="container max-w-md py-20 md:py-28 text-center">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-foreground text-background mb-6">
-            <Check className="w-6 h-6" strokeWidth={1.5} />
+            <Mail className="w-6 h-6" strokeWidth={1.5} />
           </div>
-          <h1 className="font-display text-4xl leading-[1.1] mb-3">Проверьте почту</h1>
-          <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
-            Мы отправили письмо со ссылкой подтверждения на<br />
-            <span className="text-foreground">{email}</span>
+          <h1 className="font-display text-4xl leading-[1.1] mb-3">Что дальше</h1>
+          <p className="text-sm text-muted-foreground mb-2 leading-relaxed">
+            Email: <span className="text-foreground">{email}</span>
           </p>
-          <p className="text-xs text-muted-foreground/70">
-            Если письмо не пришло в течение пары минут, проверьте папку «Спам».
-          </p>
+
+          <div className="mt-10 space-y-6 text-left">
+            <div className="rounded-2xl border border-border p-5">
+              <p className="text-[11px] tracking-luxe uppercase text-accent mb-2">— Если новый клиент</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Проверьте почту — мы отправили ссылку для подтверждения. Не пришло за пару минут?
+                Проверьте папку «Спам».
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-border p-5 bg-muted/30">
+              <p className="text-[11px] tracking-luxe uppercase text-accent mb-2">— Если уже регистрировались</p>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                Аккаунт с таким email уже мог быть создан раньше. Войдите по паролю
+                или восстановите его.
+              </p>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => switchMode("signin")}
+                  className="w-full bg-foreground text-background py-3 rounded-full text-[11px] tracking-luxe uppercase hover:bg-accent transition-colors"
+                >
+                  Войти в аккаунт
+                </button>
+                <button
+                  onClick={() => switchMode("forgot")}
+                  className="w-full border border-border text-foreground py-3 rounded-full text-[11px] tracking-luxe uppercase hover:border-foreground transition-colors"
+                >
+                  Забыли пароль?
+                </button>
+              </div>
+            </div>
+          </div>
+
           <Link to="/" className="inline-block mt-12 text-[10px] tracking-luxe uppercase text-muted-foreground/70 hover:text-foreground transition-colors">
             ← На главную
           </Link>
