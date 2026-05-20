@@ -22,8 +22,6 @@ const PromoClaim = () => {
   const lang = i18n.language;
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const fromSignup = searchParams.get("from") === "signup";
   const [state, setState] = useState<State>({ stage: "loading" });
 
   useEffect(() => {
@@ -106,7 +104,7 @@ const PromoClaim = () => {
 
         {state.stage === "success" && (
           <>
-            {fromSignup ? (
+            {!state.repeat ? (
               <>
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/15 text-accent mb-6">
                   <Sparkles className="w-7 h-7" strokeWidth={1.5} />
