@@ -44,7 +44,7 @@ const AuthPage = () => {
   const [pdnConsent, setPdnConsent] = useState(false);
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState<null | "signup" | "forgot" | "exists">(null);
+  const [submitted, setSubmitted] = useState<null | "signup" | "forgot" | "exists" | "already-sent">(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const captchaRef = useRef<HTMLDivElement>(null);
@@ -153,9 +153,18 @@ const AuthPage = () => {
         if (error) throw error;
         setSubmitted("signup"); // переиспользуем экран «проверьте почту»
       } else if (mode === "signup") {
-        // TODO: восстановить server-side verify-turnstile когда починим pairing.
-        // Пока клиентский виджет + Supabase rate-limit (4 signup/час/email).
-        // Любая регистрация = подарок промокода. После подтверждения email — /promo-claim.
+        // Проверка: уже отправляли ссылку этому email за последние 10 минут?
+        // Supabase для unconfirmed user пересылает письмо и возвращает identities!=[],
+        // что не отличить от первой регистрации. Делаем client-side check.
+        try {
+          const cache = JSON.parse(localStorage.getItem("dsom-signup-cache") || "{}");
+          const last = cache[email.toLowerCase().trim()];
+          if (last && Date.now() - last < 10 * 60 * 1000) {
+            setSubmitted("already-sent");
+            return;
+          }
+        } catch {}
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -169,13 +178,20 @@ const AuthPage = () => {
         });
         if (error) throw error;
 
-        // Supabase signal for "user already exists":
-        // returns a user object, but identities array is empty.
+        // Supabase signal for "user already exists CONFIRMED":
+        // returns a user object with empty identities array.
         const identities = data.user?.identities ?? [];
         if (data.user && identities.length === 0) {
           setSubmitted("exists");
           return;
         }
+
+        // Кешируем чтобы при повторной попытке показать "уже отправлено"
+        try {
+          const cache = JSON.parse(localStorage.getItem("dsom-signup-cache") || "{}");
+          cache[email.toLowerCase().trim()] = Date.now();
+          localStorage.setItem("dsom-signup-cache", JSON.stringify(cache));
+        } catch {}
 
         setSubmitted("signup");
       } else if (mode === "signin") {
@@ -245,6 +261,37 @@ const AuthPage = () => {
           >
             ← К входу
           </button>
+        </section>
+      </main>
+    );
+  }
+
+  if (submitted === "already-sent") {
+    return (
+      <main className="min-h-screen bg-background">
+        <Header />
+        <section className="container max-w-md py-20 md:py-28 text-center">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-accent/15 text-accent mb-6">
+            <Mail className="w-6 h-6" strokeWidth={1.5} />
+          </div>
+          <h1 className="font-display text-4xl leading-[1.1] mb-3">Письмо уже отправлено</h1>
+          <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+            Мы недавно отправили вам ссылку для подтверждения на<br />
+            <span className="text-foreground">{email}</span>
+            <br /><br />
+            Проверьте почту и папку «Спам». Письмо может прийти в течение пары минут.
+          </p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => switchMode("signin")}
+              className="w-full bg-foreground text-background py-3.5 rounded-full text-[11px] tracking-luxe uppercase hover:bg-accent transition-colors"
+            >
+              У меня уже есть пароль — войти
+            </button>
+          </div>
+          <Link to="/" className="inline-block mt-12 text-[10px] tracking-luxe uppercase text-muted-foreground/70 hover:text-foreground transition-colors">
+            ← На главную
+          </Link>
         </section>
       </main>
     );
