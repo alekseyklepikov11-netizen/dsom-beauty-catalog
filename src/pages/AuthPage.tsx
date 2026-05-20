@@ -153,18 +153,6 @@ const AuthPage = () => {
         if (error) throw error;
         setSubmitted("signup"); // переиспользуем экран «проверьте почту»
       } else if (mode === "signup") {
-        // Проверка: уже отправляли ссылку этому email за последние 10 минут?
-        // Supabase для unconfirmed user пересылает письмо и возвращает identities!=[],
-        // что не отличить от первой регистрации. Делаем client-side check.
-        try {
-          const cache = JSON.parse(localStorage.getItem("dsom-signup-cache") || "{}");
-          const last = cache[email.toLowerCase().trim()];
-          if (last && Date.now() - last < 10 * 60 * 1000) {
-            setSubmitted("already-sent");
-            return;
-          }
-        } catch {}
-
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -178,20 +166,23 @@ const AuthPage = () => {
         });
         if (error) throw error;
 
-        // Supabase signal for "user already exists CONFIRMED":
-        // returns a user object with empty identities array.
+        // Анализируем ответ Supabase:
+        // 1) identities = [] → юзер УЖЕ ПОДТВЕРЖДЁН (confirmed exists)
+        // 2) identities > 0 + user.created_at давний → unconfirmed существующий, письмо пересоздано
+        // 3) identities > 0 + user.created_at сейчас → первая регистрация
         const identities = data.user?.identities ?? [];
         if (data.user && identities.length === 0) {
           setSubmitted("exists");
           return;
         }
 
-        // Кешируем чтобы при повторной попытке показать "уже отправлено"
-        try {
-          const cache = JSON.parse(localStorage.getItem("dsom-signup-cache") || "{}");
-          cache[email.toLowerCase().trim()] = Date.now();
-          localStorage.setItem("dsom-signup-cache", JSON.stringify(cache));
-        } catch {}
+        const createdAt = data.user?.created_at ? new Date(data.user.created_at).getTime() : 0;
+        const ageSec = (Date.now() - createdAt) / 1000;
+        if (createdAt > 0 && ageSec > 60) {
+          // Юзер существует, но не подтвердил → Supabase отправил confirmation повторно
+          setSubmitted("already-sent");
+          return;
+        }
 
         setSubmitted("signup");
       } else if (mode === "signin") {
