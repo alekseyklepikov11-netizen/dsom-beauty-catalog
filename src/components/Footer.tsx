@@ -43,6 +43,7 @@ const Footer = () => {
             <Link to="/catalog" className="hover:text-accent transition-colors">{t("nav.catalog")}</Link>
             <Link to="/page/about" className="hover:text-accent transition-colors">{t("nav.about")}</Link>
             <Link to="/page/philosophy" className="hover:text-accent transition-colors">{lang === "en" ? "Philosophy" : "Философия"}</Link>
+            <Link to="/page/values" className="hover:text-accent transition-colors">{lang === "en" ? "Values" : "Ценности"}</Link>
             <Link to="/page/delivery" className="hover:text-accent transition-colors">{lang === "en" ? "Where to buy" : "Где купить"}</Link>
             <Link to="/page/delivery-returns" className="hover:text-accent transition-colors">{lang === "en" ? "Delivery" : "Доставка"}</Link>
             <Link to="/page/care" className="hover:text-accent transition-colors">{lang === "en" ? "Client care" : "Забота о клиентах"}</Link>

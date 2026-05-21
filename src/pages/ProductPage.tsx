@@ -20,7 +20,7 @@ import { addRecentlyViewed } from "@/lib/recentlyViewed";
 // FAQ блок — короткий, общий для всех 4 продуктов DSOM
 const PRODUCT_FAQS_RU = [
   { q: "Когда стартуют продажи?", a: "11 июня 2026 года, эксклюзивно на Ozon. Подпишитесь на промокод выше — напомним за день до старта." },
-  { q: "Где производится?", a: "На контрактном производстве в Казани, Технополис «Химград». Декларация ЕАЭС в процессе оформления." },
+  { q: "Где производится?", a: "В России. Декларация соответствия ЕАЭС оформлена на ООО «ВАЛКЭНДВИР» — мы несём ответственность за каждый продукт." },
   { q: "Есть ли отдушка?", a: "Да, в составе есть лёгкая отдушка. Мы не делаем «100% без отдушек» из принципа честной коммуникации." },
   { q: "Можно ли использовать беременным и кормящим?", a: "Ретинол (P2 Renew) — нет. Vitamin C, PDRN, ламеллярный крем — возможно, но рекомендуем согласовать с врачом." },
   { q: "Подходит ли для чувствительной кожи?", a: "P3 Lift и P4 Hydro — да. P1 Glow и P2 Renew — начинать постепенно (1-2 раза в неделю)." },
@@ -28,7 +28,7 @@ const PRODUCT_FAQS_RU = [
 ];
 const PRODUCT_FAQS_EN = [
   { q: "When does it launch?", a: "June 11, 2026, exclusively on Ozon. Subscribe to the promo above — we'll remind you the day before." },
-  { q: "Where is it made?", a: "Contract manufacturing in Kazan, Technopolis Khimgrad. EAEU declaration in progress." },
+  { q: "Where is it made?", a: "In Russia. The EAEU compliance declaration is registered to LLC WALCANDVIR — we are responsible for every product." },
   { q: "Is there fragrance?", a: "Yes, a light fragrance is added. We don't claim '100% fragrance-free' on principle." },
   { q: "Safe during pregnancy?", a: "Retinol (P2 Renew) — no. Vitamin C, PDRN, lamellar cream — possibly, but consult your doctor." },
   { q: "Sensitive skin?", a: "P3 Lift and P4 Hydro — yes. P1 Glow and P2 Renew — start 1-2 times per week." },
