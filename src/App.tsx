@@ -9,6 +9,7 @@ import CookieBanner from "@/components/CookieBanner";
 import MobileCtaBar from "@/components/MobileCtaBar";
 import ScrollToTop from "@/components/ScrollToTop";
 import SupportChat from "@/components/SupportChat";
+import YandexMetrika from "@/components/YandexMetrika";
 import { useLocation } from "react-router-dom";
 
 import Index from "./pages/Index.tsx";
@@ -58,6 +59,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ScrollToTop />
+        <YandexMetrika />
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
