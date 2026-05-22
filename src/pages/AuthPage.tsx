@@ -105,6 +105,37 @@ const AuthPage = () => {
     }
   };
 
+  /**
+   * Server-side validation Cloudflare Turnstile токена через edge function.
+   * Клиентский `captchaToken` непригоден как доказательство — его легко подделать.
+   * Здесь edge function `verify-turnstile` обращается к challenges.cloudflare.com
+   * с секретным ключом и подтверждает, что токен реально выдан виджетом.
+   * Возвращает `true` если токен валиден; иначе показывает toast и ресетит виджет.
+   */
+  const verifyCaptcha = async (token: string | null): Promise<boolean> => {
+    if (!token) {
+      toast.error("Пожалуйста, подтвердите, что вы не робот");
+      return false;
+    }
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-turnstile", {
+        body: { token },
+      });
+      if (error || !data?.success) {
+        console.warn("[turnstile] verification failed", { error, data });
+        toast.error("Не удалось пройти проверку. Попробуйте ещё раз.");
+        resetCaptcha();
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error("[turnstile] verify-turnstile invoke error", err);
+      toast.error("Не удалось проверить капчу. Попробуйте позже.");
+      resetCaptcha();
+      return false;
+    }
+  };
+
   const switchMode = (m: Mode) => {
     setMode(m);
     setSubmitted(null);
@@ -138,6 +169,9 @@ const AuthPage = () => {
     setLoading(true);
     try {
       if (mode === "promo") {
+        // Server-side Turnstile check ПЕРЕД любым contact-с Supabase
+        if (!(await verifyCaptcha(captchaToken))) return;
+
         // PRE-FLIGHT: если confirmed user уже существует → попросим войти, а не слать magic-link заново
         const { data: chk } = await supabase.rpc("check_user_email", { p_email: email });
         const row = Array.isArray(chk) && chk.length > 0 ? chk[0] : null;
@@ -157,6 +191,9 @@ const AuthPage = () => {
         if (error) throw error;
         setSubmitted("signup"); // переиспользуем экран «проверьте почту»
       } else if (mode === "signup") {
+        // Server-side Turnstile check ПЕРЕД signUp (защита от ботов)
+        if (!(await verifyCaptcha(captchaToken))) return;
+
         // PRE-FLIGHT CHECK: существует ли юзер?
         // Используем серверную RPC чтобы избежать Supabase quirks с identities/timing.
         const { data: chk, error: chkErr } = await supabase.rpc("check_user_email", { p_email: email });
