@@ -50,6 +50,8 @@ const Header = ({ floating = false }: { floating?: boolean }) => {
               <Link to="/catalog" className={`hover:opacity-60 transition-opacity ${pathname.startsWith("/catalog") ? "opacity-60" : ""}`}>{t("nav.catalog")}</Link>
               <Link to="/quiz" className={`hover:opacity-60 transition-opacity ${pathname.startsWith("/quiz") ? "opacity-60" : ""}`}>{t("nav.quiz")}</Link>
               <Link to="/page/about" className="hover:opacity-60 transition-opacity">{t("nav.about")}</Link>
+              <Link to="/page/where-to-buy" className="hover:opacity-60 transition-opacity">{t("nav.stores")}</Link>
+              <Link to="/page/contacts" className="hover:opacity-60 transition-opacity">{t("nav.contact")}</Link>
             </nav>
 
             <div className="flex items-center gap-2">
@@ -98,6 +100,8 @@ const Header = ({ floating = false }: { floating?: boolean }) => {
             <Link to="/catalog" className={`hover:text-accent transition-colors ${pathname.startsWith("/catalog") ? "text-accent" : ""}`}>{t("nav.catalog")}</Link>
             <Link to="/quiz" className={`hover:text-accent transition-colors ${pathname.startsWith("/quiz") ? "text-accent" : ""}`}>{t("nav.quiz")}</Link>
             <Link to="/page/about" className="hover:text-accent transition-colors">{t("nav.about")}</Link>
+            <Link to="/page/where-to-buy" className="hover:text-accent transition-colors">{t("nav.stores")}</Link>
+            <Link to="/page/contacts" className="hover:text-accent transition-colors">{t("nav.contact")}</Link>
           </nav>
           <div className="flex items-center gap-3 text-[11px] tracking-luxe uppercase">
             <button
