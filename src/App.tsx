@@ -13,6 +13,7 @@ import YandexMetrika from "@/components/YandexMetrika";
 import { useLocation } from "react-router-dom";
 
 import Index from "./pages/Index.tsx";
+import Intro from "./pages/Intro.tsx";
 import Catalog from "./pages/Catalog.tsx";
 import ProductPage from "./pages/ProductPage.tsx";
 import AuthPage from "./pages/AuthPage.tsx";
@@ -63,6 +64,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/intro" element={<Intro />} />
             <Route path="/catalog" element={<Catalog />} />
             <Route path="/product/:slug" element={<ProductPage />} />
             <Route path="/favorites" element={<Favorites />} />
