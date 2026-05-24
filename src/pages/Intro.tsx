@@ -169,8 +169,13 @@ const Intro = () => {
         document.body.style.backgroundColor = lerpColor("0A0806", "F5EFE6", t);
       }
 
-      if (p >= 0.82) heroCine.classList.add("is-finale");
-      else heroCine.classList.remove("is-finale");
+      if (p >= 0.82) {
+        heroCine.classList.add("is-finale");
+        document.body.classList.add("intro-finale");
+      } else {
+        heroCine.classList.remove("is-finale");
+        document.body.classList.remove("intro-finale");
+      }
 
       let activeIdx = 0;
       overlays.forEach((ov, i) => {
@@ -365,6 +370,7 @@ const Intro = () => {
             ref={videoRef}
             className="intro-hero-video"
             src="/videos/hero-intro.mp4"
+            poster="/videos/hero-intro-poster.jpg"
             muted
             playsInline
             preload="auto"
