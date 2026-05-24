@@ -34,12 +34,14 @@ const Intro = () => {
   const menuOverlayRef = useRef<HTMLElement>(null);
   const ctaButtonRef = useRef<HTMLAnchorElement>(null);
 
-  // Маркируем body на время жизни компонента + ставим флаг "intro seen"
-  // чтобы при следующем заходе на / не было редиректа.
+  // Маркируем body + сохраняем дату последнего просмотра.
+  // Index.tsx сравнит дату с today — если совпадают, редиректа не будет
+  // (вторичный заход в течение тех же суток). Завтра — снова покажется.
   useEffect(() => {
     document.body.classList.add("intro-active");
     if (typeof window !== "undefined") {
-      localStorage.setItem("dsom_intro_seen", "1");
+      const today = new Date().toISOString().slice(0, 10);
+      localStorage.setItem("dsom_intro_last_seen", today);
     }
     return () => {
       document.body.classList.remove("intro-active");
@@ -128,6 +130,13 @@ const Intro = () => {
 
     const overlays = Array.from(overlaysContainer.querySelectorAll<HTMLDivElement>(".intro-overlay"));
 
+    // На мобильных touch-устройствах scroll-scrubbing работает плохо
+    // (нет колеса мыши, неточный thumb-scroll, тяжело декодировать кадры).
+    // Делаем простой fallback: видео играет autoplay+loop, текст-оверлеи
+    // всё равно меняются по scroll position.
+    const isMobile = window.matchMedia("(max-width: 768px)").matches
+                  || ("ontouchstart" in window);
+
     let targetTime = 0;
     let smoothTime = 0;
     let isVideoReady = false;
@@ -192,10 +201,20 @@ const Intro = () => {
     const initVideo = () => {
       if (isVideoReady) return;
       isVideoReady = true;
-      video.pause();
-      update();
-      smoothTime = targetTime;
-      video.currentTime = smoothTime;
+      if (isMobile) {
+        // Мобильные — просто autoplay loop, без скраббинга
+        video.loop = true;
+        video.muted = true;
+        video.play().catch(() => {
+          // если autoplay блокирован браузером — пользователь увидит постер,
+          // тапнет на видео — оно начнёт играть (стандартное поведение)
+        });
+      } else {
+        video.pause();
+        update();
+        smoothTime = targetTime;
+        video.currentTime = smoothTime;
+      }
     };
 
     video.addEventListener("canplaythrough", initVideo);
@@ -204,7 +223,8 @@ const Intro = () => {
 
     window.addEventListener("scroll", update, { passive: true });
     window.addEventListener("resize", update);
-    rafId = requestAnimationFrame(tick);
+    // На мобильных tick не нужен — видео играет само
+    if (!isMobile) rafId = requestAnimationFrame(tick);
     update();
 
     setTimeout(() => {

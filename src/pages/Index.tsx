@@ -29,11 +29,14 @@ const FALLBACK_VIDEO = "https://cdn.coverr.co/videos/coverr-pouring-cosmetic-cre
 const Index = () => {
   const navigate = useNavigate();
 
-  // First-visit redirect: новый посетитель → на /intro презентацию.
-  // Флаг localStorage.dsom_intro_seen ставится при первом монтировании Intro.
-  // Повторные визиты — без редиректа, сразу на главную.
+  // Daily-first-visit redirect: первый заход за календарные сутки → на /intro.
+  // Хранится дата последнего просмотра. Если сегодняшняя дата ≠ сохранённой —
+  // редирект (новый день = новый показ презентации).
   useEffect(() => {
-    if (typeof window !== "undefined" && !localStorage.getItem("dsom_intro_seen")) {
+    if (typeof window === "undefined") return;
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD по UTC
+    const lastSeen = localStorage.getItem("dsom_intro_last_seen");
+    if (lastSeen !== today) {
       navigate("/intro", { replace: true });
     }
   }, [navigate]);
