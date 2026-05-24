@@ -304,7 +304,7 @@ const Intro = () => {
       <div className="intro-scene-marker" ref={sceneMarkerRef}>
         <span className="current">01</span> / 06
       </div>
-      <div className="intro-brand-mark">DSOM</div>
+      <Link to="/" className="intro-brand-mark">DSOM</Link>
       <div className="intro-scroll-hint">Листайте</div>
 
       {/* Burger menu */}
@@ -316,10 +316,13 @@ const Intro = () => {
         <Link to="/">Главная</Link>
         <Link to="/catalog">Каталог</Link>
         <Link to="/quiz">Подбор ухода</Link>
+        <Link to="/favorites">Избранное</Link>
+        <div className="menu-section">— О бренде</div>
         <Link to="/page/about">О бренде</Link>
         <Link to="/page/philosophy">Философия</Link>
+        <Link to="/page/values">Ценности</Link>
         <Link to="/page/where-to-buy">Где купить</Link>
-        <div className="menu-section">— Информация</div>
+        <div className="menu-section">— Сервис</div>
         <Link to="/page/delivery">Доставка</Link>
         <Link to="/page/care">Забота о клиентах</Link>
         <Link to="/page/contacts">Контакты</Link>

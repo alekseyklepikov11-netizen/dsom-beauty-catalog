@@ -312,8 +312,11 @@ body.intro-active #root {
   letter-spacing: 0.45em;
   color: var(--intro-ink-cream);
   mix-blend-mode: difference;
-  pointer-events: none;
+  text-decoration: none;
+  cursor: none;
+  transition: letter-spacing 400ms var(--intro-ease-out-quint);
 }
+.intro-brand-mark:hover { letter-spacing: 0.52em; }
 .intro-scene-marker {
   position: fixed; top: 32px; left: 100px;
   z-index: 50;
