@@ -499,19 +499,35 @@ body.intro-menu-open .intro-menu-overlay {
   .intro-overlay h2.huge-number { font-size: 84px; }
   .intro-overlay h2.statement { font-size: 40px; }
   .intro-cta-button { padding: 18px 36px; }
+  /* На мобиле финал: скрываем текст-блок (флакон сам говорит за продукт),
+     оставляем только кнопку «Перейти в каталог» в самом низу экрана */
   .intro-overlay.is-finale {
     grid-template-columns: 1fr;
-    grid-template-rows: 1fr auto auto;
+    grid-template-rows: 1fr auto;
     text-align: center;
-    padding-bottom: 5vh;
+    padding: 0 6vw 4vh;
   }
-  .intro-overlay.is-finale .finale-left,
+  .intro-overlay.is-finale .finale-left {
+    display: none; /* «Активная косметика с прозрачным составом.» — наложение на флакон */
+  }
   .intro-overlay.is-finale .finale-right {
     grid-column: 1;
+    grid-row: 2;
     align-items: center;
+    width: 100%;
+    gap: 10px;
   }
-  .intro-overlay.is-finale .finale-left { grid-row: 2; }
-  .intro-overlay.is-finale .finale-right { grid-row: 3; margin-top: 16px; }
-  .intro-overlay.is-finale h2.statement { max-width: 20ch; text-align: center; font-size: 32px; }
+  .intro-cta-button {
+    padding: 16px 32px;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+  }
+  .intro-cta-meta {
+    text-align: center;
+    font-size: 9px;
+    letter-spacing: 0.25em;
+  }
   .intro-menu-overlay { left: 12px; top: 60px; width: calc(100vw - 24px); }
+  /* Колофон делаем компактнее на мобиле — не отвлекает от финала */
+  .intro-colophon { padding: 30px 6vw; font-size: 8px; letter-spacing: 0.25em; }
 }

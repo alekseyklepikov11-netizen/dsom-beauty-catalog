@@ -101,7 +101,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CookieBanner />
-          <MobileCtaBar />
+          <MobileCtaGate />
           <SupportChatGate />
         </AuthProvider>
       </BrowserRouter>
@@ -109,11 +109,20 @@ const App = () => (
   </QueryClientProvider>
 );
 
-// Чат не показываем в админке.
+// Чат не показываем в админке и на /intro (презентация).
 const SupportChatGate = () => {
   const { pathname } = useLocation();
   if (pathname.startsWith("/admin")) return null;
+  if (pathname === "/intro") return null;
   return <SupportChat />;
+};
+
+// MobileCtaBar «В магазин» не показываем в админке и на /intro.
+const MobileCtaGate = () => {
+  const { pathname } = useLocation();
+  if (pathname.startsWith("/admin")) return null;
+  if (pathname === "/intro") return null;
+  return <MobileCtaBar />;
 };
 
 export default App;
