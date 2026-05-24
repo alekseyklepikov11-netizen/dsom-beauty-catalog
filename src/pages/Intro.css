@@ -248,12 +248,13 @@ body.intro-active #root {
   align-items: center;
   gap: 16px;
   padding: 22px 48px;
-  background: var(--intro-ink-dark);
-  color: var(--intro-ink-cream);
+  background: var(--intro-ink-dark) !important;
+  color: var(--intro-ink-cream) !important; /* override Tailwind a-color */
   font-family: var(--intro-font-caps);
   font-size: 12px;
   letter-spacing: 0.35em;
   text-transform: uppercase;
+  text-decoration: none !important;
   cursor: none;
   pointer-events: auto;
   border: none;
@@ -262,9 +263,10 @@ body.intro-active #root {
               letter-spacing 600ms var(--intro-ease-out-quint);
 }
 .intro-cta-button:hover {
-  background: var(--intro-bg-dark);
+  background: var(--intro-bg-dark) !important;
   letter-spacing: 0.42em;
 }
+.intro-cta-button span { color: inherit; }
 .intro-cta-button .arrow {
   display: inline-block;
   width: 24px; height: 1px;
@@ -436,7 +438,7 @@ body.intro-menu-open .intro-menu-overlay {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   line-height: 1.4;
-  color: var(--intro-ink-cream);
+  color: var(--intro-ink-cream) !important; /* override Tailwind / shadcn a-color */
   text-decoration: none;
   padding: 9px 0;
   border-bottom: 1px solid rgba(245, 239, 230, 0.06);
@@ -449,7 +451,7 @@ body.intro-menu-open .intro-menu-overlay {
 .intro-menu-overlay a:last-of-type { border-bottom: none; }
 .intro-menu-overlay a:hover {
   padding-left: 12px;
-  color: var(--intro-gold);
+  color: var(--intro-gold) !important;
   opacity: 1;
 }
 .intro-menu-footer {
