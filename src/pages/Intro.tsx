@@ -34,14 +34,17 @@ const Intro = () => {
   const menuOverlayRef = useRef<HTMLElement>(null);
   const ctaButtonRef = useRef<HTMLAnchorElement>(null);
 
-  // Маркируем body на время жизни компонента — применяет глобальные стили (cursor:none и т.д.)
+  // Маркируем body на время жизни компонента + ставим флаг "intro seen"
+  // чтобы при следующем заходе на / не было редиректа.
   useEffect(() => {
     document.body.classList.add("intro-active");
+    if (typeof window !== "undefined") {
+      localStorage.setItem("dsom_intro_seen", "1");
+    }
     return () => {
       document.body.classList.remove("intro-active");
       document.body.classList.remove("intro-show-hint");
       document.body.classList.remove("intro-menu-open");
-      // вернуть стандартный фон страницы
       document.body.style.backgroundColor = "";
     };
   }, []);

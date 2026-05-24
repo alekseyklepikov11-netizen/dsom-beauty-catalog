@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
@@ -27,6 +27,17 @@ interface Banner {
 const FALLBACK_VIDEO = "https://cdn.coverr.co/videos/coverr-pouring-cosmetic-cream-into-a-jar-9419/1080p.mp4";
 
 const Index = () => {
+  const navigate = useNavigate();
+
+  // First-visit redirect: новый посетитель → на /intro презентацию.
+  // Флаг localStorage.dsom_intro_seen ставится при первом монтировании Intro.
+  // Повторные визиты — без редиректа, сразу на главную.
+  useEffect(() => {
+    if (typeof window !== "undefined" && !localStorage.getItem("dsom_intro_seen")) {
+      navigate("/intro", { replace: true });
+    }
+  }, [navigate]);
+
   const { t, i18n } = useTranslation();
   const [banner, setBanner] = useState<Banner | null>(null);
   const [products, setProducts] = useState<ProductLite[]>([]);
