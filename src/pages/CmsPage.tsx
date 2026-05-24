@@ -180,13 +180,18 @@ const CmsPage = () => {
   const bodySrc = page ? (lang === "en" && page.content_en ? page.content_en : page.content) : null;
   const body = renderBody(bodySrc);
 
+  // SEO-поля из content.seo_title / content.seo_description (см. БД pages)
+  // Если не заполнены — fallback: title страницы + первые 160 символов body
+  const seoTitle = (bodySrc && typeof bodySrc === "object" && bodySrc.seo_title) || undefined;
+  const seoDescription = (bodySrc && typeof bodySrc === "object" && bodySrc.seo_description) || body.slice(0, 160);
+
   const bannerTitle = banner ? (lang === "en" && banner.title_en ? banner.title_en : banner.title) : null;
   const bannerSubtitle = banner ? (lang === "en" && banner.subtitle_en ? banner.subtitle_en : banner.subtitle) : null;
   const bannerCta = banner ? (lang === "en" && banner.cta_label_en ? banner.cta_label_en : banner.cta_label) : null;
 
   return (
     <main className="min-h-screen bg-background">
-      <SEO title={title} description={body.slice(0, 160)} />
+      <SEO title={seoTitle || title} description={seoDescription} />
       <Header />
 
       {banner && (banner.image_url || banner.video_url) && (
