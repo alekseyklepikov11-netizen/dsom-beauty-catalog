@@ -453,8 +453,11 @@ body.intro-menu-open .intro-menu-overlay {
   transition: padding-left 240ms var(--intro-ease-out-quint),
               color 240ms;
   cursor: none;
-  pointer-events: auto;
   opacity: 0.85;
+  /* pointer-events НЕ задаём явно: наследуется от родителя .intro-menu-overlay.
+     Если меню скрыто (pointer-events: none на родителе) → ссылки тоже
+     не получают клики. Иначе — на mobile при тапе по экрану срабатывали
+     невидимые ссылки и пользователя выкидывало в случайный раздел. */
 }
 .intro-menu-overlay a:last-of-type { border-bottom: none; }
 .intro-menu-overlay a:hover {
