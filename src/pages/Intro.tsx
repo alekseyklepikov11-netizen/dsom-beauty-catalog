@@ -130,13 +130,6 @@ const Intro = () => {
 
     const overlays = Array.from(overlaysContainer.querySelectorAll<HTMLDivElement>(".intro-overlay"));
 
-    // На мобильных touch-устройствах scroll-scrubbing работает плохо
-    // (нет колеса мыши, неточный thumb-scroll, тяжело декодировать кадры).
-    // Делаем простой fallback: видео играет autoplay+loop, текст-оверлеи
-    // всё равно меняются по scroll position.
-    const isMobile = window.matchMedia("(max-width: 768px)").matches
-                  || ("ontouchstart" in window);
-
     let targetTime = 0;
     let smoothTime = 0;
     let isVideoReady = false;
@@ -206,30 +199,21 @@ const Intro = () => {
     const initVideo = () => {
       if (isVideoReady) return;
       isVideoReady = true;
-      if (isMobile) {
-        // Мобильные — просто autoplay loop, без скраббинга
-        video.loop = true;
-        video.muted = true;
-        video.play().catch(() => {
-          // если autoplay блокирован браузером — пользователь увидит постер,
-          // тапнет на видео — оно начнёт играть (стандартное поведение)
-        });
-      } else {
-        video.pause();
-        update();
-        smoothTime = targetTime;
-        video.currentTime = smoothTime;
-      }
+      video.pause();
+      update();
+      smoothTime = targetTime;
+      video.currentTime = smoothTime;
     };
 
     video.addEventListener("canplaythrough", initVideo);
     video.addEventListener("loadedmetadata", initVideo);
     if (video.readyState >= 4) initVideo();
+    // На iOS Safari — иногда нужно явно .load() чтобы запустить preload
+    video.load();
 
     window.addEventListener("scroll", update, { passive: true });
     window.addEventListener("resize", update);
-    // На мобильных tick не нужен — видео играет само
-    if (!isMobile) rafId = requestAnimationFrame(tick);
+    rafId = requestAnimationFrame(tick);
     update();
 
     setTimeout(() => {
