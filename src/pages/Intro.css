@@ -494,7 +494,12 @@ body.intro-menu-open .intro-menu-overlay {
 /* МОБИЛКА */
 @media (max-width: 768px) {
   body.intro-active { cursor: auto; }
-  .intro-cursor-canvas, .intro-cursor-dot { display: none; }
+  /* !important нужен потому что .intro-cursor-dot.is-active (specificity 20)
+     добавляется через JS и перекрывает display:none без !important */
+  .intro-cursor-canvas,
+  .intro-cursor-dot,
+  .intro-cursor-dot.is-active,
+  .intro-cursor-dot.magnetic { display: none !important; }
   .intro-scroll-progress { left: 12px; }
   .intro-scene-marker { left: 80px; top: 24px; font-size: 9px; }
   .intro-brand-mark { right: 20px; top: 22px; font-size: 18px; letter-spacing: 0.35em; }
