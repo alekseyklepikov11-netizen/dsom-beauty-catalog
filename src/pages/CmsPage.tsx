@@ -39,11 +39,12 @@ const renderBody = (body: any): string => {
   return "";
 };
 
-// Section heading: short ALL-CAPS line, no terminal punctuation
+// Section heading: short ALL-CAPS line, no terminal punctuation, no ":" anywhere
+// (двоеточие = пара "ключ: значение" → это не заголовок, а обычный пункт списка)
 const isHeading = (line: string) => {
   const trimmed = line.trim();
   if (!trimmed || trimmed.length > 60) return false;
-  if (/[.!?:;]$/.test(trimmed)) return false;
+  if (/[.!?:;]/.test(trimmed)) return false; // отвергаем любые знаки препинания
   const letters = trimmed.match(/\p{L}/gu);
   if (!letters || letters.length < 2) return false;
   return letters.every((ch) => ch === ch.toUpperCase() && ch !== ch.toLowerCase());
