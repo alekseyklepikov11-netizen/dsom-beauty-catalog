@@ -25,7 +25,6 @@
 /* Body-level overrides только пока Intro смонтирован */
 body.intro-active {
   cursor: none;
-  overflow-x: hidden;
   background: var(--intro-bg-deep);
   color: var(--intro-ink-cream);
   font-family: var(--intro-font-body);
@@ -33,8 +32,17 @@ body.intro-active {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   line-height: 1.5;
+  /* overflow visible — НЕ ставим hidden/clip иначе position:sticky сломается */
+  overflow: visible !important;
 }
 body.intro-active a { color: inherit; text-decoration: none; }
+
+/* КРИТИЧНО: #root в основном приложении имеет `overflow: clip visible`
+   (Tailwind base или index.css), что ломает position:sticky у потомков.
+   Здесь принудительно делаем visible пока активен Intro. */
+body.intro-active #root {
+  overflow: visible !important;
+}
 
 /* ─────────────── КУРСОР ─────────────── */
 .intro-cursor-canvas {
