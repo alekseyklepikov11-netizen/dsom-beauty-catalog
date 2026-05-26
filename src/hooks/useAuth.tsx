@@ -29,25 +29,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    // 1. Listener FIRST (sync state only inside; defer async work)
+    // 1. Listener FIRST (sync state only inside; defer async work).
+    //
+    // CRITICAL: при свежем логине через onAuthStateChange ставим loading=true
+    // пока качаем роли — иначе ProtectedRoute увидит user=есть, loading=false,
+    // roles=[] (ещё не загружены) → выдаст flash «Доступ ограничен» 403.
+    //
+    // Защита от white-screen (была причиной revert 2126c22): fetchRoles обёрнут
+    // в .catch() — любая ошибка (RLS, network) логируется, но не оставляет
+    // loading=true навсегда. setLoading(false) гарантированно в .finally().
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
       if (newSession?.user) {
+        setLoading(true);
         // defer Supabase call to avoid deadlock with onAuthStateChange
-        setTimeout(() => fetchRoles(newSession.user.id), 0);
+        setTimeout(() => {
+          fetchRoles(newSession.user.id)
+            .catch((e) => console.error("useAuth fetchRoles (auth-change) failed:", e))
+            .finally(() => setLoading(false));
+        }, 0);
       } else {
         setRoles([]);
+        setLoading(false);
       }
     });
 
-    // 2. THEN check existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) fetchRoles(session.user.id).finally(() => setLoading(false));
-      else setLoading(false);
-    });
+    // 2. THEN check existing session (для уже-залогиненных при загрузке страницы)
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          return fetchRoles(session.user.id)
+            .catch((e) => console.error("useAuth fetchRoles (init) failed:", e));
+        }
+      })
+      .finally(() => setLoading(false));
 
     return () => subscription.unsubscribe();
   }, []);
