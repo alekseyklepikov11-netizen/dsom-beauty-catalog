@@ -56,15 +56,15 @@ serve(async (req) => {
   const userJwt = authHeader.slice(7);
 
   // ============================================================
-  // 3. Верифицируем JWT и достаём user_id
-  //    Используем anon client + setSession для верификации
+  // 3. Верифицируем JWT и достаём user_id.
+  //    auth.getUser(jwt) — explicit JWT validation без зависимости от
+  //    session record (в edge runtime нет localStorage/cookies).
   // ============================================================
   const userClient = createClient(SUPABASE_URL, ANON_KEY, {
-    global: { headers: { Authorization: `Bearer ${userJwt}` } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  const { data: userData, error: userError } = await userClient.auth.getUser();
+  const { data: userData, error: userError } = await userClient.auth.getUser(userJwt);
   if (userError || !userData.user) {
     return json({
       ok: false,
