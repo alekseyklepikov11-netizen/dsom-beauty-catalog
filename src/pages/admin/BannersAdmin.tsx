@@ -88,16 +88,36 @@ const BannersAdmin = () => {
 
   const remove = async (b: Banner) => {
     if (!confirm(`Удалить баннер «${b.title}»? Это действие необратимо.`)) return;
+
+    // DEBUG (27.05.2026) — диагностика silent-fail. Уберём после починки.
+    const sess = await supabase.auth.getSession();
+    const s = sess.data.session;
+    // eslint-disable-next-line no-console
+    console.log("[banners.remove] auth:", s
+      ? { user: s.user.email, sub: s.user.id, expires_at: new Date(s.expires_at! * 1000).toISOString(), now: new Date().toISOString() }
+      : "NO SESSION");
+    // eslint-disable-next-line no-console
+    console.log("[banners.remove] deleting banner id:", b.id, "title:", b.title);
+
     // PostgREST DELETE возвращает 204 даже если RLS отфильтровала все строки.
     // С .select() получаем реально удалённые записи и проверяем что удаление случилось.
-    const { data, error } = await supabase.from("banners").delete().eq("id", b.id!).select();
-    if (error) {
-      const { userMessage } = classifyError(error);
+    const res = await supabase.from("banners").delete().eq("id", b.id!).select();
+    // eslint-disable-next-line no-console
+    console.log("[banners.remove] response:", {
+      status: (res as any).status,
+      statusText: (res as any).statusText,
+      error: res.error,
+      data: res.data,
+      rowsAffected: res.data?.length ?? 0,
+    });
+
+    if (res.error) {
+      const { userMessage } = classifyError(res.error);
       toast.error(`Не удалось удалить: ${userMessage}`);
       return;
     }
-    if (isRlsBlocked(data)) {
-      toast.error("Не удалось удалить — нет прав. Возможно, истекла сессия. Перелогинься в /admin/login.");
+    if (isRlsBlocked(res.data)) {
+      toast.error("Не удалось удалить — нет прав (RLS отфильтровала). Скорее всего истекла сессия. Перелогинься в /admin/login.");
       return;
     }
     toast.success("Баннер удалён");
