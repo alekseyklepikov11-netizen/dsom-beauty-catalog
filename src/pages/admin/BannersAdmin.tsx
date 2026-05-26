@@ -186,8 +186,17 @@ const BannersAdmin = () => {
                     {b.is_active ? <><Eye className="w-3 h-3" />Активен</> : <><EyeOff className="w-3 h-3" />Скрыт</>}
                   </button>
                   <div className="flex gap-2">
-                    <button onClick={() => setEditing(b)} className="text-[10px] tracking-luxe uppercase hover:text-accent">Изм.</button>
-                    <button onClick={() => remove(b)} className="text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+                    <button
+                      onClick={() => setEditing(b)}
+                      className="text-[11px] tracking-luxe uppercase px-3 py-1.5 rounded-full border border-border hover:border-foreground hover:bg-secondary transition-colors"
+                    >Редактировать</button>
+                    <button
+                      onClick={() => remove(b)}
+                      className="inline-flex items-center gap-1.5 text-[11px] tracking-luxe uppercase px-3 py-1.5 rounded-full border border-destructive/40 text-destructive hover:bg-destructive hover:text-white transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Удалить
+                    </button>
                   </div>
                 </div>
               </div>
