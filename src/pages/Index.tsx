@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
@@ -55,19 +55,9 @@ const HERO_POS_GRADIENT: Record<string, string> = {
 };
 
 const Index = () => {
-  const navigate = useNavigate();
-
-  // Daily-first-visit redirect: первый заход за календарные сутки → на /intro.
-  // Хранится дата последнего просмотра. Если сегодняшняя дата ≠ сохранённой —
-  // редирект (новый день = новый показ презентации).
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD по UTC
-    const lastSeen = localStorage.getItem("dsom_intro_last_seen");
-    if (lastSeen !== today) {
-      navigate("/intro", { replace: true });
-    }
-  }, [navigate]);
+  // /intro daily-redirect отключён 26.05.2026 по запросу — главная теперь сразу
+  // показывает hero-баннер из БД, без промежуточного экрана.
+  // (страница /intro остаётся доступной как самостоятельный URL для прямого захода)
 
   const { t, i18n } = useTranslation();
   const [banner, setBanner] = useState<Banner | null>(null);
@@ -115,10 +105,15 @@ const Index = () => {
       />
       <Header floating />
 
-      {/* HERO with full-bleed video background — Logoisum style */}
+      {/* HERO with full-bleed video background — Logoisum style.
+          Текст и кнопки реально позиционируются по banner.text_position через flex
+          parent + text-align в дочерних элементах (раньше mx-auto перебивало это). */}
       {(() => {
         const heroPos = (banner?.text_position && HERO_POS_CLASSES[banner.text_position]) ? banner.text_position : "middle-center";
         const heroGrad = HERO_POS_GRADIENT[heroPos] || HERO_POS_GRADIENT["middle-center"];
+        const [vertical, horizontal] = heroPos.split("-"); // "middle", "right"
+        const textAlign = horizontal === "left" ? "text-left" : horizontal === "right" ? "text-right" : "text-center";
+        const ctaJustify = horizontal === "left" ? "justify-start" : horizontal === "right" ? "justify-end" : "justify-center";
         return (
       <section className={`relative min-h-[100vh] flex overflow-hidden bg-[#0a0a0a] ${HERO_POS_CLASSES[heroPos]}`}>
         <video
@@ -133,43 +128,41 @@ const Index = () => {
         {/* Виньетка ориентирована под зону текста */}
         <div className={`absolute inset-0 ${heroGrad} pointer-events-none`} />
 
-        <div className="relative container px-4 pt-32 pb-20 animate-fade-up">
+        <div className={`relative px-6 md:px-12 lg:px-20 pt-32 pb-20 max-w-2xl lg:max-w-3xl w-full animate-fade-up ${textAlign}`}>
           {/* Eyebrow */}
           <p className="font-barlow font-medium text-[12px] tracking-[0.3em] uppercase text-white/80 mb-8">
             — {t("hero.eyebrow")}
           </p>
 
-          {/* Headline — берётся из banner.title (admin-управляемо).
-              Если в title есть «|», левая часть — обычный font, правая — italic serif (две строки).
-              Иначе — один заголовок одной строкой. */}
+          {/* Headline — из banner.title. Если есть «|» — двухстрочная вёрстка с italic 2-й строкой */}
           {(() => {
             const splitIdx = title.indexOf("|");
             if (splitIdx > 0) {
               const line1 = title.slice(0, splitIdx).trim();
               const line2 = title.slice(splitIdx + 1).trim();
               return (
-                <h1 className="text-white max-w-5xl mx-auto">
-                  <span className="block font-barlow font-medium text-[clamp(2.5rem,7vw,5.5rem)] leading-[1] tracking-[-0.04em]">{line1}</span>
-                  <span className="block font-serif italic text-[clamp(3rem,9vw,7rem)] leading-[1.05] -mt-1 md:-mt-2">{line2}</span>
+                <h1 className="text-white">
+                  <span className="block font-barlow font-medium text-[clamp(2.5rem,6vw,5rem)] leading-[1] tracking-[-0.04em]">{line1}</span>
+                  <span className="block font-serif italic text-[clamp(3rem,7vw,6rem)] leading-[1.05] -mt-1 md:-mt-2">{line2}</span>
                 </h1>
               );
             }
             return (
-              <h1 className="text-white max-w-5xl mx-auto font-barlow font-medium text-[clamp(2.5rem,7vw,5.5rem)] leading-[1.05] tracking-[-0.04em]">
+              <h1 className="text-white font-barlow font-medium text-[clamp(2.5rem,6vw,5rem)] leading-[1.05] tracking-[-0.04em]">
                 {title}
               </h1>
             );
           })()}
 
-          {/* Subtitle из banner.subtitle */}
+          {/* Subtitle */}
           {subtitle && (
-            <p className="mt-8 font-barlow font-medium text-[16px] md:text-[18px] text-white/85 max-w-2xl mx-auto leading-relaxed">
+            <p className="mt-8 font-barlow font-medium text-[16px] md:text-[18px] text-white/85 leading-relaxed">
               {subtitle}
             </p>
           )}
 
-          {/* CTAs */}
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+          {/* CTAs — выравнивание совпадает с зоной текста */}
+          <div className={`mt-10 flex flex-wrap items-center gap-3 ${ctaJustify}`}>
             {/* Primary — white pill with play */}
             <a
               href="#promo"

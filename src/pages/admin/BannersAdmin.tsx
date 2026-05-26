@@ -132,9 +132,16 @@ const BannersAdmin = () => {
 
   const remove = async (b: Banner) => {
     if (!confirm(`Удалить баннер «${b.title}»? Это действие необратимо.`)) return;
-    const { error } = await supabase.from("banners").delete().eq("id", b.id!);
+    // CRITICAL: PostgREST DELETE возвращает 204 даже если RLS отфильтровала все строки →
+    // нужен Prefer: return=representation чтобы получить реально удалённые записи и
+    // проверить что удаление случилось (а не молча отклонилось из-за expired JWT/RLS).
+    const { data, error } = await supabase.from("banners").delete().eq("id", b.id!).select();
     if (error) {
       toast.error(`Не удалось удалить: ${error.message}`);
+      return;
+    }
+    if (!data || data.length === 0) {
+      toast.error("Не удалось удалить — нет прав. Возможно, истекла сессия. Перелогинься в /admin/login.");
       return;
     }
     toast.success("Баннер удалён");
