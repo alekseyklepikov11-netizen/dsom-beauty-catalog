@@ -71,12 +71,21 @@ const BannersAdmin = () => {
     setSaving(true);
     try {
       const payload: any = { ...editing }; delete payload.id;
-      const { error } = editing.id
-        ? await supabase.from("banners").update(payload).eq("id", editing.id)
-        : await supabase.from("banners").insert(payload);
+      // .select() возвращает реально сохранённые/обновлённые строки. Если RLS
+      // отфильтровала всё (например, JWT expired) — data будет пустым массивом
+      // даже при success status, и тогда нужен принудительный re-login.
+      const { data, error } = editing.id
+        ? await supabase.from("banners").update(payload).eq("id", editing.id).select()
+        : await supabase.from("banners").insert(payload).select();
       if (error) {
         const { userMessage } = classifyError(error);
         toast.error(userMessage);
+        return;
+      }
+      if (isRlsBlocked(data)) {
+        toast.error("Сессия истекла. Перенаправляю на повторный логин...");
+        try { await supabase.auth.signOut(); } catch {}
+        setTimeout(() => { window.location.href = "/admin/login"; }, 1200);
         return;
       }
       toast.success("Сохранено");
@@ -88,36 +97,20 @@ const BannersAdmin = () => {
 
   const remove = async (b: Banner) => {
     if (!confirm(`Удалить баннер «${b.title}»? Это действие необратимо.`)) return;
-
-    // DEBUG (27.05.2026) — диагностика silent-fail. Уберём после починки.
-    const sess = await supabase.auth.getSession();
-    const s = sess.data.session;
-    // eslint-disable-next-line no-console
-    console.log("[banners.remove] auth:", s
-      ? { user: s.user.email, sub: s.user.id, expires_at: new Date(s.expires_at! * 1000).toISOString(), now: new Date().toISOString() }
-      : "NO SESSION");
-    // eslint-disable-next-line no-console
-    console.log("[banners.remove] deleting banner id:", b.id, "title:", b.title);
-
     // PostgREST DELETE возвращает 204 даже если RLS отфильтровала все строки.
     // С .select() получаем реально удалённые записи и проверяем что удаление случилось.
-    const res = await supabase.from("banners").delete().eq("id", b.id!).select();
-    // eslint-disable-next-line no-console
-    console.log("[banners.remove] response:", {
-      status: (res as any).status,
-      statusText: (res as any).statusText,
-      error: res.error,
-      data: res.data,
-      rowsAffected: res.data?.length ?? 0,
-    });
-
-    if (res.error) {
-      const { userMessage } = classifyError(res.error);
+    const { data, error } = await supabase.from("banners").delete().eq("id", b.id!).select();
+    if (error) {
+      const { userMessage } = classifyError(error);
       toast.error(`Не удалось удалить: ${userMessage}`);
       return;
     }
-    if (isRlsBlocked(res.data)) {
-      toast.error("Не удалось удалить — нет прав (RLS отфильтровала). Скорее всего истекла сессия. Перелогинься в /admin/login.");
+    if (isRlsBlocked(data)) {
+      // Самая частая причина пустого DELETE — JWT истёк, supabase-js скатился на anon → RLS блокирует.
+      // Автоматически логаут + redirect на /admin/login чтобы юзер получил свежий JWT.
+      toast.error("Сессия истекла. Перенаправляю на повторный логин...");
+      try { await supabase.auth.signOut(); } catch {}
+      setTimeout(() => { window.location.href = "/admin/login"; }, 1200);
       return;
     }
     toast.success("Баннер удалён");
