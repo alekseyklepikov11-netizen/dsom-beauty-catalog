@@ -29,15 +29,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    // 1. Listener FIRST (sync state only inside; defer async work)
+    // 1. Listener FIRST (sync state only inside; defer async work).
+    // CRITICAL: при свежем логине через onAuthStateChange ставим loading=true
+    // пока качаем роли — иначе ProtectedRoute увидит user=есть, loading=false,
+    // roles=[] и выдаст flash «Доступ ограничен» до завершения fetchRoles.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
       if (newSession?.user) {
+        setLoading(true);
         // defer Supabase call to avoid deadlock with onAuthStateChange
-        setTimeout(() => fetchRoles(newSession.user.id), 0);
+        setTimeout(() => {
+          fetchRoles(newSession.user.id).finally(() => setLoading(false));
+        }, 0);
       } else {
         setRoles([]);
+        setLoading(false);
       }
     });
 
