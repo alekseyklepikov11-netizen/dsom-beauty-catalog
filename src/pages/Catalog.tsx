@@ -10,26 +10,10 @@ import QuickViewDialog from "@/components/QuickViewDialog";
 import PromoGate from "@/components/PromoGate";
 import { LAUNCH_CONFIG, currentPhase } from "@/lib/launchConfig";
 import { SKIN_TYPES } from "@/lib/skinTypes";
-import { track } from "@/lib/analytics";
 import { useBanner } from "@/hooks/useBanner";
+import { HeroBanner } from "@/components/HeroBanner";
 
 interface Cat { id: string; slug: string; name: string; name_en: string | null; parent_id: string | null }
-
-interface Banner {
-  id: string;
-  title: string; title_en: string | null;
-  subtitle: string | null; subtitle_en: string | null;
-  cta_label: string | null; cta_label_en: string | null;
-  cta_url: string | null;
-  image_url: string | null; video_url: string | null;
-  ab_group: string | null;
-  text_position?: string | null;
-  image_srcset?: Record<string, string> | null;
-  image_focal_point?: string | null;
-}
-
-// 9-зон сетка вынесена в lib/banner-positions.ts (корректные оси для row-flex section)
-import { POS_CLASSES as TEXT_POS_CLASSES, POS_GRADIENT as TEXT_POS_GRADIENT, isValidPos } from "@/lib/banner-positions";
 
 type SortKey = "new" | "price_asc" | "price_desc";
 
@@ -44,7 +28,6 @@ const Catalog = () => {
   const [products, setProducts] = useState<ProductLite[]>([]);
   const [quickSlug, setQuickSlug] = useState<string | null>(null);
   const bannerState = useBanner("catalog_top");
-  const banner = bannerState.status === "ready" ? (bannerState.banner as Banner | null) : null;
   const [mobileCols, setMobileCols] = useState<1 | 2>(() => {
     if (typeof window === "undefined") return 1;
     const saved = window.localStorage.getItem("catalog:mobileCols");
@@ -115,61 +98,13 @@ const Catalog = () => {
     <main className="min-h-screen bg-background">
       <Header />
 
-      {banner ? (
-        // Динамический баннер из таблицы banners (position=catalog_top)
-        (() => {
-          const pos = (banner.text_position && TEXT_POS_CLASSES[banner.text_position]) ? banner.text_position : "bottom-left";
-          const ss = banner.image_srcset;
-          // Строка srcset для <picture>: используем 768w/1280w/1920w если есть, иначе fallback на image_url
-          const srcset = ss && (ss["768w"] || ss["1280w"] || ss["1920w"])
-            ? [ss["768w"] && `${ss["768w"]} 768w`, ss["1280w"] && `${ss["1280w"]} 1280w`, ss["1920w"] && `${ss["1920w"]} 1920w`].filter(Boolean).join(", ")
-            : undefined;
-          return (
-            <section className="relative h-[55vh] min-h-[420px] max-h-[680px] overflow-hidden bg-[#0a0a0a] border-b border-border/60">
-              {banner.image_url && (
-                <img
-                  src={banner.image_url}
-                  srcSet={srcset}
-                  sizes="100vw"
-                  alt={lang === "en" && banner.title_en ? banner.title_en : banner.title}
-                  loading="eager"
-                  fetchPriority="high"
-                  style={{ objectPosition: banner.image_focal_point || "center 25%" }}
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              )}
-              {/* Виньетка ориентирована под зону текста (тёмный угол ↔ текст) */}
-              <div className={`absolute inset-0 ${TEXT_POS_GRADIENT[pos]} pointer-events-none`} />
-
-              <div className={`relative container h-full flex flex-col py-12 md:py-16 lg:py-20 ${TEXT_POS_CLASSES[pos]}`}>
-                <div className="max-w-3xl">
-                  <p className="text-[11px] tracking-luxe uppercase text-white/70 mb-4">— {t("catalog.title")}</p>
-                  <h1 className="font-display text-4xl md:text-6xl lg:text-7xl leading-[1.0] text-white">
-                    {lang === "en" && banner.title_en ? banner.title_en : banner.title}
-                  </h1>
-                  {banner.subtitle && (
-                    <p className="mt-5 md:mt-6 text-white/85 text-sm md:text-base lg:text-lg leading-relaxed max-w-2xl">
-                      {lang === "en" && banner.subtitle_en ? banner.subtitle_en : banner.subtitle}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </section>
-          );
-        })()
-      ) : (
-        // Fallback на статичный заголовок, если в БД нет активного баннера catalog_top
-        <section className="border-b border-border/60">
-          <div className="container py-14 md:py-20">
-            <p className="text-[11px] tracking-luxe uppercase text-accent mb-4">— {t("catalog.title")}</p>
-            <h1 className="font-display text-5xl md:text-7xl leading-[0.95]">
-              {lang === "en" ? "Skincare with" : "Уход с архитектурой"}
-              <br />
-              <span className="italic">{lang === "en" ? "formula architecture" : "формул"}</span>
-            </h1>
-          </div>
-        </section>
-      )}
+      <HeroBanner
+        state={bannerState}
+        variant="section"
+        fallbackTitle={lang === "en" ? "Skincare with | formula architecture" : "Уход с архитектурой | формул"}
+        eyebrow={`— ${t("catalog.title")}`}
+        className="border-b border-border/60"
+      />
 
       {/* Sticky horizontal category tabs */}
       <div className="sticky top-[68px] z-30 bg-background/90 backdrop-blur-xl border-b border-border/60">
