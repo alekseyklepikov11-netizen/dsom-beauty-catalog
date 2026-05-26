@@ -11,6 +11,7 @@ import PromoGate from "@/components/PromoGate";
 import { LAUNCH_CONFIG, currentPhase } from "@/lib/launchConfig";
 import { SKIN_TYPES } from "@/lib/skinTypes";
 import { track } from "@/lib/analytics";
+import { useBanner } from "@/hooks/useBanner";
 
 interface Cat { id: string; slug: string; name: string; name_en: string | null; parent_id: string | null }
 
@@ -42,7 +43,8 @@ const Catalog = () => {
   const [cats, setCats] = useState<Cat[]>([]);
   const [products, setProducts] = useState<ProductLite[]>([]);
   const [quickSlug, setQuickSlug] = useState<string | null>(null);
-  const [banner, setBanner] = useState<Banner | null>(null);
+  const bannerState = useBanner("catalog_top");
+  const banner = bannerState.status === "ready" ? (bannerState.banner as Banner | null) : null;
   const [mobileCols, setMobileCols] = useState<1 | 2>(() => {
     if (typeof window === "undefined") return 1;
     const saved = window.localStorage.getItem("catalog:mobileCols");
@@ -62,25 +64,7 @@ const Catalog = () => {
       .then(({ data }) => setCats((data || []) as Cat[]));
   }, []);
 
-  // Загрузка top-баннера каталога (позиция catalog_top), A/B random pick если несколько активных.
-  // Graceful fallback: пробуем full SELECT с новыми колонками (text_position, image_srcset,
-  // image_focal_point); если миграция ещё не применена и PostgREST вернёт 42703 "column does
-  // not exist" — повторяем запрос с базовыми колонками. Так баннер живёт и до, и после миграции.
-  useEffect(() => {
-    (async () => {
-      const COLS_FULL = "id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group,text_position,image_srcset,image_focal_point";
-      const COLS_BASE = "id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group";
-      let res = await supabase.from("banners").select(COLS_FULL).eq("position", "catalog_top").eq("is_active", true).order("sort_order");
-      if (res.error && (res.error as any).code === "42703") {
-        res = await supabase.from("banners").select(COLS_BASE).eq("position", "catalog_top").eq("is_active", true).order("sort_order");
-      }
-      const list = (res.data || []) as Banner[];
-      if (list.length === 0) return;
-      const chosen = list[Math.floor(Math.random() * list.length)];
-      setBanner(chosen);
-      try { track("banner_view", { banner_id: chosen.id, value: chosen.ab_group || "default" }); } catch {}
-    })();
-  }, []);
+  // Banner loading вынесен в useBanner hook (выше).
 
   useEffect(() => {
     (async () => {

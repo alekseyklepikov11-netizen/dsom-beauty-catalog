@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useBanner } from "@/hooks/useBanner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard, { ProductLite } from "@/components/ProductCard";
@@ -39,31 +40,15 @@ const Index = () => {
   // (страница /intro остаётся доступной как самостоятельный URL для прямого захода)
 
   const { t, i18n } = useTranslation();
-  const [banner, setBanner] = useState<Banner | null>(null);
+  const bannerState = useBanner("home_hero");
+  const banner = bannerState.status === "ready" ? (bannerState.banner as Banner | null) : null;
   const [products, setProducts] = useState<ProductLite[]>([]);
   const [quickSlug, setQuickSlug] = useState<string | null>(null);
 
+  // Bestsellers — отдельный fetch, не относится к hero
   useEffect(() => {
     (async () => {
-      // Graceful fallback на случай если миграция banner-колонок не применена:
-      // на 42703 повторяем SELECT с базовым набором колонок.
-      const COLS_FULL = "id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group,text_position,image_srcset,image_focal_point";
-      const COLS_BASE = "id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group";
-      let bRes = await supabase.from("banners").select(COLS_FULL).eq("position", "home_hero").eq("is_active", true).order("sort_order");
-      if (bRes.error && (bRes.error as any).code === "42703") {
-        bRes = await supabase.from("banners").select(COLS_BASE).eq("position", "home_hero").eq("is_active", true).order("sort_order");
-      }
       const p = await supabase.from("products").select("id,slug,name,name_en,subtitle,subtitle_en,price,volume,cover_image_url,is_bestseller,is_new").eq("is_visible", true).eq("is_bestseller", true).order("sort_order").limit(6);
-      const b = bRes;
-      // A/B: pick a random active banner for this position
-      const banners = (b.data || []) as Banner[];
-      let chosen: Banner | null = null;
-      if (banners.length > 0) {
-        chosen = banners[Math.floor(Math.random() * banners.length)];
-        // Fire-and-forget impression
-        track("banner_view", { banner_id: chosen.id, value: chosen.ab_group || "default" });
-      }
-      setBanner(chosen);
       setProducts((p.data || []) as ProductLite[]);
     })();
   }, []);
