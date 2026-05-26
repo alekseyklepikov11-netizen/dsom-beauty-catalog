@@ -78,9 +78,10 @@ const Footer = () => {
         </div>
       </div>
       <div className="container mt-12 pt-8 border-t border-background/15 text-[11px] tracking-luxe uppercase text-background/40 flex flex-col md:flex-row justify-between gap-2">
-        <span>© 2026 ООО «ВАЛКЭНДВИР» · {t("footer.rights")}</span>
+        <span>© 2026 DSOM · {t("footer.rights")}</span>
         <span className="normal-case tracking-normal text-background/50">
-          ИНН 9707045838 · г. Москва, ул. Краснопролетарская, 7 · Произведено: г. Казань
+          Произведено в России ·{" "}
+          <a href="/oferta" className="underline hover:text-background/70">Реквизиты в публичной оферте</a>
         </span>
       </div>
     </footer>

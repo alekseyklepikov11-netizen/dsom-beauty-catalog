@@ -13,18 +13,18 @@ const SITE_NAME = "DSOM";
 const DEFAULT_DESCRIPTION =
   "Сыворотки и крем с указанными концентрациями: Vitamin C 2000 ppm, Ретинол 0,3%, PDRN 0,1%. Без маркетинговых уловок. Старт продаж на Ozon — июнь 2026.";
 
+// schema.org JSON-LD для брендовой карточки.
+// Юр.лицо (legalName/taxID/street address) НЕ публикуем по бренд-регламенту —
+// эти данные доступны только в /oferta и /privacy. Для поисковиков сохраняем
+// бренд-уровень: имя, домен, логотип, контакты, соц.сети, страна.
 const ORGANIZATION_JSONLD = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "DSOM",
-  legalName: "ООО «ВАЛКЭНДВИР»",
   url: "https://dsom.ru",
   logo: "https://dsom.ru/og-default.jpg",
-  taxID: "9707045838",
   address: {
     "@type": "PostalAddress",
-    streetAddress: "ул. Краснопролетарская, 7",
-    addressLocality: "Москва",
     addressCountry: "RU",
   },
   contactPoint: [

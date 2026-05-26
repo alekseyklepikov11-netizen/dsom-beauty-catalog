@@ -464,7 +464,7 @@ const Intro = () => {
       </section>
 
       <footer className="intro-colophon">
-        DSOM · ООО «ВАЛКЭНДВИР» · ИНН 9707045838 · Произведено: Российская Федерация
+        DSOM · Произведено в России · Реквизиты в публичной оферте на dsom.ru/oferta
       </footer>
     </div>
   );
