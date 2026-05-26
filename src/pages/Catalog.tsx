@@ -27,33 +27,8 @@ interface Banner {
   image_focal_point?: string | null;
 }
 
-// Маппинг 9-зон сетки на Tailwind-классы для flex-col контейнера.
-// Вертикаль: justify-* (start=top, center=middle, end=bottom).
-// Горизонталь: items-* (start=left, center, end=right).
-const TEXT_POS_CLASSES: Record<string, string> = {
-  "top-left":      "justify-start items-start text-left",
-  "top-center":    "justify-start items-center text-center",
-  "top-right":     "justify-start items-end text-right",
-  "middle-left":   "justify-center items-start text-left",
-  "middle-center": "justify-center items-center text-center",
-  "middle-right":  "justify-center items-end text-right",
-  "bottom-left":   "justify-end items-start text-left",
-  "bottom-center": "justify-end items-center text-center",
-  "bottom-right":  "justify-end items-end text-right",
-};
-
-// Виньетка-градиент, тёмный угол совпадает с положением текста (читабельность).
-const TEXT_POS_GRADIENT: Record<string, string> = {
-  "top-left":      "bg-gradient-to-br from-black/75 via-black/30 to-transparent",
-  "top-center":    "bg-gradient-to-b  from-black/75 via-black/30 to-transparent",
-  "top-right":     "bg-gradient-to-bl from-black/75 via-black/30 to-transparent",
-  "middle-left":   "bg-gradient-to-r  from-black/75 via-black/30 to-transparent",
-  "middle-center": "bg-black/40",
-  "middle-right":  "bg-gradient-to-l  from-black/75 via-black/30 to-transparent",
-  "bottom-left":   "bg-gradient-to-tr from-black/75 via-black/30 to-transparent",
-  "bottom-center": "bg-gradient-to-t  from-black/75 via-black/30 to-transparent",
-  "bottom-right":  "bg-gradient-to-tl from-black/75 via-black/30 to-transparent",
-};
+// 9-зон сетка вынесена в lib/banner-positions.ts (корректные оси для row-flex section)
+import { POS_CLASSES as TEXT_POS_CLASSES, POS_GRADIENT as TEXT_POS_GRADIENT, isValidPos } from "@/lib/banner-positions";
 
 type SortKey = "new" | "price_asc" | "price_desc";
 

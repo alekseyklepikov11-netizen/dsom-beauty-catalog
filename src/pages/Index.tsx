@@ -29,30 +29,9 @@ interface Banner {
 }
 const FALLBACK_VIDEO = "https://cdn.coverr.co/videos/coverr-pouring-cosmetic-cream-into-a-jar-9419/1080p.mp4";
 
-// 9-зон сетка для позиции текста на hero (см. таблица banners.text_position)
-const HERO_POS_CLASSES: Record<string, string> = {
-  "top-left":      "items-start    justify-start  text-left",
-  "top-center":    "items-center   justify-start  text-center",
-  "top-right":     "items-end      justify-start  text-right",
-  "middle-left":   "items-start    justify-center text-left",
-  "middle-center": "items-center   justify-center text-center",
-  "middle-right":  "items-end      justify-center text-right",
-  "bottom-left":   "items-start    justify-end    text-left",
-  "bottom-center": "items-center   justify-end    text-center",
-  "bottom-right":  "items-end      justify-end    text-right",
-};
-
-const HERO_POS_GRADIENT: Record<string, string> = {
-  "top-left":      "bg-gradient-to-br from-black/60 via-black/15 to-transparent",
-  "top-center":    "bg-gradient-to-b  from-black/55 via-black/10 to-transparent",
-  "top-right":     "bg-gradient-to-bl from-black/60 via-black/15 to-transparent",
-  "middle-left":   "bg-gradient-to-r  from-black/55 via-black/15 to-transparent",
-  "middle-center": "bg-gradient-to-b  from-black/15 via-transparent to-black/30",
-  "middle-right":  "bg-gradient-to-l  from-black/55 via-black/15 to-transparent",
-  "bottom-left":   "bg-gradient-to-tr from-black/60 via-black/15 to-transparent",
-  "bottom-center": "bg-gradient-to-t  from-black/55 via-black/10 to-transparent",
-  "bottom-right":  "bg-gradient-to-tl from-black/60 via-black/15 to-transparent",
-};
+// 9-зон сетка для позиции текста на hero вынесена в lib/banner-positions.ts
+// (там корректные оси для row-flex: items-* = vertical, justify-* = horizontal).
+import { POS_CLASSES as HERO_POS_CLASSES, POS_GRADIENT as HERO_POS_GRADIENT, DEFAULT_POS, isValidPos } from "@/lib/banner-positions";
 
 const Index = () => {
   // /intro daily-redirect отключён 26.05.2026 по запросу — главная теперь сразу

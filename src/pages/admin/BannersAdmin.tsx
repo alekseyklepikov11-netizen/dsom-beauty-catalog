@@ -20,31 +20,10 @@ interface Banner {
   image_focal_point?: string | null;
 }
 
-const TEXT_POSITIONS: { value: string; label: string }[] = [
-  { value: "top-left",      label: "Сверху · слева" },
-  { value: "top-center",    label: "Сверху · центр" },
-  { value: "top-right",     label: "Сверху · справа" },
-  { value: "middle-left",   label: "По центру · слева" },
-  { value: "middle-center", label: "По центру · центр" },
-  { value: "middle-right",  label: "По центру · справа" },
-  { value: "bottom-left",   label: "Снизу · слева" },
-  { value: "bottom-center", label: "Снизу · центр" },
-  { value: "bottom-right",  label: "Снизу · справа" },
-];
+// 9-зон сетка вынесена в lib/banner-positions.ts (единый источник правды)
+import { POSITIONS, POS_LABELS, FOCAL_POINTS } from "@/lib/banner-positions";
 
-// CSS object-position значения — 9 зон. Управляет тем КАКАЯ часть картинки
-// видна при кропе под viewport (если aspect-ratio не совпадает).
-const FOCAL_POINTS: { value: string; label: string }[] = [
-  { value: "left top",      label: "Сверху · слева" },
-  { value: "center top",    label: "Сверху · центр (для вертикальных продуктов — крышка видна)" },
-  { value: "right top",     label: "Сверху · справа" },
-  { value: "left center",   label: "По центру · слева" },
-  { value: "center center", label: "По центру · центр (дефолт)" },
-  { value: "right center",  label: "По центру · справа" },
-  { value: "left bottom",   label: "Снизу · слева" },
-  { value: "center bottom", label: "Снизу · центр" },
-  { value: "right bottom",  label: "Снизу · справа" },
-];
+const TEXT_POSITIONS = POSITIONS.map((value) => ({ value, label: POS_LABELS[value] }));
 
 const empty = (): Banner => ({
   position: "home_hero", title: "", title_en: "", subtitle: "", subtitle_en: "",
