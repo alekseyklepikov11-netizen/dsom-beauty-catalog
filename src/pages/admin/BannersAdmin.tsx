@@ -17,6 +17,7 @@ interface Banner {
   ab_group: string | null;
   text_position?: string | null;
   image_srcset?: Record<string, string> | null;
+  image_focal_point?: string | null;
 }
 
 const TEXT_POSITIONS: { value: string; label: string }[] = [
@@ -31,11 +32,25 @@ const TEXT_POSITIONS: { value: string; label: string }[] = [
   { value: "bottom-right",  label: "Снизу · справа" },
 ];
 
+// CSS object-position значения — 9 зон. Управляет тем КАКАЯ часть картинки
+// видна при кропе под viewport (если aspect-ratio не совпадает).
+const FOCAL_POINTS: { value: string; label: string }[] = [
+  { value: "left top",      label: "Сверху · слева" },
+  { value: "center top",    label: "Сверху · центр (для вертикальных продуктов — крышка видна)" },
+  { value: "right top",     label: "Сверху · справа" },
+  { value: "left center",   label: "По центру · слева" },
+  { value: "center center", label: "По центру · центр (дефолт)" },
+  { value: "right center",  label: "По центру · справа" },
+  { value: "left bottom",   label: "Снизу · слева" },
+  { value: "center bottom", label: "Снизу · центр" },
+  { value: "right bottom",  label: "Снизу · справа" },
+];
+
 const empty = (): Banner => ({
   position: "home_hero", title: "", title_en: "", subtitle: "", subtitle_en: "",
   cta_label: "", cta_label_en: "", cta_url: "/catalog",
   image_url: null, video_url: "", is_active: true, sort_order: 0, ab_group: null,
-  text_position: "bottom-left", image_srcset: null,
+  text_position: "bottom-left", image_srcset: null, image_focal_point: "center center",
 });
 
 interface BannerStats { views: number; clicks: number }
@@ -186,6 +201,22 @@ const BannersAdmin = () => {
                 <p className="text-[10px] text-muted-foreground mt-1">
                   Выбирай зону так, чтобы заголовок не закрывал главный объект на картинке.
                   Виньетка-градиент автоматически подстраивается под выбранную зону для контрастности.
+                </p>
+              </Field>
+              <Field label="Фокусная точка картинки (что видно при кропе)">
+                <select
+                  value={editing.image_focal_point || "center center"}
+                  onChange={(e) => setEditing({ ...editing, image_focal_point: e.target.value })}
+                  className={fieldCls}
+                >
+                  {FOCAL_POINTS.map((p) => (
+                    <option key={p.value} value={p.value}>{p.label}</option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Когда aspect-ratio картинки не совпадает с баннером, лишнее обрезается.
+                  Это поле говорит — КАКОЙ КУСОК сохранить. Например для вертикальной баночки
+                  на горизонтальном баннере выбирай «Сверху · центр» — крышка-дроппер будет видна.
                 </p>
               </Field>
               <I18nField label="Заголовок" valueRu={editing.title} valueEn={editing.title_en || ""}

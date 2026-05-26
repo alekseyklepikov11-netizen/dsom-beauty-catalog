@@ -24,6 +24,7 @@ interface Banner {
   ab_group: string | null;
   text_position?: string | null;
   image_srcset?: Record<string, string> | null;
+  image_focal_point?: string | null;
 }
 
 // Маппинг 9-зон сетки на Tailwind-классы для flex-col контейнера.
@@ -91,7 +92,7 @@ const Catalog = () => {
     (async () => {
       const { data } = await supabase
         .from("banners")
-        .select("id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group,text_position,image_srcset")
+        .select("id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group,text_position,image_srcset,image_focal_point")
         .eq("position", "catalog_top")
         .eq("is_active", true)
         .order("sort_order");
@@ -171,6 +172,7 @@ const Catalog = () => {
                   alt={lang === "en" && banner.title_en ? banner.title_en : banner.title}
                   loading="eager"
                   fetchPriority="high"
+                  style={{ objectPosition: banner.image_focal_point || "center 25%" }}
                   className="absolute inset-0 w-full h-full object-cover"
                 />
               )}

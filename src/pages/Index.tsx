@@ -25,6 +25,7 @@ interface Banner {
   ab_group: string | null;
   text_position?: string | null;
   image_srcset?: Record<string, string> | null;
+  image_focal_point?: string | null;
 }
 const FALLBACK_VIDEO = "https://cdn.coverr.co/videos/coverr-pouring-cosmetic-cream-into-a-jar-9419/1080p.mp4";
 
@@ -76,7 +77,7 @@ const Index = () => {
   useEffect(() => {
     (async () => {
       const [b, p] = await Promise.all([
-        supabase.from("banners").select("id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group,text_position,image_srcset").eq("position", "home_hero").eq("is_active", true).order("sort_order"),
+        supabase.from("banners").select("id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group,text_position,image_srcset,image_focal_point").eq("position", "home_hero").eq("is_active", true).order("sort_order"),
         supabase.from("products").select("id,slug,name,name_en,subtitle,subtitle_en,price,volume,cover_image_url,is_bestseller,is_new").eq("is_visible", true).eq("is_bestseller", true).order("sort_order").limit(6),
       ]);
       // A/B: pick a random active banner for this position
@@ -117,6 +118,7 @@ const Index = () => {
         <video
           autoPlay muted loop playsInline preload="auto"
           poster={banner?.image_url || undefined}
+          style={{ objectPosition: banner?.image_focal_point || "center center" }}
           className="absolute inset-0 w-full h-full object-cover"
         >
           <source src={videoSrc} type="video/mp4" />

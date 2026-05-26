@@ -27,7 +27,23 @@ ALTER TABLE banners
 ALTER TABLE banners
   ADD COLUMN IF NOT EXISTS image_srcset jsonb;
 
+ALTER TABLE banners
+  ADD COLUMN IF NOT EXISTS image_focal_point text NOT NULL DEFAULT 'center center';
+
+ALTER TABLE banners
+  DROP CONSTRAINT IF EXISTS banners_image_focal_point_check;
+
+ALTER TABLE banners
+  ADD CONSTRAINT banners_image_focal_point_check
+  CHECK (image_focal_point IN (
+    'left top',    'center top',    'right top',
+    'left center', 'center center', 'right center',
+    'left bottom', 'center bottom', 'right bottom'
+  ));
+
 COMMENT ON COLUMN banners.text_position IS
   '9-зон сетка для позиционирования наложения текста на баннере';
 COMMENT ON COLUMN banners.image_srcset IS
   'Адаптивные размеры WebP: {"768w": "url", "1280w": "url", "1920w": "url"}. Null = use image_url везде.';
+COMMENT ON COLUMN banners.image_focal_point IS
+  '9-зон сетка для object-position картинки при кропе. «center top» = сохранить верх, обрезать снизу.';
