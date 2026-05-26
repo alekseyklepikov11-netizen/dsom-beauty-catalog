@@ -87,16 +87,19 @@ const Catalog = () => {
       .then(({ data }) => setCats((data || []) as Cat[]));
   }, []);
 
-  // Загрузка top-баннера каталога (позиция catalog_top), A/B random pick если несколько активных
+  // Загрузка top-баннера каталога (позиция catalog_top), A/B random pick если несколько активных.
+  // Graceful fallback: пробуем full SELECT с новыми колонками (text_position, image_srcset,
+  // image_focal_point); если миграция ещё не применена и PostgREST вернёт 42703 "column does
+  // not exist" — повторяем запрос с базовыми колонками. Так баннер живёт и до, и после миграции.
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("banners")
-        .select("id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group,text_position,image_srcset,image_focal_point")
-        .eq("position", "catalog_top")
-        .eq("is_active", true)
-        .order("sort_order");
-      const list = (data || []) as Banner[];
+      const COLS_FULL = "id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group,text_position,image_srcset,image_focal_point";
+      const COLS_BASE = "id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group";
+      let res = await supabase.from("banners").select(COLS_FULL).eq("position", "catalog_top").eq("is_active", true).order("sort_order");
+      if (res.error && (res.error as any).code === "42703") {
+        res = await supabase.from("banners").select(COLS_BASE).eq("position", "catalog_top").eq("is_active", true).order("sort_order");
+      }
+      const list = (res.data || []) as Banner[];
       if (list.length === 0) return;
       const chosen = list[Math.floor(Math.random() * list.length)];
       setBanner(chosen);

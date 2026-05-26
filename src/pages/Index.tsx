@@ -76,10 +76,16 @@ const Index = () => {
 
   useEffect(() => {
     (async () => {
-      const [b, p] = await Promise.all([
-        supabase.from("banners").select("id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group,text_position,image_srcset,image_focal_point").eq("position", "home_hero").eq("is_active", true).order("sort_order"),
-        supabase.from("products").select("id,slug,name,name_en,subtitle,subtitle_en,price,volume,cover_image_url,is_bestseller,is_new").eq("is_visible", true).eq("is_bestseller", true).order("sort_order").limit(6),
-      ]);
+      // Graceful fallback на случай если миграция banner-колонок не применена:
+      // на 42703 повторяем SELECT с базовым набором колонок.
+      const COLS_FULL = "id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group,text_position,image_srcset,image_focal_point";
+      const COLS_BASE = "id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group";
+      let bRes = await supabase.from("banners").select(COLS_FULL).eq("position", "home_hero").eq("is_active", true).order("sort_order");
+      if (bRes.error && (bRes.error as any).code === "42703") {
+        bRes = await supabase.from("banners").select(COLS_BASE).eq("position", "home_hero").eq("is_active", true).order("sort_order");
+      }
+      const p = await supabase.from("products").select("id,slug,name,name_en,subtitle,subtitle_en,price,volume,cover_image_url,is_bestseller,is_new").eq("is_visible", true).eq("is_bestseller", true).order("sort_order").limit(6);
+      const b = bRes;
       // A/B: pick a random active banner for this position
       const banners = (b.data || []) as Banner[];
       let chosen: Banner | null = null;
