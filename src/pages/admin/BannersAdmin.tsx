@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import AdminLayout from "@/components/admin/AdminLayout";
 import I18nField, { Field, fieldCls } from "@/components/admin/I18nField";
 import ImageUpload from "@/components/admin/ImageUpload";
-import { classifyError, isRlsBlocked } from "@/lib/supabase-errors";
+// classifyError/isRlsBlocked больше не используются — admin CRUD теперь
+// через edge function admin-banners (см. callAdminBanners ниже).
 
 interface Banner {
   id?: string; position: string;
@@ -65,56 +66,69 @@ const BannersAdmin = () => {
   };
   useEffect(() => { load(); }, []);
 
+  // ============================================================
+  // CRUD через edge function admin-banners — НЕ зависит от JWT-в-браузере
+  // и фронтового RLS. Функция сама проверяет admin role через service_role,
+  // потом делает операцию в обход RLS. Если JWT истёк/нет роли — 401/403.
+  // ============================================================
+  const callAdminBanners = async (action: "insert" | "update" | "delete", id?: string, payload?: any) => {
+    const { data, error } = await supabase.functions.invoke("admin-banners", {
+      body: { action, id, payload },
+    });
+    if (error) {
+      // Edge function вернула HTTP error — JWT недействителен/нет роли/etc.
+      throw new Error(error.message || "Edge function error");
+    }
+    if (!data?.ok) {
+      throw new Error(data?.error || "Operation failed");
+    }
+    return data;
+  };
+
+  const handleAuthError = async (msg: string) => {
+    toast.error(`${msg}. Перенаправляю на повторный логин...`);
+    try { await supabase.auth.signOut(); } catch {}
+    setTimeout(() => { window.location.href = "/admin/login"; }, 1200);
+  };
+
   const save = async () => {
     if (!editing) return;
     if (!editing.title) return toast.error("Заголовок обязателен");
     setSaving(true);
     try {
-      const payload: any = { ...editing }; delete payload.id;
-      // .select() возвращает реально сохранённые/обновлённые строки. Если RLS
-      // отфильтровала всё (например, JWT expired) — data будет пустым массивом
-      // даже при success status, и тогда нужен принудительный re-login.
-      const { data, error } = editing.id
-        ? await supabase.from("banners").update(payload).eq("id", editing.id).select()
-        : await supabase.from("banners").insert(payload).select();
-      if (error) {
-        const { userMessage } = classifyError(error);
-        toast.error(userMessage);
-        return;
-      }
-      if (isRlsBlocked(data)) {
-        toast.error("Сессия истекла. Перенаправляю на повторный логин...");
-        try { await supabase.auth.signOut(); } catch {}
-        setTimeout(() => { window.location.href = "/admin/login"; }, 1200);
-        return;
+      if (editing.id) {
+        await callAdminBanners("update", editing.id, editing);
+      } else {
+        await callAdminBanners("insert", undefined, editing);
       }
       toast.success("Сохранено");
       setEditing(null); load();
     } catch (e: any) {
-      toast.error(`Ошибка сохранения: ${e?.message || e}`);
+      const msg = e?.message || String(e);
+      if (msg.includes("expired") || msg.includes("Invalid") || msg.includes("Forbidden") || msg.includes("401") || msg.includes("403")) {
+        return handleAuthError("Сессия истекла или нет admin-роли");
+      }
+      toast.error(`Ошибка сохранения: ${msg}`);
     } finally { setSaving(false); }
   };
 
   const remove = async (b: Banner) => {
     if (!confirm(`Удалить баннер «${b.title}»? Это действие необратимо.`)) return;
-    // PostgREST DELETE возвращает 204 даже если RLS отфильтровала все строки.
-    // С .select() получаем реально удалённые записи и проверяем что удаление случилось.
-    const { data, error } = await supabase.from("banners").delete().eq("id", b.id!).select();
-    if (error) {
-      const { userMessage } = classifyError(error);
-      toast.error(`Не удалось удалить: ${userMessage}`);
-      return;
+    try {
+      const res = await callAdminBanners("delete", b.id);
+      if (res.rowsAffected === 0) {
+        toast.error("Удаление не дало эффекта — баннер уже был удалён или ID невалиден");
+        return;
+      }
+      toast.success("Баннер удалён");
+      load();
+    } catch (e: any) {
+      const msg = e?.message || String(e);
+      if (msg.includes("expired") || msg.includes("Invalid") || msg.includes("Forbidden") || msg.includes("401") || msg.includes("403")) {
+        return handleAuthError("Сессия истекла или нет admin-роли");
+      }
+      toast.error(`Не удалось удалить: ${msg}`);
     }
-    if (isRlsBlocked(data)) {
-      // Самая частая причина пустого DELETE — JWT истёк, supabase-js скатился на anon → RLS блокирует.
-      // Автоматически логаут + redirect на /admin/login чтобы юзер получил свежий JWT.
-      toast.error("Сессия истекла. Перенаправляю на повторный логин...");
-      try { await supabase.auth.signOut(); } catch {}
-      setTimeout(() => { window.location.href = "/admin/login"; }, 1200);
-      return;
-    }
-    toast.success("Баннер удалён");
-    load();
   };
 
   const toggle = async (b: Banner) => {
