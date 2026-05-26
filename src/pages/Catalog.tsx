@@ -22,7 +22,37 @@ interface Banner {
   cta_url: string | null;
   image_url: string | null; video_url: string | null;
   ab_group: string | null;
+  text_position?: string | null;
+  image_srcset?: Record<string, string> | null;
 }
+
+// Маппинг 9-зон сетки на Tailwind-классы для flex-col контейнера.
+// Вертикаль: justify-* (start=top, center=middle, end=bottom).
+// Горизонталь: items-* (start=left, center, end=right).
+const TEXT_POS_CLASSES: Record<string, string> = {
+  "top-left":      "justify-start items-start text-left",
+  "top-center":    "justify-start items-center text-center",
+  "top-right":     "justify-start items-end text-right",
+  "middle-left":   "justify-center items-start text-left",
+  "middle-center": "justify-center items-center text-center",
+  "middle-right":  "justify-center items-end text-right",
+  "bottom-left":   "justify-end items-start text-left",
+  "bottom-center": "justify-end items-center text-center",
+  "bottom-right":  "justify-end items-end text-right",
+};
+
+// Виньетка-градиент, тёмный угол совпадает с положением текста (читабельность).
+const TEXT_POS_GRADIENT: Record<string, string> = {
+  "top-left":      "bg-gradient-to-br from-black/75 via-black/30 to-transparent",
+  "top-center":    "bg-gradient-to-b  from-black/75 via-black/30 to-transparent",
+  "top-right":     "bg-gradient-to-bl from-black/75 via-black/30 to-transparent",
+  "middle-left":   "bg-gradient-to-r  from-black/75 via-black/30 to-transparent",
+  "middle-center": "bg-black/40",
+  "middle-right":  "bg-gradient-to-l  from-black/75 via-black/30 to-transparent",
+  "bottom-left":   "bg-gradient-to-tr from-black/75 via-black/30 to-transparent",
+  "bottom-center": "bg-gradient-to-t  from-black/75 via-black/30 to-transparent",
+  "bottom-right":  "bg-gradient-to-tl from-black/75 via-black/30 to-transparent",
+};
 
 type SortKey = "new" | "price_asc" | "price_desc";
 
@@ -61,7 +91,7 @@ const Catalog = () => {
     (async () => {
       const { data } = await supabase
         .from("banners")
-        .select("id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group")
+        .select("id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group,text_position,image_srcset")
         .eq("position", "catalog_top")
         .eq("is_active", true)
         .order("sort_order");
@@ -124,29 +154,45 @@ const Catalog = () => {
 
       {banner ? (
         // Динамический баннер из таблицы banners (position=catalog_top)
-        <section className="relative h-[55vh] min-h-[420px] max-h-[680px] overflow-hidden bg-[#0a0a0a] border-b border-border/60">
-          {banner.image_url && (
-            <img
-              src={banner.image_url}
-              alt={lang === "en" && banner.title_en ? banner.title_en : banner.title}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          )}
-          {/* Лёгкая виньетка слева снизу для контрастности текста, не закрывает баночку */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-black/75 via-black/30 to-transparent pointer-events-none" />
+        (() => {
+          const pos = (banner.text_position && TEXT_POS_CLASSES[banner.text_position]) ? banner.text_position : "bottom-left";
+          const ss = banner.image_srcset;
+          // Строка srcset для <picture>: используем 768w/1280w/1920w если есть, иначе fallback на image_url
+          const srcset = ss && (ss["768w"] || ss["1280w"] || ss["1920w"])
+            ? [ss["768w"] && `${ss["768w"]} 768w`, ss["1280w"] && `${ss["1280w"]} 1280w`, ss["1920w"] && `${ss["1920w"]} 1920w`].filter(Boolean).join(", ")
+            : undefined;
+          return (
+            <section className="relative h-[55vh] min-h-[420px] max-h-[680px] overflow-hidden bg-[#0a0a0a] border-b border-border/60">
+              {banner.image_url && (
+                <img
+                  src={banner.image_url}
+                  srcSet={srcset}
+                  sizes="100vw"
+                  alt={lang === "en" && banner.title_en ? banner.title_en : banner.title}
+                  loading="eager"
+                  fetchPriority="high"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              )}
+              {/* Виньетка ориентирована под зону текста (тёмный угол ↔ текст) */}
+              <div className={`absolute inset-0 ${TEXT_POS_GRADIENT[pos]} pointer-events-none`} />
 
-          <div className="relative container h-full flex flex-col justify-end pb-12 md:pb-16 lg:pb-20">
-            <p className="text-[11px] tracking-luxe uppercase text-white/70 mb-4">— {t("catalog.title")}</p>
-            <h1 className="font-display text-4xl md:text-6xl lg:text-7xl leading-[1.0] text-white max-w-3xl">
-              {lang === "en" && banner.title_en ? banner.title_en : banner.title}
-            </h1>
-            {banner.subtitle && (
-              <p className="mt-5 md:mt-6 text-white/85 max-w-2xl text-sm md:text-base lg:text-lg leading-relaxed">
-                {lang === "en" && banner.subtitle_en ? banner.subtitle_en : banner.subtitle}
-              </p>
-            )}
-          </div>
-        </section>
+              <div className={`relative container h-full flex flex-col py-12 md:py-16 lg:py-20 ${TEXT_POS_CLASSES[pos]}`}>
+                <div className="max-w-3xl">
+                  <p className="text-[11px] tracking-luxe uppercase text-white/70 mb-4">— {t("catalog.title")}</p>
+                  <h1 className="font-display text-4xl md:text-6xl lg:text-7xl leading-[1.0] text-white">
+                    {lang === "en" && banner.title_en ? banner.title_en : banner.title}
+                  </h1>
+                  {banner.subtitle && (
+                    <p className="mt-5 md:mt-6 text-white/85 text-sm md:text-base lg:text-lg leading-relaxed max-w-2xl">
+                      {lang === "en" && banner.subtitle_en ? banner.subtitle_en : banner.subtitle}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
+          );
+        })()
       ) : (
         // Fallback на статичный заголовок, если в БД нет активного баннера catalog_top
         <section className="border-b border-border/60">

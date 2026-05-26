@@ -7,31 +7,117 @@ interface Props {
   bucket: string;
   value: string | null;
   onChange: (url: string | null) => void;
+  /**
+   * Optional callback. Если передан — компонент сгенерирует адаптивные
+   * WebP-варианты (768w / 1280w / 1920w) и вернёт map для сохранения
+   * в banners.image_srcset (или аналогичную колонку).
+   * При этом onChange получит URL 1920w как «главный» image_url.
+   */
+  onSrcsetChange?: (srcset: Record<string, string> | null) => void;
   label?: string;
   className?: string;
   aspect?: string;
 }
 
-const ImageUpload = ({ bucket, value, onChange, label = "Изображение", className = "", aspect = "aspect-[4/5]" }: Props) => {
+/** Загружает <img> из File через ObjectURL. */
+function loadImage(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
+    img.src = url;
+  });
+}
+
+/**
+ * Конвертирует исходное HTMLImageElement в WebP-blob заданной ширины.
+ * Если оригинал уже ≤ maxWidth — резайз не делается (lossless по размеру).
+ * Используется imageSmoothingQuality='high' для качественного даунсэмплинга.
+ */
+async function toWebp(img: HTMLImageElement, maxWidth: number, quality = 0.92): Promise<Blob> {
+  const scale = img.naturalWidth > maxWidth ? maxWidth / img.naturalWidth : 1;
+  const w = Math.round(img.naturalWidth * scale);
+  const h = Math.round(img.naturalHeight * scale);
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas 2D context unavailable");
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(img, 0, 0, w, h);
+  return await new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => blob ? resolve(blob) : reject(new Error("WebP encoding failed")),
+      "image/webp",
+      quality,
+    );
+  });
+}
+
+const ImageUpload = ({ bucket, value, onChange, onSrcsetChange, label = "Изображение", className = "", aspect = "aspect-[4/5]" }: Props) => {
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const upload = async (file: File) => {
     setUploading(true);
+    setProgress("");
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error } = await supabase.storage.from(bucket).upload(path, file, {
-        cacheControl: "3600", upsert: false,
-      });
-      if (error) throw error;
-      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-      onChange(data.publicUrl);
-      toast.success("Загружено");
+      const slug = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+      // Режим adaptive — параметр onSrcsetChange подсказывает, что мы baner-загружаем
+      // и хотим srcset с 3 размерами WebP. По умолчанию (без callback) — старое
+      // поведение: единственный файл в исходном формате.
+      if (onSrcsetChange) {
+        setProgress("Декодирование...");
+        const img = await loadImage(file);
+        const variants = [
+          { width: 768,  key: "768w"  },
+          { width: 1280, key: "1280w" },
+          { width: 1920, key: "1920w" },
+        ];
+        const srcset: Record<string, string> = {};
+
+        for (let i = 0; i < variants.length; i++) {
+          const v = variants[i];
+          setProgress(`WebP ${v.width}w (${i + 1}/${variants.length})...`);
+          const blob = await toWebp(img, v.width, 0.92);
+          const path = `${slug}-${v.width}.webp`;
+          const { error } = await supabase.storage.from(bucket).upload(path, blob, {
+            contentType: "image/webp",
+            cacheControl: "31536000", // 1 год — у нас уникальное имя файла
+            upsert: false,
+          });
+          if (error) throw error;
+          const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+          srcset[v.key] = data.publicUrl;
+        }
+
+        // Главный image_url — это 1920w (хороший дефолт для desktop).
+        // На мобиле/планшете браузер сам подберёт нужный srcset.
+        onChange(srcset["1920w"]);
+        onSrcsetChange(srcset);
+        toast.success(`Загружено в WebP × 3 (адаптивно): ~${Math.round(file.size / 1024 / 10) / 100}× меньше`);
+      } else {
+        // Legacy режим — без оптимизации
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `${slug}.${ext}`;
+        const { error } = await supabase.storage.from(bucket).upload(path, file, {
+          cacheControl: "3600", upsert: false,
+        });
+        if (error) throw error;
+        const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+        onChange(data.publicUrl);
+        toast.success("Загружено");
+      }
     } catch (err: any) {
       toast.error(err.message || "Не удалось загрузить");
+      console.error("ImageUpload error:", err);
     } finally {
       setUploading(false);
+      setProgress("");
     }
   };
 
@@ -43,7 +129,11 @@ const ImageUpload = ({ bucket, value, onChange, label = "Изображение"
           <>
             <img src={value} alt="" className="absolute inset-0 w-full h-full object-cover" />
             <button
-              type="button" onClick={() => onChange(null)}
+              type="button"
+              onClick={() => {
+                onChange(null);
+                if (onSrcsetChange) onSrcsetChange(null);
+              }}
               className="absolute top-2 right-2 w-7 h-7 grid place-items-center rounded-full bg-background/90 hover:bg-background"
               aria-label="Удалить"
             >
@@ -55,10 +145,16 @@ const ImageUpload = ({ bucket, value, onChange, label = "Изображение"
             type="button" onClick={() => inputRef.current?.click()}
             className="absolute inset-0 grid place-items-center text-muted-foreground hover:text-foreground transition-colors"
           >
-            {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+            {uploading ? (
+              <div className="text-center">
+                <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                {progress && <p className="text-[10px] tracking-luxe uppercase mt-2">{progress}</p>}
+              </div>
+            ) : (
               <div className="text-center">
                 <Upload className="w-5 h-5 mx-auto mb-2" />
                 <p className="text-[10px] tracking-luxe uppercase">Загрузить</p>
+                {onSrcsetChange && <p className="text-[9px] text-muted-foreground mt-1">авто WebP ×3</p>}
               </div>
             )}
           </button>

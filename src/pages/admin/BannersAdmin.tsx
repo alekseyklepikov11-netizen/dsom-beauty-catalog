@@ -15,12 +15,27 @@ interface Banner {
   image_url: string | null; video_url: string | null;
   is_active: boolean; sort_order: number;
   ab_group: string | null;
+  text_position?: string | null;
+  image_srcset?: Record<string, string> | null;
 }
+
+const TEXT_POSITIONS: { value: string; label: string }[] = [
+  { value: "top-left",      label: "Сверху · слева" },
+  { value: "top-center",    label: "Сверху · центр" },
+  { value: "top-right",     label: "Сверху · справа" },
+  { value: "middle-left",   label: "По центру · слева" },
+  { value: "middle-center", label: "По центру · центр" },
+  { value: "middle-right",  label: "По центру · справа" },
+  { value: "bottom-left",   label: "Снизу · слева" },
+  { value: "bottom-center", label: "Снизу · центр" },
+  { value: "bottom-right",  label: "Снизу · справа" },
+];
 
 const empty = (): Banner => ({
   position: "home_hero", title: "", title_en: "", subtitle: "", subtitle_en: "",
   cta_label: "", cta_label_en: "", cta_url: "/catalog",
   image_url: null, video_url: "", is_active: true, sort_order: 0, ab_group: null,
+  text_position: "bottom-left", image_srcset: null,
 });
 
 interface BannerStats { views: number; clicks: number }
@@ -158,6 +173,21 @@ const BannersAdmin = () => {
                   <option value="about_top">О бренде — верх</option>
                 </select>
               </Field>
+              <Field label="Позиция текста на картинке (9 зон)">
+                <select
+                  value={editing.text_position || "bottom-left"}
+                  onChange={(e) => setEditing({ ...editing, text_position: e.target.value })}
+                  className={fieldCls}
+                >
+                  {TEXT_POSITIONS.map((p) => (
+                    <option key={p.value} value={p.value}>{p.label}</option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Выбирай зону так, чтобы заголовок не закрывал главный объект на картинке.
+                  Виньетка-градиент автоматически подстраивается под выбранную зону для контрастности.
+                </p>
+              </Field>
               <I18nField label="Заголовок" valueRu={editing.title} valueEn={editing.title_en || ""}
                 onChangeRu={(v) => setEditing({ ...editing, title: v })}
                 onChangeEn={(v) => setEditing({ ...editing, title_en: v })} />
@@ -170,7 +200,14 @@ const BannersAdmin = () => {
               <Field label="CTA ссылка"><input value={editing.cta_url || ""} onChange={(e) => setEditing({ ...editing, cta_url: e.target.value })} className={fieldCls} /></Field>
 
               <div className="grid md:grid-cols-2 gap-4">
-                <ImageUpload bucket="banners" value={editing.image_url} onChange={(url) => setEditing({ ...editing, image_url: url })} label="Постер / изображение" aspect="aspect-video" />
+                <ImageUpload
+                  bucket="banners"
+                  value={editing.image_url}
+                  onChange={(url) => setEditing({ ...editing, image_url: url })}
+                  onSrcsetChange={(srcset) => setEditing({ ...editing, image_srcset: srcset })}
+                  label="Постер / изображение (auto WebP ×3)"
+                  aspect="aspect-video"
+                />
                 <Field label="Видео URL (mp4)">
                   <textarea value={editing.video_url || ""} onChange={(e) => setEditing({ ...editing, video_url: e.target.value })} rows={3} className={fieldCls + " resize-y"} placeholder="https://…/video.mp4" />
                   <p className="text-[10px] text-muted-foreground mt-1">Если видео указано — оно проигрывается на фоне hero. Изображение используется как poster.</p>

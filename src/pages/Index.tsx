@@ -23,8 +23,35 @@ interface Banner {
   cta_url: string | null;
   image_url: string | null; video_url: string | null;
   ab_group: string | null;
+  text_position?: string | null;
+  image_srcset?: Record<string, string> | null;
 }
 const FALLBACK_VIDEO = "https://cdn.coverr.co/videos/coverr-pouring-cosmetic-cream-into-a-jar-9419/1080p.mp4";
+
+// 9-зон сетка для позиции текста на hero (см. таблица banners.text_position)
+const HERO_POS_CLASSES: Record<string, string> = {
+  "top-left":      "items-start    justify-start  text-left",
+  "top-center":    "items-center   justify-start  text-center",
+  "top-right":     "items-end      justify-start  text-right",
+  "middle-left":   "items-start    justify-center text-left",
+  "middle-center": "items-center   justify-center text-center",
+  "middle-right":  "items-end      justify-center text-right",
+  "bottom-left":   "items-start    justify-end    text-left",
+  "bottom-center": "items-center   justify-end    text-center",
+  "bottom-right":  "items-end      justify-end    text-right",
+};
+
+const HERO_POS_GRADIENT: Record<string, string> = {
+  "top-left":      "bg-gradient-to-br from-black/60 via-black/15 to-transparent",
+  "top-center":    "bg-gradient-to-b  from-black/55 via-black/10 to-transparent",
+  "top-right":     "bg-gradient-to-bl from-black/60 via-black/15 to-transparent",
+  "middle-left":   "bg-gradient-to-r  from-black/55 via-black/15 to-transparent",
+  "middle-center": "bg-gradient-to-b  from-black/15 via-transparent to-black/30",
+  "middle-right":  "bg-gradient-to-l  from-black/55 via-black/15 to-transparent",
+  "bottom-left":   "bg-gradient-to-tr from-black/60 via-black/15 to-transparent",
+  "bottom-center": "bg-gradient-to-t  from-black/55 via-black/10 to-transparent",
+  "bottom-right":  "bg-gradient-to-tl from-black/60 via-black/15 to-transparent",
+};
 
 const Index = () => {
   const navigate = useNavigate();
@@ -49,7 +76,7 @@ const Index = () => {
   useEffect(() => {
     (async () => {
       const [b, p] = await Promise.all([
-        supabase.from("banners").select("id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group").eq("position", "home_hero").eq("is_active", true).order("sort_order"),
+        supabase.from("banners").select("id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group,text_position,image_srcset").eq("position", "home_hero").eq("is_active", true).order("sort_order"),
         supabase.from("products").select("id,slug,name,name_en,subtitle,subtitle_en,price,volume,cover_image_url,is_bestseller,is_new").eq("is_visible", true).eq("is_bestseller", true).order("sort_order").limit(6),
       ]);
       // A/B: pick a random active banner for this position
@@ -82,7 +109,11 @@ const Index = () => {
       <Header floating />
 
       {/* HERO with full-bleed video background — Logoisum style */}
-      <section className="relative min-h-[100vh] flex items-center justify-center overflow-hidden bg-[#0a0a0a]">
+      {(() => {
+        const heroPos = (banner?.text_position && HERO_POS_CLASSES[banner.text_position]) ? banner.text_position : "middle-center";
+        const heroGrad = HERO_POS_GRADIENT[heroPos] || HERO_POS_GRADIENT["middle-center"];
+        return (
+      <section className={`relative min-h-[100vh] flex overflow-hidden bg-[#0a0a0a] ${HERO_POS_CLASSES[heroPos]}`}>
         <video
           autoPlay muted loop playsInline preload="auto"
           poster={banner?.image_url || undefined}
@@ -91,10 +122,10 @@ const Index = () => {
           <source src={videoSrc} type="video/mp4" />
         </video>
 
-        {/* Subtle vignette only — no heavy color overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-black/30 pointer-events-none" />
+        {/* Виньетка ориентирована под зону текста */}
+        <div className={`absolute inset-0 ${heroGrad} pointer-events-none`} />
 
-        <div className="relative container px-4 pt-32 pb-20 text-center animate-fade-up">
+        <div className="relative container px-4 pt-32 pb-20 animate-fade-up">
           {/* Eyebrow */}
           <p className="font-barlow font-medium text-[12px] tracking-[0.3em] uppercase text-white/80 mb-8">
             — {t("hero.eyebrow")}
@@ -150,6 +181,8 @@ const Index = () => {
           {lang === "en" ? "Scroll" : "Листайте"} ↓
         </div>
       </section>
+        );
+      })()}
 
       {/* BESTSELLERS */}
       <section className="py-24 md:py-32">
