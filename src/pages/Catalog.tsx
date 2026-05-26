@@ -10,8 +10,19 @@ import QuickViewDialog from "@/components/QuickViewDialog";
 import PromoGate from "@/components/PromoGate";
 import { LAUNCH_CONFIG, currentPhase } from "@/lib/launchConfig";
 import { SKIN_TYPES } from "@/lib/skinTypes";
+import { track } from "@/lib/analytics";
 
 interface Cat { id: string; slug: string; name: string; name_en: string | null; parent_id: string | null }
+
+interface Banner {
+  id: string;
+  title: string; title_en: string | null;
+  subtitle: string | null; subtitle_en: string | null;
+  cta_label: string | null; cta_label_en: string | null;
+  cta_url: string | null;
+  image_url: string | null; video_url: string | null;
+  ab_group: string | null;
+}
 
 type SortKey = "new" | "price_asc" | "price_desc";
 
@@ -25,6 +36,7 @@ const Catalog = () => {
   const [cats, setCats] = useState<Cat[]>([]);
   const [products, setProducts] = useState<ProductLite[]>([]);
   const [quickSlug, setQuickSlug] = useState<string | null>(null);
+  const [banner, setBanner] = useState<Banner | null>(null);
   const [mobileCols, setMobileCols] = useState<1 | 2>(() => {
     if (typeof window === "undefined") return 1;
     const saved = window.localStorage.getItem("catalog:mobileCols");
@@ -42,6 +54,23 @@ const Catalog = () => {
   useEffect(() => {
     supabase.from("categories").select("id,slug,name,name_en,parent_id").eq("is_visible", true).is("parent_id", null).order("sort_order")
       .then(({ data }) => setCats((data || []) as Cat[]));
+  }, []);
+
+  // Загрузка top-баннера каталога (позиция catalog_top), A/B random pick если несколько активных
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("banners")
+        .select("id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_url,image_url,video_url,ab_group")
+        .eq("position", "catalog_top")
+        .eq("is_active", true)
+        .order("sort_order");
+      const list = (data || []) as Banner[];
+      if (list.length === 0) return;
+      const chosen = list[Math.floor(Math.random() * list.length)];
+      setBanner(chosen);
+      try { track("banner_view", { banner_id: chosen.id, value: chosen.ab_group || "default" }); } catch {}
+    })();
   }, []);
 
   useEffect(() => {
@@ -93,16 +122,44 @@ const Catalog = () => {
     <main className="min-h-screen bg-background">
       <Header />
 
-      <section className="border-b border-border/60">
-        <div className="container py-14 md:py-20">
-          <p className="text-[11px] tracking-luxe uppercase text-accent mb-4">— {t("catalog.title")}</p>
-          <h1 className="font-display text-5xl md:text-7xl leading-[0.95]">
-            {lang === "en" ? "Skincare with" : "Уход с архитектурой"}
-            <br />
-            <span className="italic">{lang === "en" ? "formula architecture" : "формул"}</span>
-          </h1>
-        </div>
-      </section>
+      {banner ? (
+        // Динамический баннер из таблицы banners (position=catalog_top)
+        <section className="relative h-[55vh] min-h-[420px] max-h-[680px] overflow-hidden bg-[#0a0a0a] border-b border-border/60">
+          {banner.image_url && (
+            <img
+              src={banner.image_url}
+              alt={lang === "en" && banner.title_en ? banner.title_en : banner.title}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
+          {/* Лёгкая виньетка слева снизу для контрастности текста, не закрывает баночку */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-black/75 via-black/30 to-transparent pointer-events-none" />
+
+          <div className="relative container h-full flex flex-col justify-end pb-12 md:pb-16 lg:pb-20">
+            <p className="text-[11px] tracking-luxe uppercase text-white/70 mb-4">— {t("catalog.title")}</p>
+            <h1 className="font-display text-4xl md:text-6xl lg:text-7xl leading-[1.0] text-white max-w-3xl">
+              {lang === "en" && banner.title_en ? banner.title_en : banner.title}
+            </h1>
+            {banner.subtitle && (
+              <p className="mt-5 md:mt-6 text-white/85 max-w-2xl text-sm md:text-base lg:text-lg leading-relaxed">
+                {lang === "en" && banner.subtitle_en ? banner.subtitle_en : banner.subtitle}
+              </p>
+            )}
+          </div>
+        </section>
+      ) : (
+        // Fallback на статичный заголовок, если в БД нет активного баннера catalog_top
+        <section className="border-b border-border/60">
+          <div className="container py-14 md:py-20">
+            <p className="text-[11px] tracking-luxe uppercase text-accent mb-4">— {t("catalog.title")}</p>
+            <h1 className="font-display text-5xl md:text-7xl leading-[0.95]">
+              {lang === "en" ? "Skincare with" : "Уход с архитектурой"}
+              <br />
+              <span className="italic">{lang === "en" ? "formula architecture" : "формул"}</span>
+            </h1>
+          </div>
+        </section>
+      )}
 
       {/* Sticky horizontal category tabs */}
       <div className="sticky top-[68px] z-30 bg-background/90 backdrop-blur-xl border-b border-border/60">
