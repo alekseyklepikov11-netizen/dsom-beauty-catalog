@@ -464,7 +464,7 @@ const Intro = () => {
       </section>
 
       <footer className="intro-colophon">
-        DSOM · Произведено в России · Реквизиты в публичной оферте на dsom.ru/oferta
+        DSOM · Произведено в России · Реквизиты в публичной оферте на dsom.ru/page/oferta
       </footer>
     </div>
   );

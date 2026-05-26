@@ -81,7 +81,7 @@ const Footer = () => {
         <span>© 2026 DSOM · {t("footer.rights")}</span>
         <span className="normal-case tracking-normal text-background/50">
           Произведено в России ·{" "}
-          <a href="/oferta" className="underline hover:text-background/70">Реквизиты в публичной оферте</a>
+          <a href="/page/oferta" className="underline hover:text-background/70">Реквизиты в публичной оферте</a>
         </span>
       </div>
     </footer>

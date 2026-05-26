@@ -204,7 +204,7 @@ const CampaignEdit = () => {
               <div className="bg-secondary/50 px-4 py-4 border-t border-border text-center">
                 <p className="text-[11px] text-muted-foreground">
                   Вы получили это письмо, потому что подписаны на рассылку DSOM.<br />
-                  <span className="underline">Отписаться</span> · DSOM · Реквизиты в публичной оферте на dsom.ru/oferta
+                  <span className="underline">Отписаться</span> · DSOM · Реквизиты в публичной оферте на dsom.ru/page/oferta
                 </p>
               </div>
             </div>

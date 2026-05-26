@@ -139,22 +139,34 @@ const Index = () => {
             — {t("hero.eyebrow")}
           </p>
 
-          {/* Headline — two lines, mixed typography */}
-          <h1 className="text-white max-w-5xl mx-auto">
-            <span className="block font-barlow font-medium text-[clamp(2.5rem,7vw,5.5rem)] leading-[1] tracking-[-0.04em]">
-              {lang === "en" ? "Active cosmetics" : "Активная косметика"}
-            </span>
-            <span className="block font-serif italic text-[clamp(3rem,9vw,7rem)] leading-[1.05] -mt-1 md:-mt-2">
-              {lang === "en" ? "with transparent formulas" : "с прозрачным составом"}
-            </span>
-          </h1>
+          {/* Headline — берётся из banner.title (admin-управляемо).
+              Если в title есть «|», левая часть — обычный font, правая — italic serif (две строки).
+              Иначе — один заголовок одной строкой. */}
+          {(() => {
+            const splitIdx = title.indexOf("|");
+            if (splitIdx > 0) {
+              const line1 = title.slice(0, splitIdx).trim();
+              const line2 = title.slice(splitIdx + 1).trim();
+              return (
+                <h1 className="text-white max-w-5xl mx-auto">
+                  <span className="block font-barlow font-medium text-[clamp(2.5rem,7vw,5.5rem)] leading-[1] tracking-[-0.04em]">{line1}</span>
+                  <span className="block font-serif italic text-[clamp(3rem,9vw,7rem)] leading-[1.05] -mt-1 md:-mt-2">{line2}</span>
+                </h1>
+              );
+            }
+            return (
+              <h1 className="text-white max-w-5xl mx-auto font-barlow font-medium text-[clamp(2.5rem,7vw,5.5rem)] leading-[1.05] tracking-[-0.04em]">
+                {title}
+              </h1>
+            );
+          })()}
 
-          {/* Subtext */}
-          <p className="mt-8 font-barlow font-medium text-[16px] md:text-[18px] text-white/85 max-w-2xl mx-auto leading-relaxed">
-            {lang === "en"
-              ? "Vitamin C 2000 ppm. Retinol 0.3%. PDRN 0.1%. Concentrations on the label — no marketing tricks. Launch in June 2026, available on Ozon."
-              : "Vitamin C 2000 ppm. Ретинол 0.3%. PDRN 0.1%. Концентрации указаны — без маркетинговых уловок. Запуск в июне 2026, стартуем на Ozon."}
-          </p>
+          {/* Subtitle из banner.subtitle */}
+          {subtitle && (
+            <p className="mt-8 font-barlow font-medium text-[16px] md:text-[18px] text-white/85 max-w-2xl mx-auto leading-relaxed">
+              {subtitle}
+            </p>
+          )}
 
           {/* CTAs */}
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">

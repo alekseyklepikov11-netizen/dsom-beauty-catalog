@@ -85,26 +85,59 @@ const BannersAdmin = () => {
   };
   useEffect(() => { load(); }, []);
 
+  // Поля, добавленные миграцией 20260526173000. Если миграция ещё не применена,
+  // PostgREST вернёт PGRST204 / 42703 на insert/update — стрипаем их и ретраим.
+  const MIGRATION_FIELDS = ["text_position", "image_focal_point", "image_srcset"] as const;
+
+  const stripMigrationFields = (obj: any) => {
+    const copy = { ...obj };
+    MIGRATION_FIELDS.forEach((f) => delete copy[f]);
+    return copy;
+  };
+
+  const isSchemaCacheError = (e: any): boolean => {
+    if (!e) return false;
+    const msg = (e.message || "").toLowerCase();
+    return e.code === "PGRST204" || e.code === "42703" ||
+      msg.includes("schema cache") || msg.includes("does not exist");
+  };
+
   const save = async () => {
     if (!editing) return;
     if (!editing.title) return toast.error("Заголовок обязателен");
     setSaving(true);
     try {
       const payload: any = { ...editing }; delete payload.id;
-      if (editing.id) {
-        const { error } = await supabase.from("banners").update(payload).eq("id", editing.id);
-        if (error) throw error;
+      const exec = async (p: any) => editing.id
+        ? supabase.from("banners").update(p).eq("id", editing.id)
+        : supabase.from("banners").insert(p);
+
+      let { error } = await exec(payload);
+      if (error && isSchemaCacheError(error)) {
+        // Миграция banner-колонок не применена. Сохраняем без них и предупреждаем.
+        const stripped = stripMigrationFields(payload);
+        const retry = await exec(stripped);
+        if (retry.error) throw retry.error;
+        toast.warning("Сохранено без полей text_position / image_focal_point / image_srcset — миграция БД не применена");
+      } else if (error) {
+        throw error;
       } else {
-        const { error } = await supabase.from("banners").insert(payload);
-        if (error) throw error;
+        toast.success("Сохранено");
       }
-      toast.success("Сохранено"); setEditing(null); load();
-    } catch (e: any) { toast.error(e.message); } finally { setSaving(false); }
+      setEditing(null); load();
+    } catch (e: any) {
+      toast.error(`Ошибка сохранения: ${e.message || e}`);
+    } finally { setSaving(false); }
   };
 
   const remove = async (b: Banner) => {
-    if (!confirm("Удалить баннер?")) return;
-    await supabase.from("banners").delete().eq("id", b.id!);
+    if (!confirm(`Удалить баннер «${b.title}»? Это действие необратимо.`)) return;
+    const { error } = await supabase.from("banners").delete().eq("id", b.id!);
+    if (error) {
+      toast.error(`Не удалось удалить: ${error.message}`);
+      return;
+    }
+    toast.success("Баннер удалён");
     load();
   };
 
