@@ -266,8 +266,11 @@ const BannersAdmin = () => {
                 <ImageUpload
                   bucket="banners"
                   value={editing.image_url}
-                  onChange={(url) => setEditing({ ...editing, image_url: url })}
-                  onSrcsetChange={(srcset) => setEditing({ ...editing, image_srcset: srcset })}
+                  /* functional setState — иначе при двойном вызове (onChange + onSrcsetChange
+                     при клике «Убрать») второй setEditing использует stale editing из closure
+                     и затирает image_url=null, картинка не пропадает */
+                  onChange={(url) => setEditing((prev) => prev ? { ...prev, image_url: url } : prev)}
+                  onSrcsetChange={(srcset) => setEditing((prev) => prev ? { ...prev, image_srcset: srcset } : prev)}
                   label="Постер / изображение (auto WebP ×3)"
                   aspect="aspect-video"
                 />
