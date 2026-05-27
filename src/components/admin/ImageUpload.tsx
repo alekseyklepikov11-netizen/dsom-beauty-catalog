@@ -130,14 +130,18 @@ const ImageUpload = ({ bucket, value, onChange, onSrcsetChange, label = "Изо�
             <img src={value} alt="" className="absolute inset-0 w-full h-full object-cover" />
             <button
               type="button"
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
                 onChange(null);
                 if (onSrcsetChange) onSrcsetChange(null);
               }}
-              className="absolute top-2 right-2 w-7 h-7 grid place-items-center rounded-full bg-background/90 hover:bg-background"
-              aria-label="Удалить"
+              className="absolute top-2 right-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-foreground text-background hover:bg-destructive text-[10px] tracking-luxe uppercase shadow-lg font-medium z-10"
+              aria-label="Убрать изображение"
+              title="Убрать картинку — потом можно загрузить новую"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-3 h-3" />
+              Убрать
             </button>
           </>
         ) : (
