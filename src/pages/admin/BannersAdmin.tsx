@@ -27,6 +27,24 @@ import { POSITIONS, POS_LABELS, FOCAL_POINTS } from "@/lib/banner-positions";
 
 const TEXT_POSITIONS = POSITIONS.map((value) => ({ value, label: POS_LABELS[value] }));
 
+/**
+ * Сливает старый srcset с новыми ключами от одного из ImageUpload (desktop или mobile).
+ * Пустая строка "" в newKeys = команда «удалить этот ключ» (когда юзер нажал «Убрать»).
+ * Возвращает null если после слияния не осталось ни одного ключа.
+ */
+function mergeSrcset(
+  existing: Record<string, string> | null | undefined,
+  newKeys: Record<string, string> | null,
+): Record<string, string> | null {
+  if (!newKeys) return existing || null;
+  const merged: Record<string, string> = { ...(existing || {}) };
+  for (const [k, v] of Object.entries(newKeys)) {
+    if (v === "") delete merged[k];
+    else merged[k] = v;
+  }
+  return Object.keys(merged).length > 0 ? merged : null;
+}
+
 const empty = (): Banner => ({
   position: "home_hero", title: "", title_en: "", subtitle: "", subtitle_en: "",
   cta_label: "", cta_label_en: "", cta_url: "/catalog",
@@ -270,15 +288,38 @@ const BannersAdmin = () => {
                      при клике «Убрать») второй setEditing использует stale editing из closure
                      и затирает image_url=null, картинка не пропадает */
                   onChange={(url) => setEditing((prev) => prev ? { ...prev, image_url: url } : prev)}
-                  onSrcsetChange={(srcset) => setEditing((prev) => prev ? { ...prev, image_srcset: srcset } : prev)}
-                  label="Постер / изображение (auto WebP ×3)"
+                  onSrcsetChange={(newKeys) => setEditing((prev) => prev ? {
+                    ...prev,
+                    image_srcset: mergeSrcset(prev.image_srcset, newKeys)
+                  } : prev)}
+                  label="Desktop (16:9) — auto WebP ×3"
                   aspect="aspect-video"
                 />
-                <Field label="Видео URL (mp4)">
-                  <textarea value={editing.video_url || ""} onChange={(e) => setEditing({ ...editing, video_url: e.target.value })} rows={3} className={fieldCls + " resize-y"} placeholder="https://…/video.mp4" />
-                  <p className="text-[10px] text-muted-foreground mt-1">Если видео указано — оно проигрывается на фоне hero. Изображение используется как poster.</p>
-                </Field>
+                <ImageUpload
+                  bucket="banners"
+                  /* preview URL — самый большой mobile вариант */
+                  value={editing.image_srcset?.mobile_1080w || null}
+                  /* primaryKey=null — не трогаем image_url (он для desktop) */
+                  primaryKey={null}
+                  onChange={() => {}} /* no-op, mobile не главный image_url */
+                  onSrcsetChange={(newKeys) => setEditing((prev) => prev ? {
+                    ...prev,
+                    image_srcset: mergeSrcset(prev.image_srcset, newKeys)
+                  } : prev)}
+                  variants={[
+                    { width: 480,  key: "mobile_480w"  },
+                    { width: 768,  key: "mobile_768w"  },
+                    { width: 1080, key: "mobile_1080w" },
+                  ]}
+                  label="Mobile (4:5 portrait) — отдельная композиция для телефона"
+                  aspect="aspect-[4/5]"
+                />
               </div>
+
+              <Field label="Видео URL (mp4) — опционально, для fullscreen-hero">
+                <textarea value={editing.video_url || ""} onChange={(e) => setEditing({ ...editing, video_url: e.target.value })} rows={2} className={fieldCls + " resize-y"} placeholder="https://…/video.mp4" />
+                <p className="text-[10px] text-muted-foreground mt-1">Если видео указано — оно проигрывается на фоне hero. Картинка выше используется как poster пока видео грузится.</p>
+              </Field>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <Field label="Сортировка"><input type="number" value={editing.sort_order} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} className={fieldCls} /></Field>

@@ -3,17 +3,40 @@ import { Upload, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+interface SrcsetVariant {
+  width: number;
+  key: string;
+}
+
+const DEFAULT_VARIANTS: SrcsetVariant[] = [
+  { width: 768,  key: "768w"  },
+  { width: 1280, key: "1280w" },
+  { width: 1920, key: "1920w" },
+];
+
 interface Props {
   bucket: string;
   value: string | null;
   onChange: (url: string | null) => void;
   /**
    * Optional callback. Если передан — компонент сгенерирует адаптивные
-   * WebP-варианты (768w / 1280w / 1920w) и вернёт map для сохранения
-   * в banners.image_srcset (или аналогичную колонку).
-   * При этом onChange получит URL 1920w как «главный» image_url.
+   * WebP-варианты (по variants) и вернёт map ТОЛЬКО для своих ключей.
+   * BannersAdmin должен МЁРЖИТЬ это с существующим image_srcset
+   * (через функциональный setState с spread), чтобы desktop и mobile
+   * загрузки не затирали друг друга.
    */
   onSrcsetChange?: (srcset: Record<string, string> | null) => void;
+  /**
+   * Кастомные размеры/ключи. По умолчанию — desktop (768w/1280w/1920w).
+   * Для mobile 4:5 передавать: [{480, "mobile_480w"}, {768, "mobile_768w"}, {1080, "mobile_1080w"}].
+   */
+  variants?: SrcsetVariant[];
+  /**
+   * primaryKey — какой ключ из variants использовать для onChange (image_url).
+   * По умолчанию последний (самый большой). Для mobile можно не передавать main_url —
+   * передать primaryKey: null чтобы onChange был no-op.
+   */
+  primaryKey?: string | null;
   label?: string;
   className?: string;
   aspect?: string;
@@ -56,10 +79,15 @@ async function toWebp(img: HTMLImageElement, maxWidth: number, quality = 0.92): 
   });
 }
 
-const ImageUpload = ({ bucket, value, onChange, onSrcsetChange, label = "Изображение", className = "", aspect = "aspect-[4/5]" }: Props) => {
+const ImageUpload = ({ bucket, value, onChange, onSrcsetChange, variants, primaryKey, label = "Изображение", className = "", aspect = "aspect-[4/5]" }: Props) => {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const effectiveVariants = variants && variants.length > 0 ? variants : DEFAULT_VARIANTS;
+  // primaryKey === null означает «не трогать image_url». undefined → last variant.
+  const effectivePrimaryKey = primaryKey === null
+    ? null
+    : (primaryKey || effectiveVariants[effectiveVariants.length - 1].key);
 
   const upload = async (file: File) => {
     setUploading(true);
@@ -68,21 +96,16 @@ const ImageUpload = ({ bucket, value, onChange, onSrcsetChange, label = "Изо�
       const slug = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
       // Режим adaptive — параметр onSrcsetChange подсказывает, что мы baner-загружаем
-      // и хотим srcset с 3 размерами WebP. По умолчанию (без callback) — старое
+      // и хотим srcset с N размерами WebP. По умолчанию (без callback) — старое
       // поведение: единственный файл в исходном формате.
       if (onSrcsetChange) {
         setProgress("Декодирование...");
         const img = await loadImage(file);
-        const variants = [
-          { width: 768,  key: "768w"  },
-          { width: 1280, key: "1280w" },
-          { width: 1920, key: "1920w" },
-        ];
         const srcset: Record<string, string> = {};
 
-        for (let i = 0; i < variants.length; i++) {
-          const v = variants[i];
-          setProgress(`WebP ${v.width}w (${i + 1}/${variants.length})...`);
+        for (let i = 0; i < effectiveVariants.length; i++) {
+          const v = effectiveVariants[i];
+          setProgress(`WebP ${v.width}w (${i + 1}/${effectiveVariants.length})...`);
           const blob = await toWebp(img, v.width, 0.92);
           const path = `${slug}-${v.width}.webp`;
           const { error } = await supabase.storage.from(bucket).upload(path, blob, {
@@ -95,11 +118,13 @@ const ImageUpload = ({ bucket, value, onChange, onSrcsetChange, label = "Изо�
           srcset[v.key] = data.publicUrl;
         }
 
-        // Главный image_url — это 1920w (хороший дефолт для desktop).
-        // На мобиле/планшете браузер сам подберёт нужный srcset.
-        onChange(srcset["1920w"]);
+        // Главный image_url — primaryKey (по умолчанию последний = максимальный).
+        // Для mobile-загрузки primaryKey === null → image_url не трогаем.
+        if (effectivePrimaryKey) {
+          onChange(srcset[effectivePrimaryKey]);
+        }
         onSrcsetChange(srcset);
-        toast.success(`Загружено в WebP × 3 (адаптивно): ~${Math.round(file.size / 1024 / 10) / 100}× меньше`);
+        toast.success(`Загружено в WebP × ${effectiveVariants.length} (адаптивно): ~${Math.round(file.size / 1024 / 10) / 100}× меньше`);
       } else {
         // Legacy режим — без оптимизации
         const ext = file.name.split(".").pop() || "jpg";
@@ -133,8 +158,15 @@ const ImageUpload = ({ bucket, value, onChange, onSrcsetChange, label = "Изо�
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                onChange(null);
-                if (onSrcsetChange) onSrcsetChange(null);
+                // Убираем image_url только если primaryKey задан (desktop mode)
+                if (effectivePrimaryKey) onChange(null);
+                // Передаём пустой объект с только своими ключами (BannersAdmin будет мёржить,
+                // а наличие ключа со значением "" = сигнал на удаление этого ключа)
+                if (onSrcsetChange) {
+                  const cleared: Record<string, string> = {};
+                  effectiveVariants.forEach(v => { cleared[v.key] = ""; });
+                  onSrcsetChange(cleared);
+                }
               }}
               className="absolute top-2 right-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-foreground text-background hover:bg-destructive text-[10px] tracking-luxe uppercase shadow-lg font-medium z-10"
               aria-label="Убрать изображение"
