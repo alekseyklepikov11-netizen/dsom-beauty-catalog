@@ -82,8 +82,9 @@ export function HeroBanner(props: HeroBannerProps) {
   // Видео-source: banner.video_url имеет приоритет, fallback для fullscreen
   const videoSrc = banner?.video_url || (variant === "fullscreen" ? props.fallbackVideo : undefined);
 
-  // srcset для адаптивных WebP (если есть)
+  // srcset для адаптивных WebP (desktop sizes + опционально mobile-композиция)
   const srcset = banner?.image_srcset ? buildSrcset(banner.image_srcset) : undefined;
+  const mobileSrcset = banner?.image_srcset ? buildMobileSrcset(banner.image_srcset) : undefined;
 
   return (
     <section
@@ -105,6 +106,27 @@ export function HeroBanner(props: HeroBannerProps) {
             <source src={videoSrc} type="video/mp4" />
           </video>
         ) : banner?.image_url ? (
+          <picture>
+            {mobileSrcset && (
+              <source media="(max-width: 768px)" srcSet={mobileSrcset} sizes="100vw" />
+            )}
+            <img
+              src={banner.image_url}
+              srcSet={srcset}
+              sizes="100vw"
+              alt={altText}
+              loading="eager"
+              fetchPriority="high"
+              style={{ objectPosition: focalPoint }}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          </picture>
+        ) : null
+      ) : banner?.image_url ? (
+        <picture>
+          {mobileSrcset && (
+            <source media="(max-width: 768px)" srcSet={mobileSrcset} sizes="100vw" />
+          )}
           <img
             src={banner.image_url}
             srcSet={srcset}
@@ -115,18 +137,7 @@ export function HeroBanner(props: HeroBannerProps) {
             style={{ objectPosition: focalPoint }}
             className="absolute inset-0 w-full h-full object-cover"
           />
-        ) : null
-      ) : banner?.image_url ? (
-        <img
-          src={banner.image_url}
-          srcSet={srcset}
-          sizes="100vw"
-          alt={altText}
-          loading="eager"
-          fetchPriority="high"
-          style={{ objectPosition: focalPoint }}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        </picture>
       ) : null}
 
       {/* Виньетка-градиент под зону текста */}
@@ -178,6 +189,20 @@ function buildSrcset(srcset: Record<string, string>): string | undefined {
     srcset["768w"] && `${srcset["768w"]} 768w`,
     srcset["1280w"] && `${srcset["1280w"]} 1280w`,
     srcset["1920w"] && `${srcset["1920w"]} 1920w`,
+  ].filter(Boolean);
+  return entries.length > 0 ? entries.join(", ") : undefined;
+}
+
+/**
+ * Мобильный srcset с отдельной 4:5 композицией (text-safe внизу).
+ * Используется через <picture><source media="(max-width: 768px)"> когда есть.
+ * Ключи в image_srcset: mobile_480w, mobile_768w, mobile_1080w.
+ */
+function buildMobileSrcset(srcset: Record<string, string>): string | undefined {
+  const entries = [
+    srcset["mobile_480w"] && `${srcset["mobile_480w"]} 480w`,
+    srcset["mobile_768w"] && `${srcset["mobile_768w"]} 768w`,
+    srcset["mobile_1080w"] && `${srcset["mobile_1080w"]} 1080w`,
   ].filter(Boolean);
   return entries.length > 0 ? entries.join(", ") : undefined;
 }
