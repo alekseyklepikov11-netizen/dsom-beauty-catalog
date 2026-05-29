@@ -53,8 +53,26 @@ const COLS = "id,title,title_en,subtitle,subtitle_en,cta_label,cta_label_en,cta_
  *
  * @param position — позиция баннера: home_hero | catalog_top | about_top
  */
+/**
+ * Возвращает true когда viewport ≤768px. Перерисовывает при resize.
+ * SSR-safe: defaults к false, обновляется в useEffect.
+ */
+function useIsMobileViewport(): boolean {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return isMobile;
+}
+
 export function useBanner(position: BannerPosition): BannerState {
   const [state, setState] = useState<BannerState>({ status: "loading" });
+  const isMobile = useIsMobileViewport();
 
   useEffect(() => {
     let cancelled = false;
@@ -75,7 +93,17 @@ export function useBanner(position: BannerPosition): BannerState {
         return;
       }
 
-      const list = (data || []) as BannerData[];
+      const all = (data || []) as BannerData[];
+
+      // Фильтр по per-viewport activity-флагам в image_srcset._meta_active_*.
+      // Дефолт «true» — баннер активен на обоих, если в админке не отключили один из них.
+      const list = all.filter((b) => {
+        const srcset = b.image_srcset || {};
+        const activeDesktop = srcset._meta_active_desktop !== "false";
+        const activeMobile = srcset._meta_active_mobile !== "false";
+        return isMobile ? activeMobile : activeDesktop;
+      });
+
       const chosen = list.length > 0
         ? list[Math.floor(Math.random() * list.length)]
         : null;
@@ -95,7 +123,7 @@ export function useBanner(position: BannerPosition): BannerState {
     })();
 
     return () => { cancelled = true; };
-  }, [position]);
+  }, [position, isMobile]);
 
   return state;
 }

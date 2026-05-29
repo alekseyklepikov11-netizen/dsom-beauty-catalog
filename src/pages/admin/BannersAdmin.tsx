@@ -363,8 +363,42 @@ const BannersAdmin = () => {
               <div className="grid md:grid-cols-2 gap-4">
                 <Field label="Сортировка"><input type="number" value={editing.sort_order} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} className={fieldCls} /></Field>
                 <label className="flex items-center gap-2 text-sm cursor-pointer pt-7">
-                  <input type="checkbox" checked={editing.is_active} onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })} /> Активен
+                  <input type="checkbox" checked={editing.is_active} onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })} /> Активен (общий выключатель)
                 </label>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4 bg-secondary/30 rounded-lg p-4">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    /* активен на desktop если меты нет ИЛИ значение !== "false" */
+                    checked={editing.image_srcset?._meta_active_desktop !== "false"}
+                    onChange={(e) => setEditing((prev) => prev ? {
+                      ...prev,
+                      image_srcset: mergeSrcset(prev.image_srcset, {
+                        _meta_active_desktop: e.target.checked ? "" : "false"
+                      })
+                    } : prev)}
+                  />
+                  <span>🖥️ Показывать на <strong>Desktop</strong> (≥768px)</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editing.image_srcset?._meta_active_mobile !== "false"}
+                    onChange={(e) => setEditing((prev) => prev ? {
+                      ...prev,
+                      image_srcset: mergeSrcset(prev.image_srcset, {
+                        _meta_active_mobile: e.target.checked ? "" : "false"
+                      })
+                    } : prev)}
+                  />
+                  <span>📱 Показывать на <strong>Mobile</strong> (≤768px)</span>
+                </label>
+                <p className="text-[10px] text-muted-foreground col-span-2 mt-1">
+                  Можно отключить отдельно для каждой версии — например, скрыть длинный desktop-баннер на mobile если нет mobile-композиции.
+                  Если общий выключатель выше выключен — баннер не показывается нигде, независимо от этих галочек.
+                </p>
               </div>
 
               <Field label="A/B группа (необязательно)">
