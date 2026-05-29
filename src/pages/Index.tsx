@@ -16,7 +16,10 @@ import SEO from "@/components/SEO";
 import { HeroBanner } from "@/components/HeroBanner";
 import { HeroPromoCtas } from "@/components/HeroPromoCtas";
 
-const FALLBACK_VIDEO = "https://cdn.coverr.co/videos/coverr-pouring-cosmetic-cream-into-a-jar-9419/1080p.mp4";
+// 29.05.2026 — fallback video отключён: у нас теперь 3 кастомных hero-баннера
+// (Эссенция / Линейка / Архитектура) с разными композициями для desktop + mobile.
+// Если нужно вернуть — раскомментировать и передать в HeroBanner.fallbackVideo.
+// const FALLBACK_VIDEO = "https://cdn.coverr.co/videos/coverr-pouring-cosmetic-cream-into-a-jar-9419/1080p.mp4";
 
 const Index = () => {
   // /intro daily-redirect отключён 26.05.2026 по запросу пользователя — главная
@@ -65,7 +68,6 @@ const Index = () => {
         variant="fullscreen"
         fallbackTitle={fallbackTitle}
         fallbackSubtitle={fallbackSubtitle}
-        fallbackVideo={FALLBACK_VIDEO}
         eyebrow={`— ${t("hero.eyebrow")}`}
         cta={<HeroPromoCtas bannerId={banner?.id} abGroup={banner?.ab_group} />}
         showScrollCue
