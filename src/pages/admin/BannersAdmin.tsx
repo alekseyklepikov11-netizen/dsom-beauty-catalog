@@ -238,37 +238,76 @@ const BannersAdmin = () => {
                   <option value="about_top">О бренде — верх</option>
                 </select>
               </Field>
-              <Field label="Позиция текста на картинке (9 зон)">
-                <select
-                  value={editing.text_position || "bottom-left"}
-                  onChange={(e) => setEditing({ ...editing, text_position: e.target.value })}
-                  className={fieldCls}
-                >
-                  {TEXT_POSITIONS.map((p) => (
-                    <option key={p.value} value={p.value}>{p.label}</option>
-                  ))}
-                </select>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  Выбирай зону так, чтобы заголовок не закрывал главный объект на картинке.
-                  Виньетка-градиент автоматически подстраивается под выбранную зону для контрастности.
-                </p>
-              </Field>
-              <Field label="Фокусная точка картинки (что видно при кропе)">
-                <select
-                  value={editing.image_focal_point || "center center"}
-                  onChange={(e) => setEditing({ ...editing, image_focal_point: e.target.value })}
-                  className={fieldCls}
-                >
-                  {FOCAL_POINTS.map((p) => (
-                    <option key={p.value} value={p.value}>{p.label}</option>
-                  ))}
-                </select>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  Когда aspect-ratio картинки не совпадает с баннером, лишнее обрезается.
-                  Это поле говорит — КАКОЙ КУСОК сохранить. Например для вертикальной баночки
-                  на горизонтальном баннере выбирай «Сверху · центр» — крышка-дроппер будет видна.
-                </p>
-              </Field>
+              <div className="grid md:grid-cols-2 gap-4">
+                <Field label="Позиция текста — Desktop (9 зон)">
+                  <select
+                    value={editing.text_position || "bottom-left"}
+                    onChange={(e) => setEditing({ ...editing, text_position: e.target.value })}
+                    className={fieldCls}
+                  >
+                    {TEXT_POSITIONS.map((p) => (
+                      <option key={p.value} value={p.value}>{p.label}</option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Где текст на десктопе (≥768px). Виньетка автоматически подстраивается под зону.
+                  </p>
+                </Field>
+                <Field label="Позиция текста — Mobile (9 зон, ≤768px)">
+                  <select
+                    value={(editing.image_srcset?._meta_text_position_mobile as string) || ""}
+                    onChange={(e) => setEditing((prev) => prev ? {
+                      ...prev,
+                      image_srcset: mergeSrcset(prev.image_srcset, { _meta_text_position_mobile: e.target.value || "" })
+                    } : prev)}
+                    className={fieldCls}
+                  >
+                    <option value="">— как на Desktop —</option>
+                    {TEXT_POSITIONS.map((p) => (
+                      <option key={p.value} value={p.value}>{p.label}</option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Для mobile-композиции с text-safe внизу выбирай «Снизу · центр».
+                    Если не задано — берётся desktop-позиция.
+                  </p>
+                </Field>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <Field label="Фокусная точка — Desktop">
+                  <select
+                    value={editing.image_focal_point || "center center"}
+                    onChange={(e) => setEditing({ ...editing, image_focal_point: e.target.value })}
+                    className={fieldCls}
+                  >
+                    {FOCAL_POINTS.map((p) => (
+                      <option key={p.value} value={p.value}>{p.label}</option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Какой кусок картинки оставлять при кропе на десктопе.
+                  </p>
+                </Field>
+                <Field label="Фокусная точка — Mobile">
+                  <select
+                    value={(editing.image_srcset?._meta_focal_mobile as string) || ""}
+                    onChange={(e) => setEditing((prev) => prev ? {
+                      ...prev,
+                      image_srcset: mergeSrcset(prev.image_srcset, { _meta_focal_mobile: e.target.value || "" })
+                    } : prev)}
+                    className={fieldCls}
+                  >
+                    <option value="">— как на Desktop —</option>
+                    {FOCAL_POINTS.map((p) => (
+                      <option key={p.value} value={p.value}>{p.label}</option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Какой кусок оставлять при кропе на мобиле (если mobile-картинка не загружена).
+                  </p>
+                </Field>
+              </div>
               <I18nField label="Заголовок" valueRu={editing.title} valueEn={editing.title_en || ""}
                 onChangeRu={(v) => setEditing({ ...editing, title: v })}
                 onChangeEn={(v) => setEditing({ ...editing, title_en: v })} />

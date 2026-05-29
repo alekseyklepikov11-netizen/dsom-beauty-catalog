@@ -8,7 +8,7 @@
 // Это устраняет FOOC «Активная косметика» при загрузке /.
 // ============================================================
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { BannerState } from "@/hooks/useBanner";
 import {
   POS_CLASSES,
@@ -45,8 +45,25 @@ const HEIGHT_CLASSES: Record<HeroBannerProps["variant"], string> = {
   section: "h-[55vh] min-h-[420px] max-h-[680px]",
 };
 
+/**
+ * Хук: true когда viewport <= 768px. SSR-safe (defaults false, обновляется в useEffect).
+ */
+function useIsMobile(): boolean {
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return isMobile;
+}
+
 export function HeroBanner(props: HeroBannerProps) {
   const { state, variant } = props;
+  const isMobile = useIsMobile();
 
   // Лог ошибок для debug, но render всё равно показывает fallback
   if (state.status === "error") {
@@ -67,19 +84,24 @@ export function HeroBanner(props: HeroBannerProps) {
 
   // ready или error — рендерим контент (с banner или fallback)
   const banner = state.status === "ready" ? state.banner : null;
+  // Desktop position — text_position из БД (через статический lookup POS_CLASSES).
   const pos = banner?.text_position && isValidPos(banner.text_position)
     ? banner.text_position
     : DEFAULT_POS;
-  // posClass — для desktop (md+). На mobile принудительно bottom-center,
-  // потому что наши mobile-композиции имеют text-safe внизу 40%.
-  const posClassDesktop = POS_CLASSES[pos].split(/\s+/).map(c => `md:${c}`).join(" ");
-  const posClass = `items-end justify-center text-center ${posClassDesktop}`;
-  // Градиент тоже подбираем под mobile (снизу) и desktop (по pos)
-  const gradientClassDesktop = POS_GRADIENT[pos].split(/\s+/).map(c => `md:${c}`).join(" ");
-  const gradientClass = `bg-gradient-to-t from-black/60 via-black/15 to-transparent ${gradientClassDesktop}`;
-  // CTA центрирован на mobile, по pos на desktop
-  const ctaJustify = `justify-center md:${POS_CTA_JUSTIFY[pos]}`;
-  const focalPoint = banner?.image_focal_point || DEFAULT_FOCAL_POINT;
+  // Mobile position — отдельная настройка, хранится в image_srcset как _meta_text_position_mobile
+  // (избегаем миграции БД — переиспользуем существующую JSON-колонку).
+  // Если не задано — фолбэк на desktop pos.
+  const posMobileRaw = banner?.image_srcset?._meta_text_position_mobile;
+  const posMobile = posMobileRaw && isValidPos(posMobileRaw) ? posMobileRaw : pos;
+  const effectivePos = isMobile ? posMobile : pos;
+  const posClass = POS_CLASSES[effectivePos];
+  const gradientClass = POS_GRADIENT[effectivePos];
+  const ctaJustify = POS_CTA_JUSTIFY[effectivePos];
+  // Focal point — mobile отдельно через _meta_focal_mobile в image_srcset, fallback на desktop
+  const focalMobile = banner?.image_srcset?._meta_focal_mobile;
+  const focalPoint = (isMobile && focalMobile)
+    ? focalMobile
+    : (banner?.image_focal_point || DEFAULT_FOCAL_POINT);
 
   const title = banner?.title || props.fallbackTitle;
   const subtitle = banner?.subtitle || props.fallbackSubtitle;
