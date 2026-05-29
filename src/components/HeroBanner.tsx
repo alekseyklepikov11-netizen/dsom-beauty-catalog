@@ -70,9 +70,15 @@ export function HeroBanner(props: HeroBannerProps) {
   const pos = banner?.text_position && isValidPos(banner.text_position)
     ? banner.text_position
     : DEFAULT_POS;
-  const posClass = POS_CLASSES[pos];
-  const gradientClass = POS_GRADIENT[pos];
-  const ctaJustify = POS_CTA_JUSTIFY[pos];
+  // posClass — для desktop (md+). На mobile принудительно bottom-center,
+  // потому что наши mobile-композиции имеют text-safe внизу 40%.
+  const posClassDesktop = POS_CLASSES[pos].split(/\s+/).map(c => `md:${c}`).join(" ");
+  const posClass = `items-end justify-center text-center ${posClassDesktop}`;
+  // Градиент тоже подбираем под mobile (снизу) и desktop (по pos)
+  const gradientClassDesktop = POS_GRADIENT[pos].split(/\s+/).map(c => `md:${c}`).join(" ");
+  const gradientClass = `bg-gradient-to-t from-black/60 via-black/15 to-transparent ${gradientClassDesktop}`;
+  // CTA центрирован на mobile, по pos на desktop
+  const ctaJustify = `justify-center md:${POS_CTA_JUSTIFY[pos]}`;
   const focalPoint = banner?.image_focal_point || DEFAULT_FOCAL_POINT;
 
   const title = banner?.title || props.fallbackTitle;
