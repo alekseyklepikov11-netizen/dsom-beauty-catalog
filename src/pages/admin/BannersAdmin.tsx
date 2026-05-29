@@ -54,11 +54,21 @@ const empty = (): Banner => ({
 
 interface BannerStats { views: number; clicks: number }
 
+type Viewport = "desktop" | "mobile";
+
+/** Видим ли баннер на данном viewport (с учётом мета-флага в image_srcset). */
+function isVisibleOn(b: Banner, vp: Viewport): boolean {
+  const srcset = b.image_srcset || {};
+  if (vp === "desktop") return srcset._meta_active_desktop !== "false";
+  return srcset._meta_active_mobile !== "false";
+}
+
 const BannersAdmin = () => {
   const [rows, setRows] = useState<Banner[]>([]);
   const [editing, setEditing] = useState<Banner | null>(null);
   const [saving, setSaving] = useState(false);
   const [stats, setStats] = useState<Record<string, BannerStats>>({});
+  const [tab, setTab] = useState<Viewport>("desktop");
 
   const load = async () => {
     const { data } = await supabase.from("banners").select("*").order("position").order("sort_order");
@@ -156,19 +166,49 @@ const BannersAdmin = () => {
 
   return (
     <AdminLayout>
-      <div className="flex items-end justify-between gap-4 mb-8 flex-wrap">
+      <div className="flex items-end justify-between gap-4 mb-6 flex-wrap">
         <div>
           <p className="text-[11px] tracking-luxe uppercase text-accent mb-3">— Главная</p>
           <h1 className="font-display text-5xl">Баннеры и видео</h1>
         </div>
-        <button onClick={() => setEditing(empty())} className="inline-flex items-center gap-2 bg-foreground text-background rounded-full pl-5 pr-2 py-2 text-[11px] tracking-luxe uppercase hover:bg-accent transition-colors">
-          Новый баннер
+        <button
+          onClick={() => {
+            const fresh = empty();
+            // При создании из вкладки — скрываем баннер на другой viewport
+            // (default — показывается только в текущей вкладке)
+            const other = tab === "desktop" ? "_meta_active_mobile" : "_meta_active_desktop";
+            fresh.image_srcset = { [other]: "false" };
+            setEditing(fresh);
+          }}
+          className="inline-flex items-center gap-2 bg-foreground text-background rounded-full pl-5 pr-2 py-2 text-[11px] tracking-luxe uppercase hover:bg-accent transition-colors"
+        >
+          {tab === "desktop" ? "Новый Desktop-баннер" : "Новый Mobile-баннер"}
           <span className="grid place-items-center w-7 h-7 rounded-full bg-background/15"><Plus className="w-3.5 h-3.5" /></span>
         </button>
       </div>
 
+      {/* Вкладки Desktop / Mobile */}
+      <div className="flex gap-2 mb-8 border-b border-border">
+        <button
+          onClick={() => setTab("desktop")}
+          className={`px-5 py-3 text-[11px] tracking-luxe uppercase border-b-2 -mb-px transition-colors ${
+            tab === "desktop" ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          🖥️ Desktop ({rows.filter(b => isVisibleOn(b, "desktop")).length})
+        </button>
+        <button
+          onClick={() => setTab("mobile")}
+          className={`px-5 py-3 text-[11px] tracking-luxe uppercase border-b-2 -mb-px transition-colors ${
+            tab === "mobile" ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          📱 Mobile ({rows.filter(b => isVisibleOn(b, "mobile")).length})
+        </button>
+      </div>
+
       <div className="grid md:grid-cols-2 gap-4">
-        {rows.map((b) => {
+        {rows.filter(b => isVisibleOn(b, tab)).map((b) => {
           const s = (b.id && stats[b.id]) || { views: 0, clicks: 0 };
           const ctr = s.views > 0 ? ((s.clicks / s.views) * 100).toFixed(1) : "—";
           return (
