@@ -8,7 +8,7 @@
 // Это устраняет FOOC «Активная косметика» при загрузке /.
 // ============================================================
 
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import type { BannerState } from "@/hooks/useBanner";
 import {
   POS_CLASSES,
@@ -45,25 +45,11 @@ const HEIGHT_CLASSES: Record<HeroBannerProps["variant"], string> = {
   section: "h-[55vh] min-h-[420px] max-h-[680px]",
 };
 
-/**
- * Хук: true когда viewport <= 768px. SSR-safe (defaults false, обновляется в useEffect).
- */
-function useIsMobile(): boolean {
-  const [isMobile, setIsMobile] = useState<boolean>(false);
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return;
-    const mq = window.matchMedia("(max-width: 768px)");
-    const update = () => setIsMobile(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-  return isMobile;
-}
-
 export function HeroBanner(props: HeroBannerProps) {
   const { state, variant } = props;
-  const isMobile = useIsMobile();
+  // viewport-фильтрация баннеров теперь в useBanner — каждый баннер пришёл уже
+  // для своего viewport (variant=desktop или variant=mobile). HeroBanner просто
+  // рендерит то что получил.
 
   // Лог ошибок для debug, но render всё равно показывает fallback
   if (state.status === "error") {
@@ -84,24 +70,15 @@ export function HeroBanner(props: HeroBannerProps) {
 
   // ready или error — рендерим контент (с banner или fallback)
   const banner = state.status === "ready" ? state.banner : null;
-  // Desktop position — text_position из БД (через статический lookup POS_CLASSES).
+  // Text position приходит уже правильным для viewport (useBanner отфильтровал
+  // нужный variant). Просто берём text_position из банера.
   const pos = banner?.text_position && isValidPos(banner.text_position)
     ? banner.text_position
     : DEFAULT_POS;
-  // Mobile position — отдельная настройка, хранится в image_srcset как _meta_text_position_mobile
-  // (избегаем миграции БД — переиспользуем существующую JSON-колонку).
-  // Если не задано — фолбэк на desktop pos.
-  const posMobileRaw = banner?.image_srcset?._meta_text_position_mobile;
-  const posMobile = posMobileRaw && isValidPos(posMobileRaw) ? posMobileRaw : pos;
-  const effectivePos = isMobile ? posMobile : pos;
-  const posClass = POS_CLASSES[effectivePos];
-  const gradientClass = POS_GRADIENT[effectivePos];
-  const ctaJustify = POS_CTA_JUSTIFY[effectivePos];
-  // Focal point — mobile отдельно через _meta_focal_mobile в image_srcset, fallback на desktop
-  const focalMobile = banner?.image_srcset?._meta_focal_mobile;
-  const focalPoint = (isMobile && focalMobile)
-    ? focalMobile
-    : (banner?.image_focal_point || DEFAULT_FOCAL_POINT);
+  const posClass = POS_CLASSES[pos];
+  const gradientClass = POS_GRADIENT[pos];
+  const ctaJustify = POS_CTA_JUSTIFY[pos];
+  const focalPoint = banner?.image_focal_point || DEFAULT_FOCAL_POINT;
 
   const title = banner?.title || props.fallbackTitle;
   const subtitle = banner?.subtitle || props.fallbackSubtitle;
@@ -110,9 +87,9 @@ export function HeroBanner(props: HeroBannerProps) {
   // Видео-source: banner.video_url имеет приоритет, fallback для fullscreen
   const videoSrc = banner?.video_url || (variant === "fullscreen" ? props.fallbackVideo : undefined);
 
-  // srcset для адаптивных WebP (desktop sizes + опционально mobile-композиция)
+  // srcset для адаптивных WebP — 768/1280/1920w. Mobile-variant баннеры
+  // используют те же ключи (но содержат mobile-композиции внутри).
   const srcset = banner?.image_srcset ? buildSrcset(banner.image_srcset) : undefined;
-  const mobileSrcset = banner?.image_srcset ? buildMobileSrcset(banner.image_srcset) : undefined;
 
   return (
     <section
@@ -134,27 +111,6 @@ export function HeroBanner(props: HeroBannerProps) {
             <source src={videoSrc} type="video/mp4" />
           </video>
         ) : banner?.image_url ? (
-          <picture>
-            {mobileSrcset && (
-              <source media="(max-width: 768px)" srcSet={mobileSrcset} sizes="100vw" />
-            )}
-            <img
-              src={banner.image_url}
-              srcSet={srcset}
-              sizes="100vw"
-              alt={altText}
-              loading="eager"
-              fetchPriority="high"
-              style={{ objectPosition: focalPoint }}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          </picture>
-        ) : null
-      ) : banner?.image_url ? (
-        <picture>
-          {mobileSrcset && (
-            <source media="(max-width: 768px)" srcSet={mobileSrcset} sizes="100vw" />
-          )}
           <img
             src={banner.image_url}
             srcSet={srcset}
@@ -165,7 +121,18 @@ export function HeroBanner(props: HeroBannerProps) {
             style={{ objectPosition: focalPoint }}
             className="absolute inset-0 w-full h-full object-cover"
           />
-        </picture>
+        ) : null
+      ) : banner?.image_url ? (
+        <img
+          src={banner.image_url}
+          srcSet={srcset}
+          sizes="100vw"
+          alt={altText}
+          loading="eager"
+          fetchPriority="high"
+          style={{ objectPosition: focalPoint }}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
       ) : null}
 
       {/* Виньетка-градиент под зону текста */}
@@ -217,20 +184,6 @@ function buildSrcset(srcset: Record<string, string>): string | undefined {
     srcset["768w"] && `${srcset["768w"]} 768w`,
     srcset["1280w"] && `${srcset["1280w"]} 1280w`,
     srcset["1920w"] && `${srcset["1920w"]} 1920w`,
-  ].filter(Boolean);
-  return entries.length > 0 ? entries.join(", ") : undefined;
-}
-
-/**
- * Мобильный srcset с отдельной 4:5 композицией (text-safe внизу).
- * Используется через <picture><source media="(max-width: 768px)"> когда есть.
- * Ключи в image_srcset: mobile_480w, mobile_768w, mobile_1080w.
- */
-function buildMobileSrcset(srcset: Record<string, string>): string | undefined {
-  const entries = [
-    srcset["mobile_480w"] && `${srcset["mobile_480w"]} 480w`,
-    srcset["mobile_768w"] && `${srcset["mobile_768w"]} 768w`,
-    srcset["mobile_1080w"] && `${srcset["mobile_1080w"]} 1080w`,
   ].filter(Boolean);
   return entries.length > 0 ? entries.join(", ") : undefined;
 }

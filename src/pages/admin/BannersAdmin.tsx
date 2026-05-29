@@ -56,11 +56,10 @@ interface BannerStats { views: number; clicks: number }
 
 type Viewport = "desktop" | "mobile";
 
-/** Видим ли баннер на данном viewport (с учётом мета-флага в image_srcset). */
-function isVisibleOn(b: Banner, vp: Viewport): boolean {
-  const srcset = b.image_srcset || {};
-  if (vp === "desktop") return srcset._meta_active_desktop !== "false";
-  return srcset._meta_active_mobile !== "false";
+/** Variant баннера: каждый баннер привязан к одному viewport. */
+function getVariant(b: Banner): Viewport {
+  const v = (b.image_srcset || {})._meta_variant;
+  return v === "mobile" ? "mobile" : "desktop"; // default = desktop для старых
 }
 
 const BannersAdmin = () => {
@@ -174,10 +173,8 @@ const BannersAdmin = () => {
         <button
           onClick={() => {
             const fresh = empty();
-            // При создании из вкладки — скрываем баннер на другой viewport
-            // (default — показывается только в текущей вкладке)
-            const other = tab === "desktop" ? "_meta_active_mobile" : "_meta_active_desktop";
-            fresh.image_srcset = { [other]: "false" };
+            // variant закреплён за текущей вкладкой
+            fresh.image_srcset = { _meta_variant: tab };
             setEditing(fresh);
           }}
           className="inline-flex items-center gap-2 bg-foreground text-background rounded-full pl-5 pr-2 py-2 text-[11px] tracking-luxe uppercase hover:bg-accent transition-colors"
@@ -187,7 +184,7 @@ const BannersAdmin = () => {
         </button>
       </div>
 
-      {/* Вкладки Desktop / Mobile */}
+      {/* Вкладки Desktop / Mobile — каждый баннер строго одного типа */}
       <div className="flex gap-2 mb-8 border-b border-border">
         <button
           onClick={() => setTab("desktop")}
@@ -195,7 +192,7 @@ const BannersAdmin = () => {
             tab === "desktop" ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
-          🖥️ Desktop ({rows.filter(b => isVisibleOn(b, "desktop")).length})
+          🖥️ Desktop ({rows.filter(b => getVariant(b) === "desktop").length})
         </button>
         <button
           onClick={() => setTab("mobile")}
@@ -203,12 +200,12 @@ const BannersAdmin = () => {
             tab === "mobile" ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
-          📱 Mobile ({rows.filter(b => isVisibleOn(b, "mobile")).length})
+          📱 Mobile ({rows.filter(b => getVariant(b) === "mobile").length})
         </button>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        {rows.filter(b => isVisibleOn(b, tab)).map((b) => {
+        {rows.filter(b => getVariant(b) === tab).map((b) => {
           const s = (b.id && stats[b.id]) || { views: 0, clicks: 0 };
           const ctr = s.views > 0 ? ((s.clicks / s.views) * 100).toFixed(1) : "—";
           return (
@@ -267,7 +264,15 @@ const BannersAdmin = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-sm" onClick={() => setEditing(null)}>
           <div className="bg-background rounded-2xl max-w-3xl w-full max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-6 border-b border-border">
-              <h2 className="font-display text-3xl">{editing.id ? "Изменить баннер" : "Новый баннер"}</h2>
+              <h2 className="font-display text-3xl">
+                {editing.id ? "Изменить баннер" : "Новый баннер"}
+                {/* Variant chip */}
+                <span className={`ml-3 inline-flex items-center px-3 py-1 rounded-full text-[11px] tracking-luxe uppercase ${
+                  getVariant(editing) === "mobile" ? "bg-accent/20 text-accent" : "bg-foreground/10 text-foreground"
+                }`}>
+                  {getVariant(editing) === "mobile" ? "📱 Mobile" : "🖥️ Desktop"}
+                </span>
+              </h2>
               <button onClick={() => setEditing(null)} className="p-2 rounded hover:bg-secondary"><X className="w-4 h-4" /></button>
             </div>
             <div className="p-6 space-y-5">
@@ -279,7 +284,7 @@ const BannersAdmin = () => {
                 </select>
               </Field>
               <div className="grid md:grid-cols-2 gap-4">
-                <Field label="Позиция текста — Desktop (9 зон)">
+                <Field label="Позиция текста (9 зон)">
                   <select
                     value={editing.text_position || "bottom-left"}
                     onChange={(e) => setEditing({ ...editing, text_position: e.target.value })}
@@ -290,32 +295,10 @@ const BannersAdmin = () => {
                     ))}
                   </select>
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    Где текст на десктопе (≥768px). Виньетка автоматически подстраивается под зону.
+                    Где будет текст. Для mobile-баннера обычно «Снизу · центр».
                   </p>
                 </Field>
-                <Field label="Позиция текста — Mobile (9 зон, ≤768px)">
-                  <select
-                    value={(editing.image_srcset?._meta_text_position_mobile as string) || ""}
-                    onChange={(e) => setEditing((prev) => prev ? {
-                      ...prev,
-                      image_srcset: mergeSrcset(prev.image_srcset, { _meta_text_position_mobile: e.target.value || "" })
-                    } : prev)}
-                    className={fieldCls}
-                  >
-                    <option value="">— как на Desktop —</option>
-                    {TEXT_POSITIONS.map((p) => (
-                      <option key={p.value} value={p.value}>{p.label}</option>
-                    ))}
-                  </select>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    Для mobile-композиции с text-safe внизу выбирай «Снизу · центр».
-                    Если не задано — берётся desktop-позиция.
-                  </p>
-                </Field>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <Field label="Фокусная точка — Desktop">
+                <Field label="Фокусная точка картинки">
                   <select
                     value={editing.image_focal_point || "center center"}
                     onChange={(e) => setEditing({ ...editing, image_focal_point: e.target.value })}
@@ -326,25 +309,7 @@ const BannersAdmin = () => {
                     ))}
                   </select>
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    Какой кусок картинки оставлять при кропе на десктопе.
-                  </p>
-                </Field>
-                <Field label="Фокусная точка — Mobile">
-                  <select
-                    value={(editing.image_srcset?._meta_focal_mobile as string) || ""}
-                    onChange={(e) => setEditing((prev) => prev ? {
-                      ...prev,
-                      image_srcset: mergeSrcset(prev.image_srcset, { _meta_focal_mobile: e.target.value || "" })
-                    } : prev)}
-                    className={fieldCls}
-                  >
-                    <option value="">— как на Desktop —</option>
-                    {FOCAL_POINTS.map((p) => (
-                      <option key={p.value} value={p.value}>{p.label}</option>
-                    ))}
-                  </select>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    Какой кусок оставлять при кропе на мобиле (если mobile-картинка не загружена).
+                    Какой кусок оставлять при кропе.
                   </p>
                 </Field>
               </div>
@@ -359,39 +324,26 @@ const BannersAdmin = () => {
                 onChangeEn={(v) => setEditing({ ...editing, cta_label_en: v })} />
               <Field label="CTA ссылка"><input value={editing.cta_url || ""} onChange={(e) => setEditing({ ...editing, cta_url: e.target.value })} className={fieldCls} /></Field>
 
-              <div className="grid md:grid-cols-2 gap-4">
+              <div>
                 <ImageUpload
                   bucket="banners"
                   value={editing.image_url}
-                  /* functional setState — иначе при двойном вызове (onChange + onSrcsetChange
-                     при клике «Убрать») второй setEditing использует stale editing из closure
-                     и затирает image_url=null, картинка не пропадает */
                   onChange={(url) => setEditing((prev) => prev ? { ...prev, image_url: url } : prev)}
                   onSrcsetChange={(newKeys) => setEditing((prev) => prev ? {
                     ...prev,
                     image_srcset: mergeSrcset(prev.image_srcset, newKeys)
                   } : prev)}
-                  label="Desktop (16:9) — auto WebP ×3"
-                  aspect="aspect-video"
-                />
-                <ImageUpload
-                  bucket="banners"
-                  /* preview URL — самый большой mobile вариант */
-                  value={editing.image_srcset?.mobile_1080w || null}
-                  /* primaryKey=null — не трогаем image_url (он для desktop) */
-                  primaryKey={null}
-                  onChange={() => {}} /* no-op, mobile не главный image_url */
-                  onSrcsetChange={(newKeys) => setEditing((prev) => prev ? {
-                    ...prev,
-                    image_srcset: mergeSrcset(prev.image_srcset, newKeys)
-                  } : prev)}
-                  variants={[
-                    { width: 480,  key: "mobile_480w"  },
-                    { width: 768,  key: "mobile_768w"  },
-                    { width: 1080, key: "mobile_1080w" },
-                  ]}
-                  label="Mobile (4:5 portrait) — отдельная композиция для телефона"
-                  aspect="aspect-[4/5]"
+                  variants={
+                    getVariant(editing) === "mobile"
+                      ? [
+                          { width: 480,  key: "768w"  },
+                          { width: 768,  key: "1280w" },
+                          { width: 1080, key: "1920w" },
+                        ]
+                      : undefined /* default desktop 768/1280/1920 */
+                  }
+                  label={getVariant(editing) === "mobile" ? "📱 Mobile (4:5 portrait) — auto WebP ×3" : "🖥️ Desktop (16:9) — auto WebP ×3"}
+                  aspect={getVariant(editing) === "mobile" ? "aspect-[4/5]" : "aspect-video"}
                 />
               </div>
 
@@ -407,39 +359,6 @@ const BannersAdmin = () => {
                 </label>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4 bg-secondary/30 rounded-lg p-4">
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input
-                    type="checkbox"
-                    /* активен на desktop если меты нет ИЛИ значение !== "false" */
-                    checked={editing.image_srcset?._meta_active_desktop !== "false"}
-                    onChange={(e) => setEditing((prev) => prev ? {
-                      ...prev,
-                      image_srcset: mergeSrcset(prev.image_srcset, {
-                        _meta_active_desktop: e.target.checked ? "" : "false"
-                      })
-                    } : prev)}
-                  />
-                  <span>🖥️ Показывать на <strong>Desktop</strong> (≥768px)</span>
-                </label>
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={editing.image_srcset?._meta_active_mobile !== "false"}
-                    onChange={(e) => setEditing((prev) => prev ? {
-                      ...prev,
-                      image_srcset: mergeSrcset(prev.image_srcset, {
-                        _meta_active_mobile: e.target.checked ? "" : "false"
-                      })
-                    } : prev)}
-                  />
-                  <span>📱 Показывать на <strong>Mobile</strong> (≤768px)</span>
-                </label>
-                <p className="text-[10px] text-muted-foreground col-span-2 mt-1">
-                  Можно отключить отдельно для каждой версии — например, скрыть длинный desktop-баннер на mobile если нет mobile-композиции.
-                  Если общий выключатель выше выключен — баннер не показывается нигде, независимо от этих галочек.
-                </p>
-              </div>
 
               <Field label="A/B группа (необязательно)">
                 <input

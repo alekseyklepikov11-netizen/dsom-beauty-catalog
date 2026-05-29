@@ -95,13 +95,13 @@ export function useBanner(position: BannerPosition): BannerState {
 
       const all = (data || []) as BannerData[];
 
-      // Фильтр по per-viewport activity-флагам в image_srcset._meta_active_*.
-      // Дефолт «true» — баннер активен на обоих, если в админке не отключили один из них.
+      // Фильтр по _meta_variant: каждый баннер ровно ОДНОГО viewport.
+      // Desktop viewport → берём только variant="desktop" (или null для backward compat).
+      // Mobile viewport → берём только variant="mobile".
       const list = all.filter((b) => {
-        const srcset = b.image_srcset || {};
-        const activeDesktop = srcset._meta_active_desktop !== "false";
-        const activeMobile = srcset._meta_active_mobile !== "false";
-        return isMobile ? activeMobile : activeDesktop;
+        const variant = (b.image_srcset || {})._meta_variant;
+        if (isMobile) return variant === "mobile";
+        return variant === "desktop" || variant == null; // null = старые баннеры до миграции
       });
 
       const chosen = list.length > 0
