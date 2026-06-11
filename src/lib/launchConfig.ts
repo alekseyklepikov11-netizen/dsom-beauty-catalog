@@ -8,10 +8,10 @@
  */
 export const LAUNCH_CONFIG = {
   /** Дата старта продаж на Ozon */
-  launchDate: "2026-06-11",
+  launchDate: "2026-07-01",
 
   /** До этой даты бот выдаёт 10% (включительно) */
-  phase1EndDate: "2026-07-11",
+  phase1EndDate: "2026-07-31",
 
   /** Ozon-промокод фазы 1 (launch) */
   launchCode: "DSOM10",

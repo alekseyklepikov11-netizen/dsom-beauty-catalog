@@ -343,7 +343,7 @@ const Intro = () => {
         <div className="intro-menu-footer">
           <span>hello@dsom.ru</span>
           <span>@dsom_official</span>
-          <span>Старт продаж — июнь 2026</span>
+          <span>Старт продаж — июль 2026</span>
         </div>
       </nav>
 
@@ -369,7 +369,7 @@ const Intro = () => {
               <p className="subtitle">
                 Активная косметика без маркетинговой наценки.
                 <br />
-                Старт продаж — июнь 2026.
+                Старт продаж — июль 2026.
               </p>
             </div>
 

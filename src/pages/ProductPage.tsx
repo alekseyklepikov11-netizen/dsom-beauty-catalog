@@ -19,7 +19,7 @@ import { addRecentlyViewed } from "@/lib/recentlyViewed";
 
 // FAQ блок — короткий, общий для всех 4 продуктов DSOM
 const PRODUCT_FAQS_RU = [
-  { q: "Когда стартуют продажи?", a: "11 июня 2026 года, эксклюзивно на Ozon. Подпишитесь на промокод выше — напомним за день до старта." },
+  { q: "Когда стартуют продажи?", a: "В июле 2026 года, эксклюзивно на Ozon. Подпишитесь на промокод выше — напомним за день до старта." },
   { q: "Где производится?", a: "В России, по нашим спецификациям. Все продукты сертифицированы; реквизиты юр.лица и регистрационные документы — в публичной оферте на dsom.ru/page/oferta." },
   { q: "Есть ли отдушка?", a: "Да, в составе есть лёгкая отдушка. Мы не делаем «100% без отдушек» из принципа честной коммуникации." },
   { q: "Можно ли использовать беременным и кормящим?", a: "Ретинол (P2 Renew) — нет. Vitamin C, PDRN, ламеллярный крем — возможно, но рекомендуем согласовать с врачом." },
@@ -27,7 +27,7 @@ const PRODUCT_FAQS_RU = [
   { q: "Сколько хватает одной упаковки?", a: "30 мл сыворотки — на 2-3 месяца при ежедневном использовании. 50 мл крема — на 1.5-2 месяца." },
 ];
 const PRODUCT_FAQS_EN = [
-  { q: "When does it launch?", a: "June 11, 2026, exclusively on Ozon. Subscribe to the promo above — we'll remind you the day before." },
+  { q: "When does it launch?", a: "July 2026, exclusively on Ozon. Subscribe to the promo above — we'll remind you the day before." },
   { q: "Where is it made?", a: "In Russia. The EAEU compliance declaration is registered to LLC WALCANDVIR — we are responsible for every product." },
   { q: "Is there fragrance?", a: "Yes, a light fragrance is added. We don't claim '100% fragrance-free' on principle." },
   { q: "Safe during pregnancy?", a: "Retinol (P2 Renew) — no. Vitamin C, PDRN, lamellar cream — possibly, but consult your doctor." },

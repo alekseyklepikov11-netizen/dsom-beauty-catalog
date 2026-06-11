@@ -46,6 +46,9 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState<null | "signup" | "forgot" | "exists" | "already-sent">(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  // Статус виджета Turnstile: challenges.cloudflare.com из РФ грузится нестабильно,
+  // молчаливый отказ оставлял форму без видимой причины «подтвердите, что вы не робот».
+  const [captchaStatus, setCaptchaStatus] = useState<"loading" | "ready" | "failed">("loading");
 
   const captchaRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
@@ -66,16 +69,23 @@ const AuthPage = () => {
       widgetIdRef.current = window.turnstile.render(captchaRef.current, {
         sitekey: TURNSTILE_SITE_KEY,
         theme: "light",
-        callback: (token: string) => setCaptchaToken(token),
+        callback: (token: string) => { setCaptchaToken(token); setCaptchaStatus("ready"); },
         "expired-callback": () => setCaptchaToken(null),
-        "error-callback": () => setCaptchaToken(null),
+        "error-callback": () => { setCaptchaToken(null); setCaptchaStatus("failed"); },
       });
+      setCaptchaStatus("ready");
     };
 
     if (window.turnstile) {
       renderWidget();
       return;
     }
+
+    setCaptchaStatus("loading");
+    // Если за 10 секунд скрипт Cloudflare не поднялся — показываем видимую ошибку вместо тишины
+    window.setTimeout(() => {
+      if (!window.turnstile) setCaptchaStatus("failed");
+    }, 10000);
 
     const existing = document.querySelector('script[data-turnstile]');
     if (!existing) {
@@ -84,6 +94,7 @@ const AuthPage = () => {
       s.async = true;
       s.defer = true;
       s.setAttribute("data-turnstile", "1");
+      s.onerror = () => setCaptchaStatus("failed");
       window.onTurnstileLoad = renderWidget;
       document.head.appendChild(s);
     } else {
@@ -103,6 +114,38 @@ const AuthPage = () => {
     if (widgetIdRef.current && window.turnstile) {
       try { window.turnstile.reset(widgetIdRef.current); } catch {}
     }
+  };
+
+  // Полная перезагрузка виджета по кнопке «Загрузить проверку ещё раз»
+  const retryCaptcha = () => {
+    setCaptchaStatus("loading");
+    setCaptchaToken(null);
+    if (widgetIdRef.current && window.turnstile) {
+      try { window.turnstile.remove(widgetIdRef.current); } catch {}
+    }
+    widgetIdRef.current = null;
+    document.querySelector('script[data-turnstile]')?.remove();
+    const s = document.createElement("script");
+    s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&retry=" + Date.now();
+    s.async = true;
+    s.defer = true;
+    s.setAttribute("data-turnstile", "1");
+    s.onerror = () => setCaptchaStatus("failed");
+    window.onTurnstileLoad = () => {
+      if (!captchaRef.current || !window.turnstile || widgetIdRef.current) return;
+      widgetIdRef.current = window.turnstile.render(captchaRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        theme: "light",
+        callback: (token: string) => { setCaptchaToken(token); setCaptchaStatus("ready"); },
+        "expired-callback": () => setCaptchaToken(null),
+        "error-callback": () => { setCaptchaToken(null); setCaptchaStatus("failed"); },
+      });
+      setCaptchaStatus("ready");
+    };
+    document.head.appendChild(s);
+    window.setTimeout(() => {
+      if (!window.turnstile) setCaptchaStatus("failed");
+    }, 10000);
   };
 
   /**
@@ -515,8 +558,16 @@ const AuthPage = () => {
               )}
 
               {/* Cloudflare Turnstile widget */}
-              <div className="pt-2 flex justify-center">
+              <div className="pt-2 flex flex-col items-center gap-2">
                 <div ref={captchaRef} />
+                {captchaStatus === "failed" && (
+                  <div className="text-center text-sm text-muted-foreground space-y-1">
+                    <p>Проверка «я не робот» не загрузилась — такое бывает при включённом VPN или блокировщике рекламы.</p>
+                    <button type="button" onClick={retryCaptcha} className="underline text-foreground">
+                      Загрузить проверку ещё раз
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -25,8 +25,8 @@ interface LaunchConfig {
 // При сдвиге даты shift-launch.py обновляет launchConfig.ts (frontend), а сюда тоже надо.
 // TODO: вынести в DB-таблицу app_settings когда понадобится третья точка истины.
 const LAUNCH_CONFIG: LaunchConfig = {
-  launch_date: "2026-06-11",
-  phase1_end: "2026-07-11",
+  launch_date: "2026-07-01",
+  phase1_end: "2026-07-31",
   launch_code: "DSOM10",
   launch_discount: 10,
   welcome_code: "DSOM5",
@@ -103,6 +103,17 @@ serve(async (req) => {
       phase = existing.phase as "launch" | "welcome";
       validUntilDate = existing.valid_until;
       discount = phase === "launch" ? LAUNCH_CONFIG.launch_discount : LAUNCH_CONFIG.welcome_discount;
+
+      // Сдвиг даты старта не должен «сжигать» ранее выданные коды:
+      // если сохранённый срок launch-кода истекает раньше актуального минимума — продлеваем (extend-only).
+      if (phase === "launch") {
+        const minValid = validUntil("launch");
+        if (validUntilDate < minValid) {
+          validUntilDate = minValid;
+          await admin.from("promo_leads").update({ valid_until: minValid }).ilike("email", emailLower);
+          console.log("[claim-promo] extended valid_until to", minValid, "for", emailLower);
+        }
+      }
     } else {
       phase = currentPhase();
       code = phase === "launch" ? LAUNCH_CONFIG.launch_code : LAUNCH_CONFIG.welcome_code;

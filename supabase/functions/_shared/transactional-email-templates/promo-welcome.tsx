@@ -38,7 +38,7 @@ const PromoWelcomeEmail = ({ code = 'DSOM5', ozon_url = 'https://www.ozon.ru/sel
           <Text style={codeText}>{code}</Text>
         </Section>
         <Text style={text}>
-          5% на первый заказ. Сработает на Ozon после старта продаж — 11 июня 2026.
+          5% на первый заказ. Сработает на Ozon после старта продаж — в июле 2026.
           Мы напомним вам за день до запуска.
         </Text>
         <Text style={text}>
