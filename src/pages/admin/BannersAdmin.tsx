@@ -232,8 +232,8 @@ const BannersAdmin = () => {
                   textPosition={b.text_position}
                   focalPoint={b.image_focal_point}
                   device={tab}
+                  variant={b.position === "home_hero" ? "fullscreen" : "section"}
                 />
-                {b.video_url && <span className="absolute top-4 right-4 z-10 bg-foreground/80 text-background text-[10px] px-2 py-1 rounded tracking-luxe uppercase">Видео</span>}
                 {b.ab_group && <span className="absolute top-4 left-4 z-10 bg-accent text-background text-[10px] px-2 py-1 rounded tracking-luxe uppercase">A/B: {b.ab_group}</span>}
                 <p className="mt-2 text-center text-[9px] tracking-luxe uppercase text-muted-foreground">
                   {tab === "mobile" ? "📱 как на телефоне" : "🖥️ как на десктопе"} · текст: {POS_LABELS[(b.text_position && isValidPos(b.text_position)) ? b.text_position : DEFAULT_POS]}
