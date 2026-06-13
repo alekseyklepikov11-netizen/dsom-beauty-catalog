@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import AdminLayout from "@/components/admin/AdminLayout";
 import I18nField, { Field, fieldCls } from "@/components/admin/I18nField";
 import ImageUpload from "@/components/admin/ImageUpload";
+import BannerPreview from "@/components/admin/BannerPreview";
 // classifyError/isRlsBlocked больше не используются — admin CRUD теперь
 // через edge function admin-banners (см. callAdminBanners ниже).
 
@@ -23,7 +24,7 @@ interface Banner {
 }
 
 // 9-зон сетка вынесена в lib/banner-positions.ts (единый источник правды)
-import { POSITIONS, POS_LABELS, FOCAL_POINTS } from "@/lib/banner-positions";
+import { POSITIONS, POS_LABELS, FOCAL_POINTS, isValidPos, DEFAULT_POS } from "@/lib/banner-positions";
 
 const TEXT_POSITIONS = POSITIONS.map((value) => ({ value, label: POS_LABELS[value] }));
 
@@ -61,6 +62,17 @@ function getVariant(b: Banner): Viewport {
   const v = (b.image_srcset || {})._meta_variant;
   return v === "mobile" ? "mobile" : "desktop"; // default = desktop для старых
 }
+
+/**
+ * Eyebrow (надзаголовок-чип) для превью — берётся из страницы-носителя,
+ * не из строки баннера (на сайте eyebrow задаётся в Index/Catalog/CmsPage).
+ * Нужен, чтобы превью совпадало с боевым видом.
+ */
+const EYEBROW_BY_POSITION: Record<string, string> = {
+  home_hero: "— DSOM · Лаборатория ухода",
+  catalog_top: "— Каталог",
+  about_top: "— О бренде",
+};
 
 const BannersAdmin = () => {
   const [rows, setRows] = useState<Banner[]>([]);
@@ -210,10 +222,22 @@ const BannersAdmin = () => {
           const ctr = s.views > 0 ? ((s.clicks / s.views) * 100).toFixed(1) : "—";
           return (
             <div key={b.id} className="bg-background border border-border rounded-2xl overflow-hidden">
-              <div className="aspect-video bg-secondary relative">
-                {b.image_url && <img src={b.image_url} alt="" className="absolute inset-0 w-full h-full object-cover" />}
-                {b.video_url && <span className="absolute top-2 right-2 bg-foreground/80 text-background text-[10px] px-2 py-1 rounded tracking-luxe uppercase">Видео</span>}
-                {b.ab_group && <span className="absolute top-2 left-2 bg-accent text-background text-[10px] px-2 py-1 rounded tracking-luxe uppercase">A/B: {b.ab_group}</span>}
+              <div className="relative bg-secondary p-3">
+                <BannerPreview
+                  imageUrl={b.image_url}
+                  videoUrl={b.video_url}
+                  title={b.title}
+                  subtitle={b.subtitle}
+                  eyebrow={EYEBROW_BY_POSITION[b.position]}
+                  textPosition={b.text_position}
+                  focalPoint={b.image_focal_point}
+                  device={tab}
+                />
+                {b.video_url && <span className="absolute top-4 right-4 z-10 bg-foreground/80 text-background text-[10px] px-2 py-1 rounded tracking-luxe uppercase">Видео</span>}
+                {b.ab_group && <span className="absolute top-4 left-4 z-10 bg-accent text-background text-[10px] px-2 py-1 rounded tracking-luxe uppercase">A/B: {b.ab_group}</span>}
+                <p className="mt-2 text-center text-[9px] tracking-luxe uppercase text-muted-foreground">
+                  {tab === "mobile" ? "📱 как на телефоне" : "🖥️ как на десктопе"} · текст: {POS_LABELS[(b.text_position && isValidPos(b.text_position)) ? b.text_position : DEFAULT_POS]}
+                </p>
               </div>
               <div className="p-5">
                 <p className="text-[10px] tracking-luxe uppercase text-accent mb-2">{b.position}</p>
