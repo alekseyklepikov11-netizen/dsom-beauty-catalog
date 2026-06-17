@@ -10,10 +10,8 @@
     
     
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/og-default.jpg">
-
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="/og-default.jpg">
+    <!-- og:image / og:title / og:description / twitter:* задаёт per-page компонент SEO (react-helmet, абсолютные URL). В shell НЕ дублируем — иначе генерик перебивал бы per-page (соцботы берут первый тег). Все соц-краулеры получают пререндер-снимок с корректным per-page og. -->
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2" />
