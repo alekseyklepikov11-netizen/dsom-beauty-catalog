@@ -42,6 +42,25 @@ const isHeading = (line: string) => {
 
 const isEpigraph = (block: string) => /^[«"].+[»"]$/.test(block.trim()) && block.length < 400;
 
+// Превращает внутренние пути /page/slug и /product/slug в кликабельные ссылки (внутренняя перелинковка для SEO)
+const linkify = (text: string): (string | JSX.Element)[] => {
+  const out: (string | JSX.Element)[] = [];
+  const re = /(\/(?:page|product)\/[a-z0-9-]+)/gi;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) out.push(text.slice(last, m.index));
+    out.push(
+      <a key={`${m.index}-${m[1]}`} href={m[1]} className="text-accent hover:underline">
+        {m[1]}
+      </a>
+    );
+    last = m.index + m[1].length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+};
+
 const FormattedBody = ({ text }: { text: string }) => {
   const blocks = text.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
   return (
@@ -78,7 +97,7 @@ const FormattedBody = ({ text }: { text: string }) => {
               {lines.map((l, i) => (
                 <li key={i} className="flex gap-3">
                   <span className="text-accent select-none">—</span>
-                  <span className="flex-1">{l.replace(/^[—–-]\s+/, "")}</span>
+                  <span className="flex-1">{linkify(l.replace(/^[—–-]\s+/, ""))}</span>
                 </li>
               ))}
             </ul>
@@ -91,12 +110,12 @@ const FormattedBody = ({ text }: { text: string }) => {
           const items = lines.slice(listStart).filter((l) => l.trim());
           return (
             <div key={idx} className="space-y-3">
-              <p className="text-foreground/85 leading-relaxed">{intro}</p>
+              <p className="text-foreground/85 leading-relaxed">{linkify(intro)}</p>
               <ul className="space-y-2 text-foreground/85">
                 {items.map((l, i) => (
                   <li key={i} className="flex gap-3">
                     <span className="text-accent select-none">—</span>
-                    <span className="flex-1">{l.replace(/^[—–-]\s+/, "")}</span>
+                    <span className="flex-1">{linkify(l.replace(/^[—–-]\s+/, ""))}</span>
                   </li>
                 ))}
               </ul>
@@ -106,7 +125,7 @@ const FormattedBody = ({ text }: { text: string }) => {
 
         return (
           <p key={idx} className="text-foreground/85 leading-relaxed text-[15px] md:text-base">
-            {block}
+            {linkify(block)}
           </p>
         );
       })}

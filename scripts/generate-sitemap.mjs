@@ -19,19 +19,12 @@ const ANON = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
 const BASE = (process.env.SITEMAP_BASE_URL || "https://dsom.ru").replace(/\/$/, "");
 const OUT = path.resolve("public/sitemap.xml");
 
+// Только маршруты, которых НЕТ в таблице pages (иначе дубли: статик + БД).
+// Все /page/* и /product/* подтягиваются из Supabase ниже.
 const STATIC_PAGES = [
   { loc: "/", priority: 1.0, change: "weekly" },
   { loc: "/catalog", priority: 0.9, change: "weekly" },
   { loc: "/quiz", priority: 0.7, change: "monthly" },
-  { loc: "/page/about", priority: 0.6, change: "monthly" },
-  { loc: "/page/philosophy", priority: 0.6, change: "monthly" },
-  { loc: "/page/delivery", priority: 0.5, change: "monthly" },
-  { loc: "/page/contacts", priority: 0.5, change: "monthly" },
-  { loc: "/page/where-to-buy", priority: 0.6, change: "monthly" },
-  { loc: "/page/care", priority: 0.4, change: "monthly" },
-  { loc: "/page/documents", priority: 0.4, change: "monthly" },
-  { loc: "/page/privacy", priority: 0.3, change: "yearly" },
-  { loc: "/page/oferta", priority: 0.3, change: "yearly" },
 ];
 
 async function rest(table, qs = "select=*") {
@@ -52,8 +45,6 @@ function xmlUrl({ loc, lastmod, priority = 0.5, change = "monthly" }) {
     <loc>${u}</loc>${lastmod ? `\n    <lastmod>${lastmod}</lastmod>` : ""}
     <changefreq>${change}</changefreq>
     <priority>${priority.toFixed(1)}</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="${u}"/>
-    <xhtml:link rel="alternate" hreflang="en" href="${u}?lang=en"/>
   </url>`;
 }
 

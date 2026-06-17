@@ -38,7 +38,9 @@ const SEO = ({ title, description, image, type = "website", jsonLd, canonical }:
   const fullTitle = title ? `${title} — ${SITE_NAME}` : `${SITE_NAME} — Активная косметика с прозрачным составом`;
   const desc = description || DEFAULT_DESCRIPTION;
   const url = canonical || (typeof window !== "undefined" ? window.location.href : "");
-  const ogImage = image || "/og-default.jpg";
+  const ogImageRaw = image || "/og-default.jpg";
+  // og:image должен быть абсолютным URL, иначе соцсети/парсеры его не подхватывают
+  const ogImage = ogImageRaw.startsWith("http") ? ogImageRaw : `https://dsom.ru${ogImageRaw}`;
   const ldArr = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
   const allLd = [ORGANIZATION_JSONLD, ...ldArr];
 

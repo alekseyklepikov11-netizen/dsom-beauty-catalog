@@ -362,6 +362,35 @@ const ProductPage = () => {
           </div>
         </div>
 
+        {(() => {
+          const HUBS: Record<string, { slug: string; label: string }[]> = {
+            "vitamin-c-microspicules-serum": [
+              { slug: "vitamin-c", label: "Сыворотка с витамином C: формы и применение" },
+              { slug: "microneedles", label: "Микроиглы (спикулы): как работают" },
+            ],
+            "retinol-palmitate-microneedles-serum": [
+              { slug: "retinol", label: "Ретинол 0,3%: как вводить новичку" },
+              { slug: "microneedles", label: "Микроиглы (спикулы): как работают" },
+            ],
+            "pdrn-aloe-lifting-serum": [{ slug: "pdrn", label: "Что такое PDRN и как он работает" }],
+            "lamellar-cream-hyaluronic": [{ slug: "lamellar", label: "Что такое ламеллярный крем" }],
+          };
+          const hubs = HUBS[slug || ""] || [];
+          if (!hubs.length) return null;
+          return (
+            <div className="max-w-3xl mx-auto mt-16 pt-10 border-t border-border">
+              <p className="text-[11px] tracking-luxe uppercase text-accent mb-4">— Полезное об активах</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {hubs.map((h) => (
+                  <Link key={h.slug} to={`/page/${h.slug}`} className="px-4 py-3 border border-border rounded hover:bg-muted/50 transition text-sm">
+                    {h.label} →
+                  </Link>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         <ReviewsSection productId={product.id} />
       </section>
 

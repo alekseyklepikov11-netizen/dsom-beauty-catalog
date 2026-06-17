@@ -12,6 +12,7 @@ import { LAUNCH_CONFIG, currentPhase } from "@/lib/launchConfig";
 import { SKIN_TYPES } from "@/lib/skinTypes";
 import { useBanner } from "@/hooks/useBanner";
 import { HeroBanner } from "@/components/HeroBanner";
+import SEO from "@/components/SEO";
 
 interface Cat { id: string; slug: string; name: string; name_en: string | null; parent_id: string | null }
 
@@ -94,8 +95,29 @@ const Catalog = () => {
     setParams(p, { replace: true });
   };
 
+  // JSON-LD ItemList для каталога — помогает поисковикам понять список товаров
+  const catalogJsonLd = useMemo(() => {
+    const items = products.slice(0, 12).map((p, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      item: {
+        "@type": "Product",
+        name: lang === "en" && p.name_en ? p.name_en : p.name,
+        url: `https://dsom.ru/product/${p.slug}`,
+        ...(p.cover_image_url ? { image: p.cover_image_url } : {}),
+        ...(p.price ? { offers: { "@type": "Offer", priceCurrency: "RUB", price: p.price, availability: "https://schema.org/PreOrder" } } : {}),
+      },
+    }));
+    return items.length ? { "@context": "https://schema.org", "@type": "ItemList", itemListElement: items } : null;
+  }, [products, lang]);
+
   return (
     <main className="min-h-screen bg-background">
+      <SEO
+        title={lang === "en" ? "Catalog" : "Каталог"}
+        description={lang === "en" ? "DSOM skincare line: serums and cream with stated concentrations." : "Каталог DSOM: сыворотки с витамином С, ретинолом 0,3%, PDRN и ламеллярный крем. Понятный состав, цена до 1990 ₽."}
+        jsonLd={catalogJsonLd || undefined}
+      />
       <Header />
 
       <HeroBanner
