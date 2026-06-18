@@ -13,6 +13,11 @@ export const LAUNCH_CONFIG = {
   /** До этой даты бот выдаёт 10% (включительно) */
   phase1EndDate: "2026-07-31",
 
+  /** Публичный label старта для ВСЕХ текстов (резильентный, не протухает; правило владельца 18.06.2026: «лето 2026»).
+   *  Точная launchDate выше — ТОЛЬКО для счётчиков/фаз промо, в публичный текст не выводить. */
+  launchLabelRu: "лето 2026",
+  launchLabelEn: "summer 2026",
+
   /** Ozon-промокод фазы 1 (launch) */
   launchCode: "DSOM10",
   launchDiscountPercent: 10,

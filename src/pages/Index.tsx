@@ -50,16 +50,16 @@ const Index = () => {
   // Для двуязычного fallback при отсутствии активного баннера
   const fallbackTitle = lang === "en" ? "Active cosmetics | with transparent formulas" : "Активная косметика | с прозрачным составом";
   const fallbackSubtitle = lang === "en"
-    ? "Vitamin C 2000 ppm. Retinol 0.3%. PDRN 0.1%. Concentrations on the label — no marketing tricks. Launch in July 2026, available on Ozon."
-    : "Vitamin C 2000 ppm. Ретинол 0.3%. PDRN 0.1%. Концентрации указаны — без маркетинговых уловок. Запуск в июле 2026, стартуем на Ozon.";
+    ? `Vitamin C 2000 ppm. Retinol 0.3%. PDRN 0.1%. Concentrations on the label — no marketing tricks. Launch ${LAUNCH_CONFIG.launchLabelEn}, on Ozon.`
+    : `Vitamin C 2000 ppm. Ретинол 0.3%. PDRN 0.1%. Концентрации указаны — без маркетинговых уловок. Старт — ${LAUNCH_CONFIG.launchLabelRu}, на Ozon.`;
 
   return (
     <main className="min-h-screen bg-background">
       <SEO
         title={lang === "en" ? "Skincare with formula architecture" : "Уход, рождённый наукой"}
         description={lang === "en"
-          ? "DSOM — curated cosmetics for those who treat skincare as a daily ritual."
-          : "DSOM — кураторская косметика. Ритуал красоты, что становится культом."}
+          ? "DSOM — active skincare for those who read the ingredients: real concentrations, mechanism of action and honest limits — stated on the pack."
+          : "DSOM — активная косметика для тех, кто читает состав: рабочие концентрации, механизм действия и честные границы эффекта — на упаковке."}
       />
       <Header floating />
 
