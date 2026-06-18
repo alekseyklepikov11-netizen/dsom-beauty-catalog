@@ -126,16 +126,36 @@ const ImageUpload = ({ bucket, value, onChange, onSrcsetChange, variants, primar
         onSrcsetChange(srcset);
         toast.success(`Загружено в WebP × ${effectiveVariants.length} (адаптивно): ~${Math.round(file.size / 1024 / 10) / 100}× меньше`);
       } else {
-        // Legacy режим — без оптимизации
-        const ext = file.name.split(".").pop() || "jpg";
-        const path = `${slug}.${ext}`;
-        const { error } = await supabase.storage.from(bucket).upload(path, file, {
-          cacheControl: "3600", upsert: false,
-        });
-        if (error) throw error;
-        const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-        onChange(data.publicUrl);
-        toast.success("Загружено");
+        // Одиночная загрузка (товарные обложки/галереи): авто-оптимизация в WebP,
+        // ресайз ≤1600px. Растровые форматы жмём; SVG/GIF — без растеризации, как есть.
+        const isRaster = /^image\/(png|jpe?g|webp)$/i.test(file.type);
+        if (isRaster) {
+          setProgress("Оптимизация (WebP)...");
+          const img = await loadImage(file);
+          const blob = await toWebp(img, 1600, 0.82);
+          const path = `${slug}.webp`;
+          const { error } = await supabase.storage.from(bucket).upload(path, blob, {
+            contentType: "image/webp",
+            cacheControl: "31536000", // 1 год — имя файла уникально
+            upsert: false,
+          });
+          if (error) throw error;
+          const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+          onChange(data.publicUrl);
+          const ratio = Math.max(1, Math.round(file.size / blob.size));
+          toast.success(`Загружено в WebP (~${ratio}× меньше)`);
+        } else {
+          // SVG/GIF и пр. — без оптимизации, как есть
+          const ext = file.name.split(".").pop() || "img";
+          const path = `${slug}.${ext}`;
+          const { error } = await supabase.storage.from(bucket).upload(path, file, {
+            cacheControl: "31536000", upsert: false,
+          });
+          if (error) throw error;
+          const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+          onChange(data.publicUrl);
+          toast.success("Загружено");
+        }
       }
     } catch (err: any) {
       toast.error(err.message || "Не удалось загрузить");

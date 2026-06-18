@@ -168,10 +168,10 @@ const ProductPage = () => {
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16">
           {/* Gallery */}
           <div>
-            <div className="group relative bg-secondary aspect-[4/5] overflow-hidden">
+            <div className="group relative bg-secondary aspect-[4/5] ar-fb-45 overflow-hidden">
               <div
                 ref={galleryRef}
-                className="h-full snap-x snap-mandatory overflow-x-auto scroll-smooth flex"
+                className="absolute inset-0 snap-x snap-mandatory overflow-x-auto scroll-smooth flex"
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                 onScroll={(e) => {
                   const el = e.currentTarget;
@@ -244,7 +244,7 @@ const ProductPage = () => {
                       if (el) el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
                     }}
                     aria-label="Show image"
-                    className={`relative aspect-square bg-secondary overflow-hidden rounded-sm transition-all ${
+                    className={`relative aspect-square ar-fb-1 bg-secondary overflow-hidden rounded-sm transition-all ${
                       activeIdx === i
                         ? "ring-1 ring-foreground opacity-100"
                         : "opacity-60 hover:opacity-100"

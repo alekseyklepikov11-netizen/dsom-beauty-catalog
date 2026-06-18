@@ -4,6 +4,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Fallback для браузеров без CSS aspect-ratio (старые Android/realme браузеры):
+   без него контейнеры товарных фото схлопывались в высоту 0 → фото грузилось, но не отображалось. */
+@supports not (aspect-ratio: 1 / 1) {
+  .ar-fb-45::before { content: ""; display: block; padding-top: 125%; }
+  .ar-fb-1::before  { content: ""; display: block; padding-top: 100%; }
+}
+
 /* DSOM — design system. All colors HSL. */
 
 @layer base {

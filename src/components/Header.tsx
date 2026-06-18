@@ -54,7 +54,7 @@ const Header = ({ floating = false }: { floating?: boolean }) => {
               <Link to="/page/contacts" className="hover:opacity-60 transition-opacity">{t("nav.contact")}</Link>
             </nav>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0 min-w-0">
               <button
                 onClick={() => setSearchOpen(true)}
                 aria-label="Search"
@@ -75,9 +75,9 @@ const Header = ({ floating = false }: { floating?: boolean }) => {
               </div>
               <Link
                 to="/catalog"
-                className="group inline-flex items-center gap-2.5 bg-[#222] text-white rounded-full pl-5 pr-1.5 py-1.5 font-barlow font-medium text-[13px] hover:bg-[#000] transition-colors"
+                className="group inline-flex shrink-0 items-center gap-2.5 bg-[#222] text-white rounded-full pl-1.5 sm:pl-5 pr-1.5 py-1.5 font-barlow font-medium text-[13px] hover:bg-[#000] transition-colors"
               >
-                <span>{t("nav.shop")}</span>
+                <span className="hidden sm:inline">{t("nav.shop")}</span>
                 <span className="grid place-items-center w-9 h-9 rounded-full bg-white text-[#222]">
                   <ArrowUpRight className="w-4 h-4" strokeWidth={2.2} />
                 </span>

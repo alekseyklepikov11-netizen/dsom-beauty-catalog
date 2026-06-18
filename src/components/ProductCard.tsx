@@ -63,7 +63,7 @@ const ProductCard = ({ product, index, onQuickView }: Props) => {
 
   return (
     <div className="group block animate-fade-up" style={{ animationDelay: `${index * 60}ms` }}>
-      <div className="relative overflow-hidden bg-secondary aspect-[4/5] mb-5">
+      <div className="relative overflow-hidden bg-secondary aspect-[4/5] ar-fb-45 mb-5">
         {hasMultiple ? (
           <div
             ref={galleryRef}
@@ -93,7 +93,7 @@ const ProductCard = ({ product, index, onQuickView }: Props) => {
             ))}
           </div>
         ) : (
-          <Link to={`/product/${product.slug}`} className="block w-full h-full">
+          <Link to={`/product/${product.slug}`} className="absolute inset-0 block">
             {product.cover_image_url && (
               <img
                 src={product.cover_image_url}

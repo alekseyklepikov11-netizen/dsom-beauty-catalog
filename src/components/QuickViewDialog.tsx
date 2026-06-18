@@ -86,10 +86,10 @@ const QuickViewDialog = ({ slug, onClose }: QuickViewProps) => {
           <div className="p-20 text-center text-muted-foreground text-sm tracking-luxe uppercase">…</div>
         ) : (
           <div className="grid md:grid-cols-2">
-            <div className="group relative bg-secondary aspect-square md:aspect-auto md:min-h-[560px] overflow-hidden">
+            <div className="group relative bg-secondary aspect-square ar-fb-1 md:aspect-auto md:min-h-[560px] overflow-hidden">
               <div
                 ref={galleryRef}
-                className="h-full snap-x snap-mandatory overflow-x-auto scroll-smooth flex"
+                className="absolute inset-0 snap-x snap-mandatory overflow-x-auto scroll-smooth flex"
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                 onScroll={(e) => {
                   const el = e.currentTarget;
