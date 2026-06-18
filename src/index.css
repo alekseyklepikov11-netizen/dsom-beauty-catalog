@@ -11,6 +11,11 @@
   .ar-fb-1::before  { content: ""; display: block; padding-top: 100%; }
 }
 
+/* Старые мобильные браузеры (realme/Heytap) рисуют <button> нативным серым фоном
+   (-webkit-appearance: button), игнорируя bg:transparent → у вкладок «Описание/Состав»
+   и фильтров разделов появлялись серые «коробки». Все кнопки кастомные — сбрасываем нативный вид. */
+button { -webkit-appearance: none; appearance: none; }
+
 /* DSOM — design system. All colors HSL. */
 
 @layer base {
