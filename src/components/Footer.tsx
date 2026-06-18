@@ -4,6 +4,25 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import NewsletterForm from "@/components/NewsletterForm";
 
+function SocialIcon({ platform }: { platform: string }) {
+  const p = platform.toLowerCase();
+  if (p === "telegram" || p === "tg") {
+    return (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6" aria-hidden="true">
+        <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z" />
+      </svg>
+    );
+  }
+  if (p === "vk" || p === "вконтакте") {
+    return (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6" aria-hidden="true">
+        <path d="M21.579 6.855c.14-.465 0-.806-.662-.806h-2.193c-.558 0-.813.295-.953.619 0 0-1.115 2.719-2.695 4.483-.51.513-.743.675-1.021.675-.139 0-.341-.162-.341-.627V6.855c0-.558-.161-.806-.626-.806H9.642c-.348 0-.558.259-.558.504 0 .528.79.65.871 2.138v3.228c0 .707-.127.836-.407.836-.743 0-2.551-2.729-3.624-5.853-.209-.607-.42-.852-.98-.852H2.752c-.627 0-.752.295-.752.619 0 .582.743 3.462 3.461 7.271 1.812 2.601 4.363 4.012 6.687 4.012 1.393 0 1.565-.313 1.565-.853v-1.966c0-.626.133-.752.574-.752.325 0 .882.164 2.183 1.417 1.486 1.486 1.732 2.153 2.567 2.153h2.192c.626 0 .939-.313.759-.932-.197-.615-.907-1.51-1.849-2.569-.512-.604-1.277-1.254-1.51-1.579-.325-.419-.232-.604 0-.976.001 0 2.672-3.761 2.95-5.04z" />
+      </svg>
+    );
+  }
+  return <span className="text-sm uppercase tracking-wide">{platform}</span>;
+}
+
 const Footer = () => {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
@@ -66,10 +85,10 @@ const Footer = () => {
               <p className="text-[11px] tracking-luxe uppercase text-background/50 mb-3">
                 {lang === "en" ? "Social" : "Соцсети"}
               </p>
-              <div className="flex gap-4">
+              <div className="flex items-center gap-4">
                 {socials.map((s) => (
-                  <a key={s.platform} href={s.url} target="_blank" rel="noreferrer" className="text-sm uppercase tracking-wide hover:text-accent transition-colors">
-                    {s.platform}
+                  <a key={s.platform} href={s.url} target="_blank" rel="noreferrer" aria-label={s.platform} title={s.platform} className="text-background/80 hover:text-accent transition-colors">
+                    <SocialIcon platform={s.platform} />
                   </a>
                 ))}
               </div>
