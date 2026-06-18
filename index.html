@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DSOM — Активная косметика с прозрачным составом</title>
-    <meta name="description" content="Сыворотки и крем с указанными концентрациями: Vitamin C 2000 ppm, Ретинол 0,3%, PDRN 0,1%. Без маркетинговых уловок. Старт продаж на Ozon — июль 2026.">
+    <!-- meta description НЕ в shell: задаёт per-page компонент SEO (react-helmet). Статический тег дублировал бы per-page (helmet не заменяет, а добавляет meta) → Яндекс/Google видели дубли description. -->
     <meta name="author" content="DSOM" />
 
     
@@ -21,10 +21,7 @@
     <link rel="apple-touch-icon" sizes="512x512" href="/android-chrome-512x512.png?v=2" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#000000" />
-    <meta property="og:title" content="DSOM — Активная косметика с прозрачным составом">
-  <meta name="twitter:title" content="DSOM — Активная косметика с прозрачным составом">
-  <meta property="og:description" content="Сыворотки и крем с указанными концентрациями: Vitamin C 2000 ppm, Ретинол 0,3%, PDRN 0,1%. Без маркетинговых уловок. Старт продаж на Ozon — июль 2026.">
-  <meta name="twitter:description" content="Сыворотки и крем с указанными концентрациями: Vitamin C 2000 ppm, Ретинол 0,3%, PDRN 0,1%. Без маркетинговых уловок. Старт продаж на Ozon — июль 2026.">
+    <!-- og:title / twitter:title / og:description / twitter:description НЕ в shell: задаёт per-page SEO (react-helmet). Дублирование удалено 18.06 (Яндекс флагнул дубли title/description). -->
 
   <!-- Fonts для /intro hero-cinematic (Fraunces / Cormorant Garamond / Cormorant SC) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
