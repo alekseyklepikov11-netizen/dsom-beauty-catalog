@@ -8,6 +8,7 @@ import SEO from "@/components/SEO";
 import NotFound from "./NotFound";
 import { HeroBanner } from "@/components/HeroBanner";
 import { useBanner, type BannerPosition } from "@/hooks/useBanner";
+import AboutEditorial from "@/components/blocks/AboutEditorial";
 
 interface Page {
   slug: string;
@@ -196,6 +197,9 @@ const CmsPage = () => {
         />
       )}
 
+      {slug === "about" ? (
+        <AboutEditorial lang={lang === "en" ? "en" : "ru"} />
+      ) : (
       <article className="container max-w-3xl py-20 md:py-28">
         {loading ? (
           <p className="text-center text-muted-foreground tracking-luxe uppercase text-xs py-24">…</p>
@@ -236,6 +240,7 @@ const CmsPage = () => {
           </>
         )}
       </article>
+      )}
 
       <Footer />
     </main>
