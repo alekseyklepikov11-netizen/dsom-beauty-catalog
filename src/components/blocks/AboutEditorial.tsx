@@ -1,16 +1,19 @@
 import { Link } from "react-router-dom";
 import { ArrowUpRight, ScanSearch, FlaskConical, Coins } from "lucide-react";
 
-// Редакционная вёрстка страницы «О бренде» — первый блок системы «DSOM Editorial Lab».
-// Принципы: воздух вместо плашек, крупная типографика, тонкий honey-акцент, один
-// продуктовый визуал, микромоушн ТОЛЬКО на CSS-hover (без JS-reveal — чтобы не
-// прятать текст от ботов/пререндера). Концентрации НЕ выпячиваем — нарратив о подходе.
-// Копия сохранена с сайта; из лида убрано «российский» в лоб (правило бренда).
+// Страница «О бренде» — тёмный графитовый «разворот» (PANTONE 4140C = цвет упаковки DSOM).
+// Намеренно выбивается из светлого сайта: страница-манифест в фирменном цвете коробки.
+// Слоган = hero (вместо баннера «Архитектура линейки»). Концентрации НЕ выпячиваем.
+// Микромоушн только CSS-hover. Текст копии — реальный с сайта.
 
 type Lang = "ru" | "en";
 
+const GRAPHITE = "#393D47";
+const CUTOUT = "https://new.dsom.ru/storage/v1/object/public/product-images/p3-lift-cutout.webp";
+
 const COPY = {
   ru: {
+    eyebrow: "О бренде",
     manifesto: "Сначала состав. Потом всё остальное.",
     lede:
       "DSOM — бренд активной косметики. Расшифровывается как Derma Science Of Modernity. Не слоган — направление мысли: про настоящую науку, а не красивые слова на упаковке.",
@@ -34,9 +37,10 @@ const COPY = {
     s3:
       "Мы начали с четырёх продуктов — утреннего, вечернего, курсового и увлажняющего. Это базовый ритуал, который закрывает большинство задач. Линейка развивается: очищение, защита, специализированные форматы — по тем же стандартам. Новый продукт появляется, когда формула готова. Не раньше.",
     cta: "Смотреть линейку",
-    craft: "Производим в России · по нашим спецификациям",
+    craft: "Произведено в России · по нашим спецификациям",
   },
   en: {
+    eyebrow: "About",
     manifesto: "Ingredients first. Everything else follows.",
     lede:
       "DSOM is an active skincare brand. It stands for Derma Science Of Modernity. Not a slogan — a way of thinking: real science, not pretty words on the box.",
@@ -65,70 +69,75 @@ const COPY = {
 } as const;
 
 const Eyebrow = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-[11px] tracking-luxe uppercase text-accent mb-5">— {children}</p>
+  <p className="text-[11px] tracking-luxe uppercase text-[#C8922A] mb-5">— {children}</p>
 );
 
 const AboutEditorial = ({ lang = "ru" }: { lang?: Lang }) => {
   const c = COPY[lang];
   return (
-    <div className="pb-24">
-      {/* Манифест — крупная типографическая врезка */}
-      <section className="container max-w-4xl pt-20 md:pt-28 pb-16 md:pb-24">
-        <h2 className="font-display text-4xl md:text-6xl leading-[1.05] text-foreground max-w-3xl">
+    <div className="text-[#F5EFE6] pb-24" style={{ backgroundColor: GRAPHITE }}>
+      {/* HERO — слоган-манифест на графите (вместо баннера «Архитектура линейки») */}
+      <section className="container max-w-5xl pt-24 md:pt-36 pb-16 md:pb-24">
+        <Eyebrow>{c.eyebrow}</Eyebrow>
+        <h1 className="font-display text-5xl md:text-8xl leading-[1.0] text-[#F5EFE6] max-w-4xl">
           {c.manifesto}
-        </h2>
-        <div className="mt-8 h-px w-24 bg-accent/50" />
-        <p className="mt-8 text-lg md:text-xl leading-relaxed text-foreground/80 max-w-2xl">{c.lede}</p>
+        </h1>
+        <div className="mt-9 h-px w-24 bg-[#C8922A]/70" />
+        <p className="mt-8 text-lg md:text-2xl leading-relaxed text-[#F5EFE6]/75 max-w-2xl font-display">{c.lede}</p>
       </section>
 
       {/* Откуда мы появились */}
-      <section className="container max-w-4xl py-12 md:py-16 border-t border-border/60">
+      <section className="container max-w-4xl py-12 md:py-16 border-t border-[#F5EFE6]/12">
         <Eyebrow>{c.s1eyebrow}</Eyebrow>
         <div className="space-y-6 max-w-2xl">
           {c.s1.map((p, i) => (
-            <p key={i} className="text-foreground/85 leading-relaxed text-[15px] md:text-base">{p}</p>
+            <p key={i} className="text-[#F5EFE6]/80 leading-relaxed text-[15px] md:text-base">{p}</p>
           ))}
         </div>
       </section>
 
-      {/* Как мы работаем — split: текст + продуктовый визуал (sticky на desktop) */}
-      <section className="container py-12 md:py-20 border-t border-border/60">
-        <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-start">
+      {/* Как мы работаем — split: текст + флакон-вырезка на графите с подсветкой */}
+      <section className="container py-12 md:py-20 border-t border-[#F5EFE6]/12">
+        <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
           <div className="max-w-xl">
             <Eyebrow>{c.s2eyebrow}</Eyebrow>
             <div className="space-y-6">
               {c.s2.map((p, i) => (
-                <p key={i} className="text-foreground/85 leading-relaxed text-[15px] md:text-base">{p}</p>
+                <p key={i} className="text-[#F5EFE6]/80 leading-relaxed text-[15px] md:text-base">{p}</p>
               ))}
             </div>
           </div>
-          <div className="md:sticky md:top-28">
-            <div className="group relative overflow-hidden rounded-sm bg-secondary/40 border border-border/60">
-              <img
-                src="https://new.dsom.ru/storage/v1/object/public/product-images/p3-lift-frosted.webp"
-                alt={lang === "en" ? "DSOM serum — crafted to our specifications" : "Сыворотка DSOM — по нашим спецификациям"}
-                loading="lazy"
-                className="w-full h-auto object-contain transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-              />
-            </div>
-            <p className="mt-3 text-[11px] tracking-luxe uppercase text-muted-foreground/80">{c.craft}</p>
+          <div className="relative group flex justify-center md:justify-end">
+            {/* мягкое honey-свечение за флаконом */}
+            <div
+              className="pointer-events-none absolute inset-0 m-auto rounded-full blur-3xl opacity-40"
+              style={{ background: "radial-gradient(closest-side, rgba(200,146,42,0.45), transparent)", width: "70%", height: "70%" }}
+            />
+            <img
+              src={CUTOUT}
+              alt={lang === "en" ? "DSOM serum — crafted to our specifications" : "Сыворотка DSOM — по нашим спецификациям"}
+              loading="lazy"
+              className="relative w-auto object-contain transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+              style={{ maxHeight: "560px", filter: "drop-shadow(0 28px 55px rgba(0,0,0,0.55))" }}
+            />
           </div>
         </div>
+        <p className="mt-6 text-[11px] tracking-luxe uppercase text-[#F5EFE6]/45 text-center md:text-right">{c.craft}</p>
       </section>
 
-      {/* Принципы — честные сигналы (без «российское» первым) */}
-      <section className="container max-w-5xl py-12 md:py-16 border-t border-border/60">
+      {/* Принципы */}
+      <section className="container max-w-5xl py-12 md:py-16 border-t border-[#F5EFE6]/12">
         <Eyebrow>{c.principlesEyebrow}</Eyebrow>
         <div className="grid sm:grid-cols-3 gap-8 md:gap-10">
           {c.principles.map((p, i) => {
             const Icon = p.icon;
             return (
               <div key={i} className="group">
-                <span className="inline-flex items-center justify-center w-11 h-11 rounded-full border border-foreground/15 text-accent mb-4 transition-transform duration-300 ease-out group-hover:-rotate-12 group-hover:border-accent/60">
+                <span className="inline-flex items-center justify-center w-11 h-11 rounded-full border border-[#F5EFE6]/20 text-[#C8922A] mb-4 transition-transform duration-300 ease-out group-hover:-rotate-12 group-hover:border-[#C8922A]/70">
                   <Icon className="w-5 h-5" strokeWidth={1.6} />
                 </span>
-                <h3 className="font-display text-xl md:text-2xl mb-2 leading-snug">{p.t}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{p.d}</p>
+                <h3 className="font-display text-xl md:text-2xl mb-2 leading-snug text-[#F5EFE6]">{p.t}</h3>
+                <p className="text-sm text-[#F5EFE6]/55 leading-relaxed">{p.d}</p>
               </div>
             );
           })}
@@ -136,15 +145,15 @@ const AboutEditorial = ({ lang = "ru" }: { lang?: Lang }) => {
       </section>
 
       {/* Линейка + переход в каталог */}
-      <section className="container max-w-4xl py-12 md:py-16 border-t border-border/60">
+      <section className="container max-w-4xl py-12 md:py-16 border-t border-[#F5EFE6]/12">
         <Eyebrow>{c.s3eyebrow}</Eyebrow>
-        <p className="text-foreground/85 leading-relaxed text-[15px] md:text-base max-w-2xl">{c.s3}</p>
+        <p className="text-[#F5EFE6]/80 leading-relaxed text-[15px] md:text-base max-w-2xl">{c.s3}</p>
         <Link
           to="/catalog"
-          className="group inline-flex items-center gap-2.5 mt-8 border border-foreground/40 rounded-full pl-6 pr-2 py-2 text-[11px] tracking-luxe uppercase text-foreground hover:bg-foreground hover:text-background transition-colors duration-200"
+          className="group inline-flex items-center gap-2.5 mt-8 border border-[#F5EFE6]/40 rounded-full pl-6 pr-2 py-2 text-[11px] tracking-luxe uppercase text-[#F5EFE6] hover:bg-[#F5EFE6] hover:text-[#393D47] transition-colors duration-200"
         >
           {c.cta}
-          <span className="grid place-items-center w-8 h-8 rounded-full bg-foreground/5 group-hover:bg-background/20 transition-colors">
+          <span className="grid place-items-center w-8 h-8 rounded-full bg-[#F5EFE6]/10 group-hover:bg-[#393D47]/20 transition-colors">
             <ArrowUpRight className="w-4 h-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5" strokeWidth={2} />
           </span>
         </Link>
