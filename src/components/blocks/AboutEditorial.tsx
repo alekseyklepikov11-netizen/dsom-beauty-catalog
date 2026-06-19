@@ -11,7 +11,7 @@ type Lang = "ru" | "en";
 
 const COPY = {
   ru: {
-    manifesto: "Косметика не магия. Это химия плюс уважение к коже.",
+    manifesto: "Сначала состав. Потом всё остальное.",
     lede:
       "DSOM — бренд активной косметики. Расшифровывается как Derma Science Of Modernity. Не слоган — направление мысли: про настоящую науку, а не красивые слова на упаковке.",
     s1eyebrow: "Откуда мы появились",
@@ -37,7 +37,7 @@ const COPY = {
     craft: "Производим в России · по нашим спецификациям",
   },
   en: {
-    manifesto: "Skincare isn't magic. It's chemistry plus respect for the skin.",
+    manifesto: "Ingredients first. Everything else follows.",
     lede:
       "DSOM is an active skincare brand. It stands for Derma Science Of Modernity. Not a slogan — a way of thinking: real science, not pretty words on the box.",
     s1eyebrow: "Where we came from",
@@ -74,11 +74,9 @@ const AboutEditorial = ({ lang = "ru" }: { lang?: Lang }) => {
     <div className="pb-24">
       {/* Манифест — крупная типографическая врезка */}
       <section className="container max-w-4xl pt-20 md:pt-28 pb-16 md:pb-24">
-        <blockquote className="font-display text-3xl md:text-5xl leading-[1.08] text-foreground max-w-3xl">
-          <span className="text-accent">«</span>
-          {c.manifesto.replace(/[«»]/g, "")}
-          <span className="text-accent">»</span>
-        </blockquote>
+        <h2 className="font-display text-4xl md:text-6xl leading-[1.05] text-foreground max-w-3xl">
+          {c.manifesto}
+        </h2>
         <div className="mt-8 h-px w-24 bg-accent/50" />
         <p className="mt-8 text-lg md:text-xl leading-relaxed text-foreground/80 max-w-2xl">{c.lede}</p>
       </section>

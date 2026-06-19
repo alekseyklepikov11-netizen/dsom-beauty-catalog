@@ -2,13 +2,14 @@
 // Онлайн-оплата, фискализация и расчёт доставки подключаются ПОСЛЕ договоров
 // эквайринга/кассы и деплоя Edge Functions (create-order / pay-init / calc-delivery).
 // Сейчас: обзор корзины + контакты + согласие ПДн + заглушки доставки/оплаты.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCart } from "@/hooks/useCart";
 import { isCartEnabled, isCartDeliveryEnabled } from "@/lib/launchConfig";
+import { useAuth } from "@/hooks/useAuth";
 
 const CheckoutPage = () => {
   if (!isCartEnabled()) return <Navigate to="/" replace />;
@@ -19,10 +20,19 @@ const CheckoutInner = () => {
   const { i18n } = useTranslation();
   const en = i18n.language === "en";
   const { lines, subtotal, count } = useCart();
+  const { user } = useAuth();
   useNavigate();
+  const authedEmail = user?.email ?? "";
+  const authedName = (user?.user_metadata?.full_name || user?.user_metadata?.name || "") as string;
   const fmt = (n: number) => n.toLocaleString(en ? "en-US" : "ru-RU") + " ₽";
   const [contact, setContact] = useState({ name: "", phone: "", email: "" });
   const [consent, setConsent] = useState(false);
+
+  // Авторизованному предзаполняем контакты из профиля (грузится асинхронно).
+  // Не перетираем то, что пользователь уже ввёл руками.
+  useEffect(() => {
+    if (user) setContact((c) => ({ ...c, email: c.email || authedEmail, name: c.name || authedName }));
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (count === 0) {
     return (
@@ -48,11 +58,27 @@ const CheckoutInner = () => {
           <div className="space-y-10">
             <section>
               <h2 className="text-[11px] tracking-luxe uppercase text-muted-foreground mb-4">{en ? "Contact" : "Контакты"}</h2>
-              <div className="space-y-3 max-w-md">
-                <input value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} placeholder={en ? "Name" : "Имя"} className="w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
-                <input value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} placeholder={en ? "Phone" : "Телефон"} inputMode="tel" className="w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
-                <input value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} placeholder="Email" inputMode="email" className="w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
-              </div>
+              {user ? (
+                <div className="space-y-3 max-w-md">
+                  <div className="flex items-center justify-between gap-3 border border-border rounded-lg px-4 py-3 bg-secondary/30 text-sm">
+                    <span className="text-muted-foreground shrink-0">{en ? "Signed in as" : "Вы вошли как"}</span>
+                    <span className="font-medium truncate">{authedEmail}</span>
+                  </div>
+                  <input value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} placeholder={en ? "Recipient name" : "Имя получателя"} className="w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
+                  <input value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} placeholder={en ? "Phone" : "Телефон"} inputMode="tel" className="w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
+                </div>
+              ) : (
+                <div className="space-y-3 max-w-md">
+                  <input value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} placeholder={en ? "Name" : "Имя"} className="w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
+                  <input value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} placeholder={en ? "Phone" : "Телефон"} inputMode="tel" className="w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
+                  <input value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} placeholder="Email" inputMode="email" className="w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
+                  <p className="text-xs text-muted-foreground pt-1">
+                    {en ? "Already have an account? " : "Уже есть аккаунт? "}
+                    <Link to="/auth" className="text-accent hover:underline">{en ? "Sign in" : "Войти"}</Link>
+                    {en ? " — or continue as a guest." : " — или продолжите как гость."}
+                  </p>
+                </div>
+              )}
             </section>
 
             <section>
