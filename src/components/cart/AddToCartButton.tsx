@@ -49,7 +49,7 @@ const AddToCartButton = ({ product, variant = "full", className = "" }: Props) =
       <button
         onClick={handleAdd}
         aria-label={label}
-        className={`grid place-items-center w-9 h-9 rounded-full bg-foreground text-background hover:bg-accent transition-colors ${className}`}
+        className={`grid place-items-center w-9 h-9 rounded-full border border-foreground/40 bg-background/80 backdrop-blur text-foreground hover:bg-foreground hover:text-background active:scale-95 transition-[background-color,color,transform] duration-200 ease-out ${className}`}
       >
         {inCart ? <Check className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
       </button>
@@ -59,9 +59,11 @@ const AddToCartButton = ({ product, variant = "full", className = "" }: Props) =
   return (
     <button
       onClick={handleAdd}
-      className={`group flex items-center justify-center gap-3 w-full rounded-full bg-foreground text-background px-6 py-3.5 text-[11px] tracking-luxe uppercase hover:bg-accent transition-colors ${className}`}
+      className={`group flex items-center justify-center gap-3 w-full rounded-full border border-foreground/40 bg-secondary/50 text-foreground px-6 py-3.5 text-[11px] tracking-luxe uppercase hover:bg-foreground hover:text-background hover:border-foreground active:scale-[0.98] transition-[background-color,border-color,color,transform] duration-200 ease-out ${className}`}
     >
-      {inCart ? <Check className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
+      <span className="transition-transform duration-200 ease-out group-hover:translate-x-0.5">
+        {inCart ? <Check className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
+      </span>
       {label}
     </button>
   );

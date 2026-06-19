@@ -204,11 +204,11 @@ const Catalog = () => {
             <p className="text-center text-muted-foreground italic font-display text-2xl py-24">{t("catalog.empty")}</p>
           ) : (
             <div
-              className={`grid ${
+              className={`grid auto-rows-fr ${
                 mobileCols === 2 ? "grid-cols-2 gap-x-4 gap-y-10" : "grid-cols-1 gap-y-16"
               } sm:grid-cols-2 sm:gap-x-8 sm:gap-y-16 lg:grid-cols-3`}
             >
-              {products.map((p, i) => <ProductCard key={p.id} product={p} index={i} onQuickView={setQuickSlug} />)}
+              {products.map((p, i) => <ProductCard key={p.id} product={p} index={i} onQuickView={setQuickSlug} showAddToCart />)}
             </div>
           )}
         </div>

@@ -89,7 +89,7 @@ const Header = ({ floating = false }: { floating?: boolean }) => {
               >
                 <span className="hidden sm:inline">{t("nav.shop")}</span>
                 <span className="grid place-items-center w-9 h-9 rounded-full bg-white text-[#222]">
-                  <ArrowUpRight className="w-4 h-4" strokeWidth={2.2} />
+                  <ArrowUpRight className="w-4 h-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5" strokeWidth={2.2} />
                 </span>
               </Link>
             </div>

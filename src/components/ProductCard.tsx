@@ -27,9 +27,11 @@ interface Props {
   product: ProductLite;
   index: number;
   onQuickView?: (slug: string) => void;
+  /** Показывать кнопку «В корзину». По умолчанию false — на витринных блоках (главная/недавние) кнопки нет, только в каталоге. */
+  showAddToCart?: boolean;
 }
 
-const ProductCard = ({ product, index, onQuickView }: Props) => {
+const ProductCard = ({ product, index, onQuickView, showAddToCart = false }: Props) => {
   const { i18n, t } = useTranslation();
   const navigate = useNavigate();
   const lang = i18n.language;
@@ -64,7 +66,7 @@ const ProductCard = ({ product, index, onQuickView }: Props) => {
   };
 
   return (
-    <div className="group block animate-fade-up" style={{ animationDelay: `${index * 60}ms` }}>
+    <div className="group flex flex-col h-full animate-fade-up" style={{ animationDelay: `${index * 60}ms` }}>
       <div className="relative overflow-hidden bg-secondary aspect-[4/5] ar-fb-45 mb-5">
         {hasMultiple ? (
           <div
@@ -89,7 +91,7 @@ const ProductCard = ({ product, index, onQuickView }: Props) => {
                   alt={name}
                   loading={i === 0 ? "lazy" : "lazy"}
                   decoding="async"
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
                 />
               </Link>
             ))}
@@ -102,7 +104,7 @@ const ProductCard = ({ product, index, onQuickView }: Props) => {
                 alt={name}
                 loading="lazy"
                 decoding="async"
-                className="w-full h-full object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
               />
             )}
           </Link>
@@ -182,7 +184,7 @@ const ProductCard = ({ product, index, onQuickView }: Props) => {
       <Link to={`/product/${product.slug}`} className="block overflow-hidden">
         <div className="flex items-start justify-between gap-2 sm:gap-4">
           <div className="min-w-0 flex-1">
-            <h3 className="font-display text-lg sm:text-2xl leading-tight break-words hyphens-auto">{name}</h3>
+            <h3 className="font-display text-lg sm:text-2xl leading-tight line-clamp-2 min-h-[2.4em]">{name}</h3>
             {subtitle && <p className="text-xs sm:text-sm text-muted-foreground mt-1 italic font-display break-words">{subtitle}</p>}
           </div>
           <div className="text-right shrink-0">
@@ -191,8 +193,8 @@ const ProductCard = ({ product, index, onQuickView }: Props) => {
           </div>
         </div>
       </Link>
-      {isCartEnabled() && (
-        <div className="mt-3">
+      {isCartEnabled() && showAddToCart && (
+        <div className="mt-auto pt-4">
           <AddToCartButton product={product} variant="full" />
         </div>
       )}
