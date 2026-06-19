@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowUpRight, Search, Heart, User } from "lucide-react";
+import { ArrowUpRight, Search, Heart, User, ShoppingBag } from "lucide-react";
 import SearchDialog from "@/components/SearchDialog";
 import { useAuth } from "@/hooks/useAuth";
+import { useCart } from "@/hooks/useCart";
+import { isCartEnabled } from "@/lib/launchConfig";
 
 const Header = ({ floating = false }: { floating?: boolean }) => {
   const { t, i18n } = useTranslation();
   const { pathname } = useLocation();
   const { user } = useAuth();
+  const { open: openCart, count: cartCount } = useCart();
+  const showCart = isCartEnabled();
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const accountHref = user ? "/account" : "/auth";
@@ -62,6 +66,12 @@ const Header = ({ floating = false }: { floating?: boolean }) => {
               >
                 <Search className="w-4 h-4" />
               </button>
+              {showCart && (
+                <button onClick={openCart} aria-label="Cart" className="relative p-2 text-[#111] hover:opacity-60 transition-opacity">
+                  <ShoppingBag className="w-4 h-4" />
+                  {cartCount > 0 && <span className="absolute top-0 right-0 min-w-[16px] h-4 px-1 grid place-items-center rounded-full bg-[#222] text-white text-[10px] leading-none">{cartCount}</span>}
+                </button>
+              )}
               <Link to="/favorites" aria-label="Favorites" className="p-2 text-[#111] hover:opacity-60 transition-opacity">
                 <Heart className="w-4 h-4" />
               </Link>
@@ -111,6 +121,12 @@ const Header = ({ floating = false }: { floating?: boolean }) => {
             >
               <Search className="w-4 h-4" />
             </button>
+            {showCart && (
+              <button onClick={openCart} aria-label="Cart" className="relative p-1 text-muted-foreground hover:text-foreground transition-colors">
+                <ShoppingBag className="w-4 h-4" />
+                {cartCount > 0 && <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 grid place-items-center rounded-full bg-accent text-accent-foreground text-[9px] leading-none">{cartCount}</span>}
+              </button>
+            )}
             <Link to="/favorites" aria-label="Favorites" className="p-1 text-muted-foreground hover:text-foreground transition-colors">
               <Heart className="w-4 h-4" />
             </Link>

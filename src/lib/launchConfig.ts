@@ -35,6 +35,13 @@ export const LAUNCH_CONFIG = {
 
   /** Telegram бот для выдачи промокода */
   telegramBotUrl: "https://t.me/dsom_promo_bot?start=promo5",
+
+  /** ФИЧА-ФЛАГ D2C-корзины. false = корзина/чекаут скрыты на всём сайте (кнопки, иконка, /checkout → редирект).
+   *  Включать ТОЛЬКО когда подключены оплата/доставка и пройдено ревью. */
+  cartEnabled: true,
+  /** Блок выбора нашей доставки/ПВЗ в чекауте. false = скрыт даже при включённой корзине
+   *  (правило владельца 19.06: иметь возможность скрывать пункты выдачи). */
+  cartDeliveryEnabled: false,
 } as const;
 
 /** Сегодняшняя фаза: 'launch' (10%) или 'welcome' (5%). */
@@ -52,3 +59,9 @@ export function launchDateEn(): string {
   const d = new Date(LAUNCH_CONFIG.launchDate);
   return d.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
 }
+
+/** Корзина/чекаут включены? (фича-флаг) */
+export const isCartEnabled = (): boolean => LAUNCH_CONFIG.cartEnabled;
+/** Блок нашей доставки/ПВЗ в чекауте включён? (требует и cartEnabled). */
+export const isCartDeliveryEnabled = (): boolean =>
+  LAUNCH_CONFIG.cartEnabled && LAUNCH_CONFIG.cartDeliveryEnabled;

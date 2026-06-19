@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
+import { CartProvider } from "@/hooks/useCart";
+import CartDrawer from "@/components/cart/CartDrawer";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CookieBanner from "@/components/CookieBanner";
 import MobileCtaBar from "@/components/MobileCtaBar";
@@ -26,6 +28,7 @@ import Account from "./pages/Account.tsx";
 import Unsubscribe from "./pages/Unsubscribe.tsx";
 import EmailUnsubscribe from "./pages/EmailUnsubscribe.tsx";
 import PromoClaim from "./pages/PromoClaim.tsx";
+import CheckoutPage from "./pages/CheckoutPage.tsx";
 
 import AdminLogin from "./pages/admin/AdminLogin.tsx";
 import Dashboard from "./pages/admin/Dashboard.tsx";
@@ -62,6 +65,7 @@ const App = () => (
         <ScrollToTop />
         <YandexMetrika />
         <AuthProvider>
+          <CartProvider>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/intro" element={<Intro />} />
@@ -97,12 +101,16 @@ const App = () => (
             <Route path="/admin/stock-alerts" element={<Protected><StockAlertsAdmin /></Protected>} />
             <Route path="/admin/support" element={<Protected><SupportAdmin /></Protected>} />
 
+            <Route path="/checkout" element={<CheckoutPage />} />
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CookieBanner />
           <MobileCtaGate />
           <SupportChatGate />
+          <CartDrawer />
+          </CartProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

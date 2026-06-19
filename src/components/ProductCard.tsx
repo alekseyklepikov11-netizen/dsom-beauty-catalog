@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, Eye, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { useFavorites } from "@/hooks/useFavorites";
+import AddToCartButton from "@/components/cart/AddToCartButton";
+import { isCartEnabled } from "@/lib/launchConfig";
 
 export interface ProductLite {
   id: string;
@@ -189,6 +191,11 @@ const ProductCard = ({ product, index, onQuickView }: Props) => {
           </div>
         </div>
       </Link>
+      {isCartEnabled() && (
+        <div className="mt-3">
+          <AddToCartButton product={product} variant="full" />
+        </div>
+      )}
     </div>
   );
 };
