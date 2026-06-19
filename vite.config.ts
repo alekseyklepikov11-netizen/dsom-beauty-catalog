@@ -19,4 +19,28 @@ export default defineConfig(({ mode }) => ({
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core"],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Явно выделяем только реально общие вендоры (грузятся почти везде) —
+        // лучше кешируются и идут параллельно. React-экосистему держим в одном
+        // чанке: инициализируется вместе, иначе ломается порядок загрузки.
+        // Остальное (recharts, react-markdown, date-fns…) НЕ трогаем — Rollup сам
+        // кладёт их в чанк нужного маршрута, чтобы они не грузились на главной.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (
+            id.includes("/react/") ||
+            id.includes("/react-dom/") ||
+            id.includes("/react-router") ||
+            id.includes("/scheduler/")
+          ) return "react-vendor";
+          if (id.includes("@supabase")) return "supabase";
+          if (id.includes("@tanstack")) return "query";
+          if (id.includes("lucide-react")) return "icons";
+          if (id.includes("@radix-ui")) return "radix";
+        },
+      },
+    },
+  },
 }));

@@ -13,7 +13,8 @@ import RecentlyViewed from "@/components/RecentlyViewed";
 import QuickViewDialog from "@/components/QuickViewDialog";
 import StockAlertDialog from "@/components/StockAlertDialog";
 import PromoGate from "@/components/PromoGate";
-import { LAUNCH_CONFIG, currentPhase } from "@/lib/launchConfig";
+import { LAUNCH_CONFIG, currentPhase, isCartEnabled } from "@/lib/launchConfig";
+import AddToCartButton from "@/components/cart/AddToCartButton";
 import { track } from "@/lib/analytics";
 import { addRecentlyViewed } from "@/lib/recentlyViewed";
 
@@ -28,7 +29,7 @@ const PRODUCT_FAQS_RU = [
 ];
 const PRODUCT_FAQS_EN = [
   { q: "When does it launch?", a: `Launch ${LAUNCH_CONFIG.launchLabelEn}, exclusively on Ozon. Subscribe to the promo above — we'll remind you the day before.` },
-  { q: "Where is it made?", a: "In Russia. The EAEU compliance declaration is registered to LLC WALCANDVIR — we are responsible for every product." },
+  { q: "Where is it made?", a: "In Russia, to our specifications. All products are certified; legal entity details and registration documents are in the public offer at dsom.ru/page/oferta." },
   { q: "Is there fragrance?", a: "Yes, a light fragrance is added. We don't claim '100% fragrance-free' on principle." },
   { q: "Safe during pregnancy?", a: "Retinol (P2 Renew) — no. Vitamin C, PDRN, lamellar cream — possibly, but consult your doctor." },
   { q: "Sensitive skin?", a: "P3 Lift and P4 Hydro — yes. P1 Glow and P2 Renew — start 1-2 times per week." },
@@ -272,32 +273,55 @@ const ProductPage = () => {
               )}
             </div>
 
-            {/* Marketplace buttons */}
+            {/* Как купить */}
             <div className="mt-8">
-              <p className="text-[11px] tracking-luxe uppercase text-muted-foreground mb-4">{t("product.marketplaces")}</p>
-              {links.length > 0 ? (
-                <>
-                  <div className="flex flex-col gap-2.5 max-w-md">
-                    {links.map((l) => <MarketplaceButton key={l.id} kind={l.kind} url={l.url} label={l.label} productId={product.id} />)}
+              <p className="text-[11px] tracking-luxe uppercase text-muted-foreground mb-4">{lang === "en" ? "— How to buy" : "— Как купить"}</p>
+              {(() => {
+                // WB пока не показываем как живой канал (карточки не созданы) — фильтр-предохранитель.
+                const visibleLinks = links.filter((l) => !["wildberries", "wb"].includes((l.kind || "").toLowerCase()));
+                return visibleLinks.length > 0 ? (
+                  <>
+                    <div className="flex flex-col gap-2.5 max-w-md">
+                      {visibleLinks.map((l) => <MarketplaceButton key={l.id} kind={l.kind} url={l.url} label={l.label} productId={product.id} />)}
+                    </div>
+                    <div className="max-w-md mt-3">
+                      <StockAlertDialog productId={product.id} productName={name} />
+                    </div>
+                  </>
+                ) : (
+                  <div className="max-w-md">
+                    <p className="text-sm text-muted-foreground mb-4 italic">
+                      {(() => {
+                        const ph = currentPhase();
+                        const pct = ph === "launch" ? LAUNCH_CONFIG.launchDiscountPercent : LAUNCH_CONFIG.welcomeDiscountPercent;
+                        return lang === "en"
+                          ? `Launch on Ozon. Get a ${pct}% promocode now.`
+                          : `Старт продаж на Ozon. Получите промокод ${pct}% уже сейчас.`;
+                      })()}
+                    </p>
+                    <PromoGate variant="card" source={`product:${product.slug}`} />
                   </div>
-                  <div className="max-w-md mt-3">
-                    <StockAlertDialog productId={product.id} productName={name} />
-                  </div>
-                </>
-              ) : (
-                <div className="max-w-md">
-                  <p className="text-sm text-muted-foreground mb-4 italic">
-                    {(() => {
-                      const ph = currentPhase();
-                      const pct = ph === "launch" ? LAUNCH_CONFIG.launchDiscountPercent : LAUNCH_CONFIG.welcomeDiscountPercent;
-                      return lang === "en"
-                        ? `Launch on Ozon. Get a ${pct}% promocode now.`
-                        : `Старт продаж на Ozon. Получите промокод ${pct}% уже сейчас.`;
-                    })()}
+                );
+              })()}
+
+              {/* Корзина — вторичный способ (тизер до подключения оплаты) */}
+              {isCartEnabled() && (
+                <div className="max-w-md mt-4">
+                  <AddToCartButton product={product} variant="full" />
+                  <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
+                    {lang === "en"
+                      ? "Checkout & payment open at launch, summer 2026. For now — build your set and grab a promo code."
+                      : "Оформление и оплата — на старте, летом 2026. Сейчас можно собрать набор и забрать промокод."}
                   </p>
-                  <PromoGate variant="card" source={`product:${product.slug}`} />
                 </div>
               )}
+
+              {/* Статус каналов покупки — честно */}
+              <p className="max-w-md mt-5 text-[10px] tracking-[0.16em] uppercase text-muted-foreground/80">
+                {lang === "en"
+                  ? "Cart — active · Ozon — summer 2026 · Delivery — in setup"
+                  : "Корзина — активна · Ozon — лето 2026 · Доставка — настраиваем"}
+              </p>
             </div>
 
             {/* Tabs */}

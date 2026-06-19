@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { Suspense, lazy } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,48 +13,62 @@ import MobileCtaBar from "@/components/MobileCtaBar";
 import ScrollToTop from "@/components/ScrollToTop";
 import SupportChat from "@/components/SupportChat";
 import YandexMetrika from "@/components/YandexMetrika";
-import { useLocation } from "react-router-dom";
 
+// Главная грузится сразу (самый частый вход) — без задержки на первый экран.
 import Index from "./pages/Index.tsx";
-import Intro from "./pages/Intro.tsx";
-import Catalog from "./pages/Catalog.tsx";
-import ProductPage from "./pages/ProductPage.tsx";
-import AuthPage from "./pages/AuthPage.tsx";
-import ResetPassword from "./pages/ResetPassword.tsx";
-import NotFound from "./pages/NotFound.tsx";
-import Favorites from "./pages/Favorites.tsx";
-import CmsPage from "./pages/CmsPage.tsx";
-import Quiz from "./pages/Quiz.tsx";
-import Account from "./pages/Account.tsx";
-import Unsubscribe from "./pages/Unsubscribe.tsx";
-import EmailUnsubscribe from "./pages/EmailUnsubscribe.tsx";
-import PromoClaim from "./pages/PromoClaim.tsx";
-import CheckoutPage from "./pages/CheckoutPage.tsx";
 
-import AdminLogin from "./pages/admin/AdminLogin.tsx";
-import Dashboard from "./pages/admin/Dashboard.tsx";
-import ProductsList from "./pages/admin/ProductsList.tsx";
-import ProductEdit from "./pages/admin/ProductEdit.tsx";
-import ProductsImport from "./pages/admin/ProductsImport.tsx";
-import BrandsAdmin from "./pages/admin/BrandsAdmin.tsx";
-import CategoriesAdmin from "./pages/admin/CategoriesAdmin.tsx";
-import StoresAdmin from "./pages/admin/StoresAdmin.tsx";
-import BannersAdmin from "./pages/admin/BannersAdmin.tsx";
-import SocialAdmin from "./pages/admin/SocialAdmin.tsx";
-import PagesAdmin from "./pages/admin/PagesAdmin.tsx";
-import UsersAdmin from "./pages/admin/UsersAdmin.tsx";
-import NewsletterAdmin from "./pages/admin/NewsletterAdmin.tsx";
-import CampaignsAdmin from "./pages/admin/CampaignsAdmin.tsx";
-import CampaignEdit from "./pages/admin/CampaignEdit.tsx";
-import PromoCodesAdmin from "./pages/admin/PromoCodesAdmin.tsx";
-import ReviewsAdmin from "./pages/admin/ReviewsAdmin.tsx";
-import StockAlertsAdmin from "./pages/admin/StockAlertsAdmin.tsx";
-import SupportAdmin from "./pages/admin/SupportAdmin.tsx";
+// Остальные страницы — по требованию (route-based code splitting), чтобы первый
+// бандл оставался лёгким. Тяжёлая админка (~20 страниц) посетителю не грузится вовсе.
+const Intro = lazy(() => import("./pages/Intro.tsx"));
+const Catalog = lazy(() => import("./pages/Catalog.tsx"));
+const ProductPage = lazy(() => import("./pages/ProductPage.tsx"));
+const AuthPage = lazy(() => import("./pages/AuthPage.tsx"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
+const NotFound = lazy(() => import("./pages/NotFound.tsx"));
+const Favorites = lazy(() => import("./pages/Favorites.tsx"));
+const CmsPage = lazy(() => import("./pages/CmsPage.tsx"));
+const Quiz = lazy(() => import("./pages/Quiz.tsx"));
+const Account = lazy(() => import("./pages/Account.tsx"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe.tsx"));
+const EmailUnsubscribe = lazy(() => import("./pages/EmailUnsubscribe.tsx"));
+const PromoClaim = lazy(() => import("./pages/PromoClaim.tsx"));
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage.tsx"));
+
+const AdminLogin = lazy(() => import("./pages/admin/AdminLogin.tsx"));
+const Dashboard = lazy(() => import("./pages/admin/Dashboard.tsx"));
+const ProductsList = lazy(() => import("./pages/admin/ProductsList.tsx"));
+const ProductEdit = lazy(() => import("./pages/admin/ProductEdit.tsx"));
+const ProductsImport = lazy(() => import("./pages/admin/ProductsImport.tsx"));
+const BrandsAdmin = lazy(() => import("./pages/admin/BrandsAdmin.tsx"));
+const CategoriesAdmin = lazy(() => import("./pages/admin/CategoriesAdmin.tsx"));
+const StoresAdmin = lazy(() => import("./pages/admin/StoresAdmin.tsx"));
+const BannersAdmin = lazy(() => import("./pages/admin/BannersAdmin.tsx"));
+const SocialAdmin = lazy(() => import("./pages/admin/SocialAdmin.tsx"));
+const PagesAdmin = lazy(() => import("./pages/admin/PagesAdmin.tsx"));
+const UsersAdmin = lazy(() => import("./pages/admin/UsersAdmin.tsx"));
+const NewsletterAdmin = lazy(() => import("./pages/admin/NewsletterAdmin.tsx"));
+const CampaignsAdmin = lazy(() => import("./pages/admin/CampaignsAdmin.tsx"));
+const CampaignEdit = lazy(() => import("./pages/admin/CampaignEdit.tsx"));
+const PromoCodesAdmin = lazy(() => import("./pages/admin/PromoCodesAdmin.tsx"));
+const ReviewsAdmin = lazy(() => import("./pages/admin/ReviewsAdmin.tsx"));
+const StockAlertsAdmin = lazy(() => import("./pages/admin/StockAlertsAdmin.tsx"));
+const SupportAdmin = lazy(() => import("./pages/admin/SupportAdmin.tsx"));
 
 const queryClient = new QueryClient();
 
 const Protected = ({ children, admin }: { children: any; admin?: boolean }) => (
   <ProtectedRoute require={admin ? "admin" : "editor"}>{children}</ProtectedRoute>
+);
+
+// Минимальный фолбэк на время подгрузки чанка маршрута — в фирменной палитре.
+const RouteFallback = () => (
+  <div className="min-h-screen grid place-items-center bg-background">
+    <div
+      className="h-6 w-6 rounded-full border-2 border-foreground/20 border-t-foreground/70 animate-spin"
+      role="status"
+      aria-label="Загрузка"
+    />
+  </div>
 );
 
 const App = () => (
@@ -66,6 +81,7 @@ const App = () => (
         <YandexMetrika />
         <AuthProvider>
           <CartProvider>
+          <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/intro" element={<Intro />} />
@@ -106,6 +122,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
           <CookieBanner />
           <MobileCtaGate />
           <SupportChatGate />
