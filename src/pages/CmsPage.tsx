@@ -19,9 +19,9 @@ interface Page {
 }
 
 // Map CMS page slug → banner position (для CMS-страниц, у которых может быть hero-баннер)
-// «О бренде» теперь имеет собственный графитовый слоган-hero внутри AboutEditorial
-// (вместо баннера «Архитектура линейки»), поэтому HeroBanner для about отключён.
-const SLUG_TO_BANNER_POSITION: Record<string, BannerPosition> = {};
+const SLUG_TO_BANNER_POSITION: Record<string, BannerPosition> = {
+  about: "about_top",
+};
 
 const renderBody = (body: any): string => {
   if (!body) return "";
