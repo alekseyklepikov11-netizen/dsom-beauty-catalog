@@ -27,6 +27,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const Favorites = lazy(() => import("./pages/Favorites.tsx"));
 const CmsPage = lazy(() => import("./pages/CmsPage.tsx"));
+const Journal = lazy(() => import("./pages/Journal.tsx"));
 const Quiz = lazy(() => import("./pages/Quiz.tsx"));
 const Account = lazy(() => import("./pages/Account.tsx"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe.tsx"));
@@ -90,6 +91,7 @@ const App = () => (
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/page/:slug" element={<CmsPage />} />
+            <Route path="/journal" element={<Journal />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/account" element={<Account />} />
