@@ -50,8 +50,8 @@ const Index = () => {
   // Для двуязычного fallback при отсутствии активного баннера
   const fallbackTitle = lang === "en" ? "Active cosmetics | with transparent formulas" : "Активная косметика | с прозрачным составом";
   const fallbackSubtitle = lang === "en"
-    ? `Vitamin C 2000 ppm. Retinol 0.3%. PDRN 0.1%. Concentrations on the label — no marketing tricks. Launch ${LAUNCH_CONFIG.launchLabelEn}, on Ozon.`
-    : `Vitamin C 2000 ppm. Ретинол 0.3%. PDRN 0.1%. Концентрации указаны — без маркетинговых уловок. Старт — ${LAUNCH_CONFIG.launchLabelRu}, на Ozon.`;
+    ? `Serums with vitamin C, retinol and PDRN, plus a lamellar cream. Transparent formulas, no marketing tricks. Launch ${LAUNCH_CONFIG.launchLabelEn}, on Ozon.`
+    : `Сыворотки с витамином C, ретинолом и PDRN и ламеллярный крем. Понятный состав без маркетинговых уловок. Старт — ${LAUNCH_CONFIG.launchLabelRu}, на Ozon.`;
 
   return (
     <main className="min-h-screen bg-background">

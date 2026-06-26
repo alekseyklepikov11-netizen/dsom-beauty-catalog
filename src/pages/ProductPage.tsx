@@ -393,7 +393,7 @@ const ProductPage = () => {
               { slug: "microneedles", label: "Микроиглы (спикулы): как работают" },
             ],
             "retinol-palmitate-microneedles-serum": [
-              { slug: "retinol", label: "Ретинол 0,3%: как вводить новичку" },
+              { slug: "retinol", label: "Ретинол для лица: как вводить новичку" },
               { slug: "microneedles", label: "Микроиглы (спикулы): как работают" },
             ],
             "pdrn-aloe-lifting-serum": [{ slug: "pdrn", label: "Что такое PDRN и как он работает" }],
