@@ -47,7 +47,7 @@ const Favorites = () => {
 
   return (
     <main className="min-h-screen bg-background">
-      <SEO title={lang === "en" ? "Favorites" : "Избранное"} description={lang === "en" ? "Your saved products on DSOM." : "Сохранённые товары на DSOM."} />
+      <SEO title={lang === "en" ? "Favorites" : "Избранное"} description={lang === "en" ? "Your saved products on DSOM." : "Сохранённые товары на DSOM."} noindex />
       <Header />
 
       <section className="border-b border-border/60">

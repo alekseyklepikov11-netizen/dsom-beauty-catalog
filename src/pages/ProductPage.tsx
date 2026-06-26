@@ -125,7 +125,7 @@ const ProductPage = () => {
     "@context": "https://schema.org/",
     "@type": "Product",
     name,
-    description: description || subtitle || name,
+    description: subtitle || description || name,
     image: gallery,
     sku: product.slug,
     brand: brandName ? { "@type": "Brand", name: brandName } : { "@type": "Brand", name: "DSOM" },
@@ -146,7 +146,16 @@ const ProductPage = () => {
       acceptedAnswer: { "@type": "Answer", text: f.a },
     })),
   };
-  const jsonLd = [productLd, faqLd];
+  const breadcrumbLd = {
+    "@context": "https://schema.org/",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: lang === "en" ? "Home" : "Главная", item: "https://dsom.ru/" },
+      { "@type": "ListItem", position: 2, name: lang === "en" ? "Catalog" : "Каталог", item: "https://dsom.ru/catalog" },
+      { "@type": "ListItem", position: 3, name, item: "https://dsom.ru/product/" + product.slug },
+    ],
+  };
+  const jsonLd = [productLd, faqLd, breadcrumbLd];
 
   return (
     <main className="min-h-screen bg-background">

@@ -9,6 +9,7 @@ Disallow: /api
 Disallow: /storage/
 Disallow: /rest/
 Disallow: /functions/
+Disallow: /*?lang=
 
 # Major crawlers
 User-agent: Googlebot
@@ -18,6 +19,7 @@ Disallow: /admin/
 User-agent: Yandex
 Allow: /
 Disallow: /admin/
+Clean-param: lang
 
 User-agent: Bingbot
 Allow: /

@@ -7,6 +7,7 @@ interface Props {
   type?: "website" | "article" | "product";
   jsonLd?: Record<string, any> | Record<string, any>[];
   canonical?: string;
+  noindex?: boolean;
 }
 
 const SITE_NAME = "DSOM";
@@ -31,10 +32,10 @@ const ORGANIZATION_JSONLD = {
     { "@type": "ContactPoint", contactType: "customer support", email: "hello@dsom.ru" },
     { "@type": "ContactPoint", contactType: "sales", email: "b2b@dsom.ru" },
   ],
-  sameAs: ["https://t.me/dsom_official"],
+  sameAs: ["https://t.me/dsom_official", "https://vk.com/dsom_skin_care"],
 };
 
-const SEO = ({ title, description, image, type = "website", jsonLd, canonical }: Props) => {
+const SEO = ({ title, description, image, type = "website", jsonLd, canonical, noindex }: Props) => {
   const fullTitle = title ? `${title} — ${SITE_NAME}` : `${SITE_NAME} — Активная косметика с прозрачным составом`;
   const desc = description || DEFAULT_DESCRIPTION;
   const url = canonical || (typeof window !== "undefined" ? window.location.href : "");
@@ -48,6 +49,7 @@ const SEO = ({ title, description, image, type = "website", jsonLd, canonical }:
     <Helmet>
       <title>{fullTitle}</title>
       <meta name="description" content={desc} />
+      {noindex && <meta name="robots" content="noindex, follow" />}
       {url && <link rel="canonical" href={url} />}
 
       <meta property="og:title" content={fullTitle} />
