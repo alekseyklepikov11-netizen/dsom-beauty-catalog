@@ -182,9 +182,41 @@ const CmsPage = () => {
   const seoTitle = (bodySrc && typeof bodySrc === "object" && bodySrc.seo_title) || undefined;
   const seoDescription = (bodySrc && typeof bodySrc === "object" && bodySrc.seo_description) || body.slice(0, 160);
 
+  // Schema.org для статей: Article + BreadcrumbList (+ FAQPage, если в content.faq есть Q&A)
+  const pageUrl = typeof window !== "undefined" ? window.location.href : `https://dsom.ru/page/${slug}`;
+  const faq: { q: string; a: string }[] =
+    bodySrc && typeof bodySrc === "object" && Array.isArray((bodySrc as any).faq) ? (bodySrc as any).faq : [];
+  const cmsJsonLd: Record<string, any>[] = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: title,
+      description: seoDescription,
+      inLanguage: lang === "en" ? "en" : "ru",
+      mainEntityOfPage: pageUrl,
+      author: { "@type": "Organization", name: "DSOM" },
+      publisher: { "@type": "Organization", name: "DSOM", logo: { "@type": "ImageObject", url: "https://dsom.ru/og-default.jpg" } },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: lang === "en" ? "Home" : "Главная", item: "https://dsom.ru/" },
+        { "@type": "ListItem", position: 2, name: title, item: pageUrl },
+      ],
+    },
+  ];
+  if (faq.length) {
+    cmsJsonLd.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+    });
+  }
+
   return (
     <main className="min-h-screen bg-background">
-      <SEO title={seoTitle || title} description={seoDescription} />
+      <SEO title={seoTitle || title} description={seoDescription} jsonLd={cmsJsonLd} />
       <Header />
 
       {showBannerHero && (
