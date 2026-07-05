@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { loadStaticCatalog, selectPageBySlug } from "@/lib/staticCatalog";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
@@ -157,6 +158,18 @@ const CmsPage = () => {
     setNotFound(false);
 
     (async () => {
+      // Сначала статический JSON. Если страницы там нет (свежесозданная или
+      // JSON недоступен) — прозрачный fallback на Supabase, включая notFound.
+      const cat = await loadStaticCatalog();
+      if (cat) {
+        const p = selectPageBySlug(cat, slug);
+        if (p) {
+          setPage(p as Page);
+          setLoading(false);
+          return;
+        }
+      }
+
       const { data } = await supabase
         .from("pages")
         .select("slug,title,title_en,content,content_en")

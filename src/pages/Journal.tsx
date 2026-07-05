@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { loadStaticCatalog, selectPagesBySlugs } from "@/lib/staticCatalog";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
@@ -24,6 +25,13 @@ const Journal = () => {
 
   useEffect(() => {
     (async () => {
+      // Сначала статический JSON (порядок ARTICLE_SLUGS сохраняет селектор)
+      const cat = await loadStaticCatalog();
+      if (cat) {
+        setItems(selectPagesBySlugs(cat, ARTICLE_SLUGS) as ArticleLite[]);
+        setLoading(false);
+        return;
+      }
       const { data } = await supabase
         .from("pages")
         .select("slug,title,title_en,content")

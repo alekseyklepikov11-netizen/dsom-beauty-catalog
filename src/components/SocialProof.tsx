@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Star, Quote } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { shouldQueryTable } from "@/lib/staticCatalog";
 
 interface Review {
   id: string;
@@ -23,6 +24,10 @@ const SocialProof = () => {
 
   useEffect(() => {
     (async () => {
+      // Пока отзывов нет (маркер в catalog.json / флаг) — не шлём 2 запроса впустую,
+      // компонент вернёт null (reviews пустой).
+      if (!(await shouldQueryTable("reviews"))) return;
+
       const { data, count } = await supabase
         .from("reviews")
         .select("id,rating,title,body,guest_name,created_at,product_id,products(slug,name,name_en)", { count: "exact" })

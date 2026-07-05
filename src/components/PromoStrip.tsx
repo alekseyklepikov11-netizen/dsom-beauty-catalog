@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Copy, Check, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { shouldQueryTable } from "@/lib/staticCatalog";
 import { toast } from "sonner";
 
 interface Promo {
@@ -22,14 +23,20 @@ const PromoStrip = () => {
   const [copied, setCopied] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase
-      .from("promo_codes")
-      .select("id,code,description,description_en,discount_type,discount_value,expires_at,marketplace_url")
-      .eq("is_active", true)
-      .eq("is_public", true)
-      .order("created_at", { ascending: false })
-      .limit(6)
-      .then(({ data }) => setPromos((data || []) as Promo[]));
+    (async () => {
+      // Пока публичных промокодов нет (маркер в catalog.json / флаг) — не шлём запрос,
+      // компонент вернёт null (promos пустой).
+      if (!(await shouldQueryTable("promo_codes"))) return;
+
+      const { data } = await supabase
+        .from("promo_codes")
+        .select("id,code,description,description_en,discount_type,discount_value,expires_at,marketplace_url")
+        .eq("is_active", true)
+        .eq("is_public", true)
+        .order("created_at", { ascending: false })
+        .limit(6);
+      setPromos((data || []) as Promo[]);
+    })();
   }, []);
 
   if (promos.length === 0) return null;

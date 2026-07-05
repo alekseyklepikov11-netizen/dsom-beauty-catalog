@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { loadStaticCatalog, selectProductBySlug } from "@/lib/staticCatalog";
 import MarketplaceButton from "./MarketplaceButton";
 
 interface QuickViewProps {
@@ -36,6 +37,17 @@ const QuickViewDialog = ({ slug, onClose }: QuickViewProps) => {
     setImages([]);
     setActiveIdx(0);
     (async () => {
+      // Сначала статический JSON, при его отсутствии — прежний supabase-путь
+      const cat = await loadStaticCatalog();
+      const sp = cat ? selectProductBySlug(cat, slug) : null;
+      if (sp) {
+        setProduct(sp.product as ProductFull);
+        setLinks(sp.links as MLink[]);
+        setImages(sp.images as Img[]);
+        setLoading(false);
+        return;
+      }
+
       const { data: p } = await supabase
         .from("products")
         .select("id,slug,name,name_en,subtitle,subtitle_en,description,description_en,price,volume,cover_image_url")

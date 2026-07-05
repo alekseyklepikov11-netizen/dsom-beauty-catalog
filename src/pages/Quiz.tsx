@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ArrowRight, RefreshCw, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { loadStaticCatalog, selectProductsBySlugs } from "@/lib/staticCatalog";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard, { ProductLite } from "@/components/ProductCard";
@@ -240,6 +241,17 @@ const Quiz = () => {
     setLoading(true);
     try {
       const slugs = recommendedSlugs;
+
+      // Сначала статический JSON, при его отсутствии — прежний supabase-путь
+      const cat = await loadStaticCatalog();
+      if (cat) {
+        let fromJson = selectProductsBySlugs(cat, slugs) as ProductLite[];
+        // Fallback внутри JSON: если slug'и не совпали (продукты переименованы) — первые 4
+        if (fromJson.length === 0) fromJson = cat.products.slice(0, 4) as ProductLite[];
+        setResults(fromJson);
+        return;
+      }
+
       let products: ProductLite[] = [];
       if (slugs.length > 0) {
         const { data } = await supabase

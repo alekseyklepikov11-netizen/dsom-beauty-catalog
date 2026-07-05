@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { loadStaticCatalog, selectSocialLinks } from "@/lib/staticCatalog";
 import NewsletterForm from "@/components/NewsletterForm";
 
 function SocialIcon({ platform }: { platform: string }) {
@@ -29,8 +30,16 @@ const Footer = () => {
   const [socials, setSocials] = useState<{ platform: string; url: string }[]>([]);
 
   useEffect(() => {
-    supabase.from("social_links").select("platform,url").eq("is_active", true).order("sort_order")
-      .then(({ data }) => setSocials(data || []));
+    (async () => {
+      // Сначала статический JSON, при его отсутствии — прежний supabase-путь
+      const cat = await loadStaticCatalog();
+      if (cat) {
+        setSocials(selectSocialLinks(cat));
+        return;
+      }
+      const { data } = await supabase.from("social_links").select("platform,url").eq("is_active", true).order("sort_order");
+      setSocials(data || []);
+    })();
   }, []);
 
   return (

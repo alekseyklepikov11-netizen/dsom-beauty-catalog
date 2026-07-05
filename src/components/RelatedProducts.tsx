@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { loadStaticCatalog, selectRelatedProducts } from "@/lib/staticCatalog";
 import ProductCard, { ProductLite } from "./ProductCard";
 
 interface Props {
@@ -17,6 +18,13 @@ const RelatedProducts = ({ productId, categoryId, brandId, onQuickView }: Props)
 
   useEffect(() => {
     (async () => {
+      // Сначала статический JSON, при его отсутствии — прежний supabase-путь
+      const cat = await loadStaticCatalog();
+      if (cat) {
+        setItems(selectRelatedProducts(cat, { productId, brandId, categoryId }, 4) as ProductLite[]);
+        return;
+      }
+
       // Try same brand first, then same category
       let q = supabase
         .from("products")

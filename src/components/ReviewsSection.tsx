@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { shouldQueryTable } from "@/lib/staticCatalog";
 import { useAuth } from "@/hooks/useAuth";
 import { track } from "@/lib/analytics";
 import { toast } from "sonner";
@@ -38,8 +39,15 @@ const ReviewsSection = ({ productId }: Props) => {
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
 
-  const load = async () => {
+  const load = async (force = false) => {
     setLoading(true);
+    // Пока отзывов нет (маркер в catalog.json / флаг) — не гоняем запрос впустую.
+    // force=true после отправки отзыва: запрашиваем в любом случае.
+    if (!force && !(await shouldQueryTable("reviews"))) {
+      setReviews([]);
+      setLoading(false);
+      return;
+    }
     const { data } = await supabase
       .from("reviews")
       .select("id,user_id,guest_name,rating,title,body,created_at,status")
@@ -100,7 +108,7 @@ const ReviewsSection = ({ productId }: Props) => {
       setTitle("");
       setBody("");
       setRating(5);
-      load();
+      load(true);
     } catch (e: any) {
       toast.error(e.message);
     } finally {

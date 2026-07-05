@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { toPublicAssetUrl } from "@/lib/utils";
 
 interface Props {
   title?: string;
@@ -40,8 +41,9 @@ const SEO = ({ title, description, image, type = "website", jsonLd, canonical, n
   const desc = description || DEFAULT_DESCRIPTION;
   const url = canonical || (typeof window !== "undefined" ? window.location.href : "");
   const ogImageRaw = image || "/og-default.jpg";
-  // og:image должен быть абсолютным URL, иначе соцсети/парсеры его не подхватывают
-  const ogImage = ogImageRaw.startsWith("http") ? ogImageRaw : `https://dsom.ru${ogImageRaw}`;
+  // og:image должен быть абсолютным URL, иначе соцсети/парсеры его не подхватывают.
+  // Плюс переписываем new.dsom.ru → dsom.ru (тот же /storage/-путь, nginx отдаёт статику).
+  const ogImage = toPublicAssetUrl(ogImageRaw.startsWith("http") ? ogImageRaw : `https://dsom.ru${ogImageRaw}`);
   const ldArr = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
   const allLd = [ORGANIZATION_JSONLD, ...ldArr];
 

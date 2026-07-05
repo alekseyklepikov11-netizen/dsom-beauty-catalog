@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { loadStaticCatalog, selectProductBySlug } from "@/lib/staticCatalog";
+import { toPublicAssetUrl } from "@/lib/utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MarketplaceButton from "@/components/MarketplaceButton";
@@ -76,6 +78,27 @@ const ProductPage = () => {
       setBrandName(null);
       if (galleryRef.current) galleryRef.current.scrollLeft = 0;
 
+      // Сначала статический JSON: продукт + картинки + ссылки + бренд одним махом.
+      // store_inventory ВСЕГДА остаётся на Supabase (живые остатки).
+      const cat = await loadStaticCatalog();
+      const sp = cat ? selectProductBySlug(cat, slug) : null;
+      if (sp) {
+        setProduct(sp.product as unknown as Product);
+        track("product_view", { product_id: sp.product.id, value: sp.product.slug });
+        addRecentlyViewed(sp.product.id);
+        setImages(sp.images as Img[]);
+        setLinks(sp.links as MLink[]);
+        if (sp.brand) setBrandName((i18n.language === "en" && sp.brand.name_en) || sp.brand.name);
+
+        const inv = await supabase.from("store_inventory").select("store_id, in_stock, stores(id,name,city,address,is_active)").eq("product_id", sp.product.id).eq("in_stock", true);
+        const storesFromJson = ((inv.data || []) as any[])
+          .map((r) => r.stores)
+          .filter((s) => s && s.is_active);
+        setStores(storesFromJson as Store[]);
+        return;
+      }
+
+      // Fallback: прежний supabase-путь (нет JSON или товара нет в нём — напр. скрытый)
       const { data: p } = await supabase.from("products").select("*").eq("slug", slug).maybeSingle();
       if (!p) return;
       setProduct(p as Product);
@@ -126,7 +149,8 @@ const ProductPage = () => {
     "@type": "Product",
     name,
     description: subtitle || description || name,
-    image: gallery,
+    // Картинки — на боевом домене dsom.ru (не new.dsom.ru), путь тот же
+    image: gallery.map(toPublicAssetUrl),
     sku: product.slug,
     brand: brandName ? { "@type": "Brand", name: brandName } : { "@type": "Brand", name: "DSOM" },
     offers: {
@@ -135,6 +159,28 @@ const ProductPage = () => {
       priceCurrency: "RUB",
       price: Number(product.price),
       availability: links.length > 0 ? "https://schema.org/InStock" : "https://schema.org/PreOrder",
+      // Требования Google Merchant к полноте Offer:
+      priceValidUntil: `${new Date().getFullYear()}-12-31`,
+      // Доставка маркетплейсом (Ozon), для покупателя бесплатно — нейтральный минимум
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingRate: { "@type": "MonetaryAmount", value: 0, currency: "RUB" },
+        shippingDestination: { "@type": "DefinedRegion", addressCountry: "RU" },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 2, unitCode: "DAY" },
+          transitTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 7, unitCode: "DAY" },
+        },
+      },
+      // Возврат 14 дней — Закон о защите прав потребителей (РФ)
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: "RU",
+        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: 14,
+        returnMethod: "https://schema.org/ReturnByMail",
+        returnFees: "https://schema.org/FreeReturn",
+      },
     },
   };
   const faqLd = {

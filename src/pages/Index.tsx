@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { loadStaticCatalog, selectBestsellers } from "@/lib/staticCatalog";
 import { useBanner } from "@/hooks/useBanner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -36,6 +37,12 @@ const Index = () => {
   const [quickSlug, setQuickSlug] = useState<string | null>(null);
   useEffect(() => {
     (async () => {
+      // Сначала статический JSON, при его отсутствии — прежний supabase-путь
+      const cat = await loadStaticCatalog();
+      if (cat) {
+        setProducts(selectBestsellers(cat, 6) as ProductLite[]);
+        return;
+      }
       const p = await supabase
         .from("products")
         .select("id,slug,name,name_en,subtitle,subtitle_en,price,volume,cover_image_url,is_bestseller,is_new")

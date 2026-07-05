@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { loadStaticCatalog, searchProducts, selectBrandById } from "@/lib/staticCatalog";
 import { track } from "@/lib/analytics";
 
 interface Result {
@@ -44,6 +45,31 @@ const SearchDialog = ({ open, onClose }: Props) => {
     let cancelled = false;
     const handle = setTimeout(async () => {
       setLoading(true);
+
+      // Сначала статический JSON, при его отсутствии — прежний supabase-путь
+      const cat = await loadStaticCatalog();
+      if (cat) {
+        const found = searchProducts(cat, q, 8);
+        if (cancelled) return;
+        setResults(
+          found.map((d) => {
+            const brand = selectBrandById(cat, d.brand_id);
+            return {
+              id: d.id,
+              slug: d.slug,
+              name: d.name,
+              name_en: d.name_en,
+              cover_image_url: d.cover_image_url,
+              price: d.price,
+              brand: brand ? (lang === "en" && brand.name_en ? brand.name_en : brand.name) : null,
+            };
+          })
+        );
+        setLoading(false);
+        track("search_query", { value: q, meta: { results: found.length } });
+        return;
+      }
+
       const { data } = await supabase
         .from("products")
         .select("id,slug,name,name_en,cover_image_url,price,brands(name,name_en)")

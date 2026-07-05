@@ -18,6 +18,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { loadStaticCatalog, selectBanners } from "@/lib/staticCatalog";
 import { track } from "@/lib/analytics";
 import type { Pos } from "@/lib/banner-positions";
 
@@ -78,22 +79,30 @@ export function useBanner(position: BannerPosition): BannerState {
     let cancelled = false;
 
     (async () => {
-      const { data, error } = await supabase
-        .from("banners")
-        .select(COLS)
-        .eq("position", position)
-        .eq("is_active", true)
-        .order("sort_order");
-
+      // Сначала статический JSON, при его отсутствии — прежний supabase-путь
+      let all: BannerData[];
+      const cat = await loadStaticCatalog();
       if (cancelled) return;
+      if (cat) {
+        all = selectBanners(cat, position) as BannerData[];
+      } else {
+        const { data, error } = await supabase
+          .from("banners")
+          .select(COLS)
+          .eq("position", position)
+          .eq("is_active", true)
+          .order("sort_order");
 
-      if (error) {
-        console.error(`useBanner(${position}) fetch error:`, error);
-        setState({ status: "error", error: error.message });
-        return;
+        if (cancelled) return;
+
+        if (error) {
+          console.error(`useBanner(${position}) fetch error:`, error);
+          setState({ status: "error", error: error.message });
+          return;
+        }
+
+        all = (data || []) as BannerData[];
       }
-
-      const all = (data || []) as BannerData[];
 
       // Фильтр по _meta_variant: каждый баннер ровно ОДНОГО viewport.
       // Desktop viewport → берём только variant="desktop" (или null для backward compat).

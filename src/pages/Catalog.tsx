@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { LayoutGrid, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { loadStaticCatalog, selectCatalogProducts, selectRootCategories, type CatalogSort } from "@/lib/staticCatalog";
+import { toPublicAssetUrl } from "@/lib/utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard, { ProductLite } from "@/components/ProductCard";
@@ -44,14 +46,32 @@ const Catalog = () => {
   }, [mobileCols]);
 
   useEffect(() => {
-    supabase.from("categories").select("id,slug,name,name_en,parent_id").eq("is_visible", true).is("parent_id", null).order("sort_order")
-      .then(({ data }) => setCats((data || []) as Cat[]));
+    (async () => {
+      // Сначала статический JSON, при его отсутствии — прежний supabase-путь
+      const cat = await loadStaticCatalog();
+      if (cat) {
+        setCats(selectRootCategories(cat) as Cat[]);
+        return;
+      }
+      const { data } = await supabase.from("categories").select("id,slug,name,name_en,parent_id").eq("is_visible", true).is("parent_id", null).order("sort_order");
+      setCats((data || []) as Cat[]);
+    })();
   }, []);
 
   // Banner loading вынесен в useBanner hook (выше).
 
   useEffect(() => {
     (async () => {
+      // Сначала статический JSON (фильтры/сортировка/картинки — селектором)
+      const cat = await loadStaticCatalog();
+      if (cat) {
+        setProducts(selectCatalogProducts(cat, {
+          categorySlug: activeCat,
+          skin: skin || null,
+          sort: sort as CatalogSort,
+        }) as ProductLite[]);
+        return;
+      }
       let q = supabase.from("products").select("id,slug,name,name_en,subtitle,subtitle_en,price,volume,cover_image_url,is_bestseller,is_new,category_id").eq("is_visible", true);
       if (activeCat !== "all") {
         const cat = cats.find((c) => c.slug === activeCat);
@@ -104,7 +124,7 @@ const Catalog = () => {
         "@type": "Product",
         name: lang === "en" && p.name_en ? p.name_en : p.name,
         url: `https://dsom.ru/product/${p.slug}`,
-        ...(p.cover_image_url ? { image: p.cover_image_url } : {}),
+        ...(p.cover_image_url ? { image: toPublicAssetUrl(p.cover_image_url) } : {}),
         ...(p.price ? { offers: { "@type": "Offer", priceCurrency: "RUB", price: p.price, availability: "https://schema.org/PreOrder" } } : {}),
       },
     }));
