@@ -130,6 +130,33 @@ button { -webkit-appearance: none; appearance: none; }
   }
 }
 
+/* Доступность: уважаем prefers-reduced-motion — все анимации/переходы мгновенны. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Скролл-ревил секций: чистый CSS (animation-timeline), без JS.
+   Прогрессивно: браузеры без поддержки просто показывают контент сразу.
+   Текст всегда в DOM — пререндер/SEO не страдают. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal-view {
+      animation: reveal-view 0.6s var(--transition-smooth) both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+    @keyframes reveal-view {
+      from { opacity: 0.001; transform: translateY(18px); }
+      to { opacity: 1; transform: none; }
+    }
+  }
+}
+
 @layer utilities {
   .grain {
     position: relative;

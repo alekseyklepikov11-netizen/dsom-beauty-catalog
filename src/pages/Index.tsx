@@ -84,7 +84,7 @@ const Index = () => {
       {/* BESTSELLERS */}
       <section className="py-24 md:py-32">
         <div className="container">
-          <div className="text-center mb-14">
+          <div className="text-center mb-14 reveal-view">
             <p className="text-[11px] tracking-luxe uppercase text-accent mb-5">— {t("sections.bestsellers")}</p>
             <h2 className="font-display text-5xl md:text-6xl">{lang === "en" ? "Our line" : "Наша линейка"}</h2>
           </div>
@@ -101,7 +101,7 @@ const Index = () => {
 
       {/* PROMO GATE — Telegram + email funnel */}
       <section id="promo" className="py-20 md:py-28 bg-muted/30 scroll-mt-20">
-        <div className="container max-w-2xl">
+        <div className="container max-w-2xl reveal-view">
           {(() => {
             const ph = currentPhase();
             const pct = ph === "launch" ? LAUNCH_CONFIG.launchDiscountPercent : LAUNCH_CONFIG.welcomeDiscountPercent;
