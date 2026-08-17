@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { MessageCircle, X, Send, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -245,6 +246,18 @@ const SupportChat = () => {
 
           {/* Input */}
           <div className="border-t border-border p-3 bg-background">
+            {/* Дисклеймер ПДн (152-ФЗ): согласие выражается действием — отправкой
+                сообщения; текст условий виден ДО отправки. Текст — блок 7 пакета
+                согласий, вариант Б. */}
+            <p className="text-[10px] text-muted-foreground mb-2 px-1 leading-relaxed">
+              Первым отвечает ИИ-ассистент; если нужно — подключится человек. Пожалуйста, не
+              указывайте в чате персональные данные, которые не нужны для вашего вопроса
+              (паспорт, платёжные реквизиты). Отправляя сообщение, вы соглашаетесь с{" "}
+              <Link to="/page/privacy" target="_blank" className="underline underline-offset-2 hover:text-foreground">
+                Политикой
+              </Link>
+              .
+            </p>
             <div className="flex items-end gap-2">
               <textarea
                 ref={inputRef}
@@ -255,7 +268,7 @@ const SupportChat = () => {
                 rows={1}
                 disabled={loading}
                 className={cn(
-                  "flex-1 resize-none rounded-md border border-input bg-background px-3 py-2",
+                  "ym-disable-keys flex-1 resize-none rounded-md border border-input bg-background px-3 py-2",
                   "text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring",
                   "max-h-32 min-h-[40px]",
                 )}
@@ -274,9 +287,6 @@ const SupportChat = () => {
                 <Send className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-[10px] text-muted-foreground mt-2 px-1">
-              AI-консультант. Серьёзные обращения передаются специалисту.
-            </p>
           </div>
         </div>
       )}

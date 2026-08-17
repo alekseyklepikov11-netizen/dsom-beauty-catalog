@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { ArrowRight, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -16,9 +17,19 @@ const NewsletterForm = ({ source = "footer" }: { source?: string }) => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  // Согласие на рассылку (152-ФЗ / 38-ФЗ): чекбокс обязателен, по умолчанию пуст
+  const [consent, setConsent] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!consent) {
+      toast.error(
+        lang === "en"
+          ? "Please confirm your consent to receive the newsletter"
+          : "Отметьте согласие на получение рассылки"
+      );
+      return;
+    }
     const parsed = schema.safeParse({ email });
     if (!parsed.success) {
       toast.error(lang === "en" ? "Invalid email" : "Неверный email");
@@ -72,24 +83,53 @@ const NewsletterForm = ({ source = "footer" }: { source?: string }) => {
   }
 
   return (
-    <form onSubmit={submit} className="flex items-center gap-0 max-w-sm">
-      <input
-        type="email"
-        required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder={lang === "en" ? "Your email" : "Ваш email"}
-        className="flex-1 bg-transparent border-b border-background/30 focus:border-accent outline-none px-0 py-2 text-sm text-background placeholder:text-background/40 transition-colors"
-        disabled={loading}
-      />
-      <button
-        type="submit"
-        disabled={loading}
-        aria-label="Subscribe"
-        className="ml-2 grid place-items-center w-9 h-9 rounded-full bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-50 transition-colors"
-      >
-        <ArrowRight className="w-4 h-4" />
-      </button>
+    <form onSubmit={submit} className="max-w-sm space-y-3">
+      <div className="flex items-center gap-0">
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder={lang === "en" ? "Your email" : "Ваш email"}
+          className="ym-disable-keys flex-1 bg-transparent border-b border-background/30 focus:border-accent outline-none px-0 py-2 text-sm text-background placeholder:text-background/40 transition-colors"
+          disabled={loading}
+        />
+        <button
+          type="submit"
+          disabled={loading || !consent}
+          aria-label="Subscribe"
+          className="ml-2 grid place-items-center w-9 h-9 rounded-full bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-50 transition-colors"
+        >
+          <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
+      <label className="flex items-start gap-2.5 cursor-pointer group">
+        <input
+          type="checkbox"
+          checked={consent}
+          onChange={(e) => setConsent(e.target.checked)}
+          className="mt-0.5 w-3.5 h-3.5 rounded border-background/40 accent-accent shrink-0"
+        />
+        <span className="text-[11px] leading-relaxed text-background/60">
+          {lang === "en" ? (
+            <>
+              I agree to receive the DSOM newsletter (
+              <Link to="/page/marketing-consent" target="_blank" className="underline underline-offset-2 hover:text-background">terms</Link>
+              {", "}
+              <Link to="/page/privacy" target="_blank" className="underline underline-offset-2 hover:text-background">Privacy policy</Link>
+              ). Unsubscribe in one click in any email.
+            </>
+          ) : (
+            <>
+              Соглашаюсь получать рассылку DSOM (
+              <Link to="/page/marketing-consent" target="_blank" className="underline underline-offset-2 hover:text-background">условия</Link>
+              {", "}
+              <Link to="/page/privacy" target="_blank" className="underline underline-offset-2 hover:text-background">Политика</Link>
+              ). Отписка — в один клик в любом письме.
+            </>
+          )}
+        </span>
+      </label>
     </form>
   );
 };

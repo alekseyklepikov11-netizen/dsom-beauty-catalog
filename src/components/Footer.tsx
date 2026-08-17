@@ -110,6 +110,10 @@ const Footer = () => {
         <span className="normal-case tracking-normal text-background/50">
           Произведено в России ·{" "}
           <a href="/page/oferta" className="underline hover:text-background/70">Реквизиты в публичной оферте</a>
+          {" · "}
+          <Link to="/page/privacy" className="underline hover:text-background/70">
+            {lang === "en" ? "Privacy policy" : "Политика конфиденциальности"}
+          </Link>
         </span>
       </div>
     </footer>

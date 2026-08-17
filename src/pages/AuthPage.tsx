@@ -552,7 +552,10 @@ const AuthPage = () => {
                     className="mt-0.5 w-4 h-4 rounded border-border accent-foreground shrink-0"
                   />
                   <span className="text-xs text-muted-foreground leading-relaxed">
-                    Хочу получать новости, разборы составов и анонсы DSOM на email. Отписаться можно в любой момент.
+                    Хочу получать письма о новинках и акциях DSOM — не чаще 4 в месяц, отписка в один клик.{" "}
+                    <Link to="/page/marketing-consent" target="_blank" className="text-foreground border-b border-foreground/30 hover:border-foreground transition-colors">
+                      Условия рассылки
+                    </Link>
                   </span>
                 </label>
               )}

@@ -1,5 +1,11 @@
-import { sendLovableEmail } from 'npm:@lovable.dev/email-js'
+// Диспетчер email-очередей (pgmq: auth_emails, transactional_emails).
+// 17.08.2026: переведён с @lovable.dev/email-js на SMTP Beget (152-ФЗ, вариант Б —
+// письма не покидают РФ). Механика SMTP повторяет claim-promo-code (рабочий пример).
+// Очередь/ретраи/DLQ/лог сохранены как были. Auth-письма GoTrue шлёт сам через
+// GOTRUE_SMTP_* (тот же smtp.beget.com) — очередь auth_emails оставлена на случай
+// включения send-email hook.
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { SMTPClient } from 'https://deno.land/x/denomailer@1.6.0/mod.ts'
 
 const MAX_RETRIES = 5
 const DEFAULT_BATCH_SIZE = 10
@@ -7,32 +13,9 @@ const DEFAULT_SEND_DELAY_MS = 200
 const DEFAULT_AUTH_TTL_MINUTES = 15
 const DEFAULT_TRANSACTIONAL_TTL_MINUTES = 60
 
-// Check if an error is a rate-limit (429) response.
-// Uses EmailAPIError.status when available (email-js >=0.x with structured errors),
-// falls back to parsing the error message for older versions.
-function isRateLimited(error: unknown): boolean {
-  if (error && typeof error === 'object' && 'status' in error) {
-    return (error as { status: number }).status === 429
-  }
-  return error instanceof Error && error.message.includes('429')
-}
-
-// Check if an error is a forbidden (403) response, which means emails are
-// disabled for this project. Retrying won't help — move straight to DLQ.
-function isForbidden(error: unknown): boolean {
-  if (error && typeof error === 'object' && 'status' in error) {
-    return (error as { status: number }).status === 403
-  }
-  return error instanceof Error && error.message.includes('403')
-}
-
-// Extract Retry-After seconds from a structured EmailAPIError, or default to 60s.
-function getRetryAfterSeconds(error: unknown): number {
-  if (error && typeof error === 'object' && 'retryAfterSeconds' in error) {
-    return (error as { retryAfterSeconds: number | null }).retryAfterSeconds ?? 60
-  }
-  return 60
-}
+// Ссылка отписки: Lovable раньше добавлял её сам по unsubscribe_token.
+// Теперь добавляем сами — страница /email-unsubscribe уже есть на сайте.
+const UNSUBSCRIBE_BASE_URL = 'https://dsom.ru/email-unsubscribe'
 
 function parseJwtClaims(token: string): Record<string, unknown> | null {
   const parts = token.split('.')
@@ -78,12 +61,69 @@ async function moveToDlq(
   }
 }
 
+// Отправка одного письма через SMTP Beget. Клиент открываем на письмо и
+// закрываем — надёжнее при редких запусках диспетчера, чем держать соединение.
+async function sendSmtpEmail(payload: Record<string, unknown>): Promise<void> {
+  const smtpUser = Deno.env.get('SMTP_USER') || ''
+  const smtpPass = Deno.env.get('SMTP_PASS') || ''
+  if (!smtpUser || !smtpPass) {
+    throw new Error('SMTP_USER/SMTP_PASS not configured')
+  }
+
+  let html = typeof payload.html === 'string' ? payload.html : undefined
+  const unsubscribeToken =
+    typeof payload.unsubscribe_token === 'string' && payload.unsubscribe_token
+      ? payload.unsubscribe_token
+      : null
+  const unsubscribeUrl = unsubscribeToken
+    ? `${UNSUBSCRIBE_BASE_URL}?token=${encodeURIComponent(unsubscribeToken)}`
+    : null
+
+  // Футер отписки — в конец html (если есть токен).
+  if (html && unsubscribeUrl) {
+    const footer =
+      `<p style="margin-top:24px;font-size:11px;color:#8a8a8a;font-family:Arial,sans-serif;">` +
+      `Не хотите получать письма DSOM? <a href="${unsubscribeUrl}" style="color:#8a8a8a;">Отписаться</a></p>`
+    html = html.includes('</body>') ? html.replace('</body>', `${footer}</body>`) : html + footer
+  }
+
+  const headers: Record<string, string> = {}
+  if (unsubscribeUrl) {
+    headers['List-Unsubscribe'] = `<${unsubscribeUrl}>`
+  }
+
+  const client = new SMTPClient({
+    connection: {
+      hostname: Deno.env.get('SMTP_HOST') || 'smtp.beget.com',
+      port: Number(Deno.env.get('SMTP_PORT') || 465),
+      tls: true,
+      auth: { username: smtpUser, password: smtpPass },
+    },
+  })
+  try {
+    await client.send({
+      // From должен совпадать с SMTP-аккаунтом (noreply@dsom.ru), иначе Beget отклонит
+      from: `DSOM <${smtpUser}>`,
+      to: String(payload.to),
+      subject: String(payload.subject || 'DSOM'),
+      content: typeof payload.text === 'string' && payload.text ? payload.text : ' ',
+      html,
+      headers,
+    })
+  } finally {
+    try {
+      await client.close()
+    } catch {
+      // ignore close errors
+    }
+  }
+}
+
 Deno.serve(async (req) => {
-  const apiKey = Deno.env.get('LOVABLE_API_KEY')
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
-  if (!apiKey || !supabaseUrl || !supabaseServiceKey) {
+  if (!supabaseUrl || !supabaseServiceKey) {
     console.error('Missing required environment variables')
     return new Response(
       JSON.stringify({ error: 'Server configuration error' }),
@@ -113,7 +153,8 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-  // 1. Check rate-limit cooldown and read queue config
+  // 1. Check cooldown and read queue config (cooldown оставлен на случай
+  // ручной паузы отправки через email_send_state.retry_after_until)
   const { data: state } = await supabase
     .from('email_send_state')
     .select('retry_after_until, batch_size, send_delay_ms, auth_email_ttl_minutes, transactional_email_ttl_minutes')
@@ -152,7 +193,7 @@ Deno.serve(async (req) => {
 
     // Retry budget is based on real send failures, not pgmq read_ct.
     // read_ct increments for every message in a claimed batch, including
-    // messages not attempted when a 429 stops processing early.
+    // messages not attempted when an error stops processing early.
     const messageIds = Array.from(
       new Set(
         messages
@@ -249,26 +290,7 @@ Deno.serve(async (req) => {
       }
 
       try {
-        await sendLovableEmail(
-          {
-            run_id: payload.run_id,
-            to: payload.to,
-            from: payload.from,
-            sender_domain: payload.sender_domain,
-            subject: payload.subject,
-            html: payload.html,
-            text: payload.text,
-            purpose: payload.purpose,
-            label: payload.label,
-            idempotency_key: payload.idempotency_key,
-            unsubscribe_token: payload.unsubscribe_token,
-            message_id: payload.message_id,
-          },
-          // sendUrl is optional — when LOVABLE_SEND_URL is not set, the library
-          // falls back to the default Lovable API endpoint (https://api.lovable.dev).
-          // Set LOVABLE_SEND_URL as a Supabase secret to override (e.g. for local dev).
-          { apiKey, sendUrl: Deno.env.get('LOVABLE_SEND_URL') }
-        )
+        await sendSmtpEmail(payload)
 
         // Log success
         await supabase.from('email_send_log').insert({
@@ -297,44 +319,9 @@ Deno.serve(async (req) => {
           error: errorMsg,
         })
 
-        if (isRateLimited(error)) {
-          await supabase.from('email_send_log').insert({
-            message_id: payload.message_id,
-            template_name: payload.label || queue,
-            recipient_email: payload.to,
-            status: 'rate_limited',
-            error_message: errorMsg.slice(0, 1000),
-          })
-
-          const retryAfterSecs = getRetryAfterSeconds(error)
-          await supabase
-            .from('email_send_state')
-            .update({
-              retry_after_until: new Date(
-                Date.now() + retryAfterSecs * 1000
-              ).toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', 1)
-
-          // Stop processing — remaining messages stay in queue (VT expires, retried next cycle)
-          return new Response(
-            JSON.stringify({ processed: totalProcessed, stopped: 'rate_limited' }),
-            { headers: { 'Content-Type': 'application/json' } }
-          )
-        }
-
-        // 403 means emails are disabled for this project — retrying won't help.
-        // Move straight to DLQ and stop processing the rest of the batch.
-        if (isForbidden(error)) {
-          await moveToDlq(supabase, queue, msg, 'Emails disabled for this project')
-          return new Response(
-            JSON.stringify({ processed: totalProcessed, stopped: 'emails_disabled' }),
-            { headers: { 'Content-Type': 'application/json' } }
-          )
-        }
-
-        // Log non-429 failures to track real retry attempts.
+        // Log failure to track real retry attempts.
+        // SMTP-ошибки не различаем по кодам: любая = failed, ретрай после VT,
+        // после MAX_RETRIES — DLQ (лимитов Lovable 429/403 больше нет).
         await supabase.from('email_send_log').insert({
           message_id: payload.message_id,
           template_name: payload.label || queue,
@@ -346,7 +333,7 @@ Deno.serve(async (req) => {
           failedAttemptsByMessageId.set(payload.message_id, failedAttempts + 1)
         }
 
-        // Non-429 errors: message stays invisible until VT expires, then retried
+        // Message stays invisible until VT expires, then retried
       }
 
       // Small delay between sends to smooth bursts

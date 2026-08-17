@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { shouldQueryTable } from "@/lib/staticCatalog";
 import { useAuth } from "@/hooks/useAuth";
@@ -38,6 +39,8 @@ const ReviewsSection = ({ productId }: Props) => {
   const [body, setBody] = useState("");
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
+  // Согласие на публикацию отзыва (гость, 152-ФЗ): чекбокс обязателен, по умолчанию пуст
+  const [guestConsent, setGuestConsent] = useState(false);
 
   const load = async (force = false) => {
     setLoading(true);
@@ -76,6 +79,14 @@ const ReviewsSection = ({ productId }: Props) => {
       toast.error(lang === "en" ? "Please fill in name and email" : "Укажите имя и email");
       return;
     }
+    if (!user && !guestConsent) {
+      toast.error(
+        lang === "en"
+          ? "Please confirm your consent to publish the review"
+          : "Отметьте согласие на публикацию отзыва"
+      );
+      return;
+    }
     setSubmitting(true);
     try {
       const payload: any = {
@@ -89,6 +100,7 @@ const ReviewsSection = ({ productId }: Props) => {
       } else {
         payload.guest_name = guestName.trim();
         payload.guest_email = guestEmail.trim();
+        payload.consent_at = new Date().toISOString();
       }
       const { error } = await supabase.from("reviews").insert(payload);
       if (error) throw error;
@@ -167,7 +179,7 @@ const ReviewsSection = ({ productId }: Props) => {
                 <input
                   value={guestName}
                   onChange={(e) => setGuestName(e.target.value)}
-                  className={inputCls}
+                  className={"ym-disable-keys " + inputCls}
                   maxLength={100}
                 />
               </div>
@@ -179,7 +191,7 @@ const ReviewsSection = ({ productId }: Props) => {
                   type="email"
                   value={guestEmail}
                   onChange={(e) => setGuestEmail(e.target.value)}
-                  className={inputCls}
+                  className={"ym-disable-keys " + inputCls}
                   maxLength={200}
                 />
               </div>
@@ -212,16 +224,44 @@ const ReviewsSection = ({ productId }: Props) => {
           </div>
 
           {!user && (
-            <p className="text-xs text-muted-foreground italic">
-              {lang === "en"
-                ? "Guest reviews require admin approval before being published."
-                : "Гостевые отзывы публикуются после модерации."}
-            </p>
+            <>
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={guestConsent}
+                  onChange={(e) => setGuestConsent(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-border accent-foreground shrink-0"
+                  required
+                />
+                <span className="text-xs text-muted-foreground leading-relaxed">
+                  {lang === "en" ? (
+                    <>
+                      I agree to the publication of my review: the name will be visible to everyone,
+                      the email is not published and is used only to contact me about the review (
+                      <Link to="/page/privacy" target="_blank" className="text-foreground border-b border-foreground/30 hover:border-foreground transition-colors">Privacy policy</Link>
+                      ).
+                    </>
+                  ) : (
+                    <>
+                      Согласен на публикацию отзыва: имя будет видно всем, email не публикуется и
+                      нужен только для связи по отзыву (
+                      <Link to="/page/privacy" target="_blank" className="text-foreground border-b border-foreground/30 hover:border-foreground transition-colors">Политика</Link>
+                      ).
+                    </>
+                  )}
+                </span>
+              </label>
+              <p className="text-xs text-muted-foreground italic">
+                {lang === "en"
+                  ? "Guest reviews require admin approval before being published."
+                  : "Гостевые отзывы публикуются после модерации."}
+              </p>
+            </>
           )}
 
           <button
             onClick={submit}
-            disabled={submitting}
+            disabled={submitting || (!user && !guestConsent)}
             className="inline-flex items-center gap-2 bg-foreground text-background rounded-full px-6 py-2.5 text-[11px] tracking-luxe uppercase hover:bg-accent transition-colors disabled:opacity-60"
           >
             {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}

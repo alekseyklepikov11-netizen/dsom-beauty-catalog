@@ -64,14 +64,14 @@ const CheckoutInner = () => {
                     <span className="text-muted-foreground shrink-0">{en ? "Signed in as" : "Вы вошли как"}</span>
                     <span className="font-medium truncate">{authedEmail}</span>
                   </div>
-                  <input value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} placeholder={en ? "Recipient name" : "Имя получателя"} className="w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
-                  <input value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} placeholder={en ? "Phone" : "Телефон"} inputMode="tel" className="w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
+                  <input value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} placeholder={en ? "Recipient name" : "Имя получателя"} className="ym-disable-keys w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
+                  <input value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} placeholder={en ? "Phone" : "Телефон"} inputMode="tel" className="ym-disable-keys w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
                 </div>
               ) : (
                 <div className="space-y-3 max-w-md">
-                  <input value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} placeholder={en ? "Name" : "Имя"} className="w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
-                  <input value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} placeholder={en ? "Phone" : "Телефон"} inputMode="tel" className="w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
-                  <input value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} placeholder="Email" inputMode="email" className="w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
+                  <input value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} placeholder={en ? "Name" : "Имя"} className="ym-disable-keys w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
+                  <input value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} placeholder={en ? "Phone" : "Телефон"} inputMode="tel" className="ym-disable-keys w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
+                  <input value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} placeholder="Email" inputMode="email" className="ym-disable-keys w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
                   <p className="text-xs text-muted-foreground pt-1">
                     {en ? "Already have an account? " : "Уже есть аккаунт? "}
                     <Link to="/auth" className="text-accent hover:underline">{en ? "Sign in" : "Войти"}</Link>
@@ -94,8 +94,26 @@ const CheckoutInner = () => {
 
             <section>
               <label className="flex items-start gap-3 text-sm text-muted-foreground max-w-md cursor-pointer">
-                <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1" />
-                <span>{en ? "I agree to the processing of personal data" : "Согласен на обработку персональных данных"}</span>
+                <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1" required />
+                <span>
+                  {en ? (
+                    <>
+                      I agree to the{" "}
+                      <Link to="/page/privacy" target="_blank" className="text-foreground border-b border-foreground/30 hover:border-foreground transition-colors">
+                        Personal data processing policy
+                      </Link>
+                      . Name, phone and email are used only to process and deliver the order.
+                    </>
+                  ) : (
+                    <>
+                      Я соглашаюсь с{" "}
+                      <Link to="/page/privacy" target="_blank" className="text-foreground border-b border-foreground/30 hover:border-foreground transition-colors">
+                        Политикой обработки персональных данных
+                      </Link>
+                      . Имя, телефон и email используются только для оформления и доставки заказа.
+                    </>
+                  )}
+                </span>
               </label>
             </section>
           </div>

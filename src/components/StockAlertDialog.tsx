@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { Bell, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,15 +16,26 @@ const StockAlertDialog = ({ productId, productName }: Props) => {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
+  // Согласие на разовое уведомление (152-ФЗ): чекбокс обязателен, по умолчанию пуст
+  const [consent, setConsent] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!consent) {
+      toast.error(en ? "Please confirm your consent" : "Отметьте согласие на обработку email");
+      return;
+    }
     if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
       toast.error(en ? "Invalid email" : "Неверный email");
       return;
     }
     setBusy(true);
-    const { error } = await supabase.from("stock_alerts").insert({ product_id: productId, email });
+    const { error } = await supabase.from("stock_alerts").insert({
+      product_id: productId,
+      email,
+      consent_at: new Date().toISOString(),
+      consent_source: "stock_alert_dialog",
+    });
     setBusy(false);
     if (error) {
       if (error.code === "23505") {
@@ -70,12 +82,38 @@ const StockAlertDialog = ({ productId, productName }: Props) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="email@example.com"
-                className="w-full border border-border bg-background px-4 py-3 text-sm focus:border-foreground outline-none"
+                className="ym-disable-keys w-full border border-border bg-background px-4 py-3 text-sm focus:border-foreground outline-none"
                 autoFocus
               />
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-border accent-foreground shrink-0"
+                  required
+                />
+                <span className="text-xs text-muted-foreground leading-relaxed">
+                  {en ? (
+                    <>
+                      Send me one email when the product is back. The email is used only for this
+                      notification and then deleted (
+                      <Link to="/page/privacy" target="_blank" className="text-foreground border-b border-foreground/30 hover:border-foreground transition-colors">Privacy policy</Link>
+                      ).
+                    </>
+                  ) : (
+                    <>
+                      Пришлите мне одно письмо, когда товар появится. Email используется только для
+                      этого уведомления и потом удаляется (
+                      <Link to="/page/privacy" target="_blank" className="text-foreground border-b border-foreground/30 hover:border-foreground transition-colors">Политика</Link>
+                      ).
+                    </>
+                  )}
+                </span>
+              </label>
               <button
                 type="submit"
-                disabled={busy}
+                disabled={busy || !consent}
                 className="w-full bg-foreground text-background py-3.5 text-[11px] tracking-luxe uppercase hover:opacity-90 disabled:opacity-50"
               >
                 {busy ? "…" : en ? "Subscribe" : "Подписаться"}

@@ -1,3 +1,10 @@
+// ⚠️ СТАТУС 17.08.2026: функция НЕАКТИВНА на self-hosted стеке (new.dsom.ru).
+// GOTRUE_HOOK_SEND_EMAIL_ENABLED выключен — auth-письма (подтверждение email,
+// сброс пароля) GoTrue отправляет САМ через GOTRUE_SMTP_* = smtp.beget.com,
+// noreply@dsom.ru (шаблоны MAILER_TEMPLATES_* с dsom.ru/email-templates/).
+// Т.е. auth-письма УЖЕ идут через российский SMTP — Lovable в этом пути нет.
+// Код ниже — приёмник Lovable-вебхука, оставлен как есть (не вызывается);
+// при включении send-email hook его нужно переписать под standardwebhooks.
 import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { parseEmailWebhookPayload } from 'npm:@lovable.dev/email-js'
