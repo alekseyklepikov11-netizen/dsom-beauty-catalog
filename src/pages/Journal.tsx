@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 
 // Список статей журнала. Новые статьи добавлять сюда (плюс саму страницу /page/<slug>).
-const ARTICLE_SLUGS = ["rossiyskie-analogi-koreyskih-syvorotok", "pdrn", "retinol", "vitamin-c", "lamellar", "microneedles", "retinol-i-vitamin-c"];
+const ARTICLE_SLUGS = ["kak-chitat-sostav-kosmetiki-inci", "rossiyskie-analogi-koreyskih-syvorotok", "pdrn", "retinol", "vitamin-c", "lamellar", "microneedles", "retinol-i-vitamin-c"];
 
 interface ArticleLite {
   slug: string;
