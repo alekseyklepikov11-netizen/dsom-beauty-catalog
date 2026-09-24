@@ -10,7 +10,9 @@ const NotFound = () => {
 
   return (
     <main className="min-h-screen bg-background flex flex-col">
-      <SEO title={lang === "en" ? "Page not found" : "Страница не найдена"} />
+      {/* noindex: /page/<slug> и /product/<slug> nginx пропускает всегда (200), поэтому несуществующий slug
+          закрываем от индексации здесь. Для прочих неизвестных адресов nginx сам отдаёт 404. */}
+      <SEO title={lang === "en" ? "Page not found" : "Страница не найдена"} noindex />
       <Header />
 
       <section className="flex-1 grid place-items-center container py-24">

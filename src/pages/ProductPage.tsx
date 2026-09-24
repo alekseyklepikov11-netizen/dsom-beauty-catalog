@@ -19,6 +19,7 @@ import { LAUNCH_CONFIG, currentPhase, isCartEnabled } from "@/lib/launchConfig";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import { track } from "@/lib/analytics";
 import { addRecentlyViewed } from "@/lib/recentlyViewed";
+import NotFound from "./NotFound";
 
 // FAQ блок — короткий, общий для всех 4 продуктов DSOM
 const PRODUCT_FAQS_RU = [
@@ -65,12 +66,14 @@ const ProductPage = () => {
   const [tab, setTab] = useState<"description" | "ingredients" | "how_to_use">("description");
   const [brandName, setBrandName] = useState<string | null>(null);
   const [quickSlug, setQuickSlug] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     (async () => {
       if (!slug) return;
       // Reset state when navigating to a different product to avoid stale images/links
       setProduct(null);
+      setNotFound(false);
       setImages([]);
       setLinks([]);
       setStores([]);
@@ -100,7 +103,11 @@ const ProductPage = () => {
 
       // Fallback: прежний supabase-путь (нет JSON или товара нет в нём — напр. скрытый)
       const { data: p } = await supabase.from("products").select("*").eq("slug", slug).maybeSingle();
-      if (!p) return;
+      if (!p) {
+        // Товара нет ни в JSON, ни в базе — страница «не найдено» с noindex (раньше висело «…» бесконечно).
+        setNotFound(true);
+        return;
+      }
       setProduct(p as Product);
 
       // Track product view + recently viewed (fire-and-forget)
@@ -122,6 +129,8 @@ const ProductPage = () => {
       if (brand.data) setBrandName((i18n.language === "en" && (brand.data as any).name_en) || (brand.data as any).name);
     })();
   }, [slug, i18n.language]);
+
+  if (notFound) return <NotFound />;
 
   if (!product) {
     return (
