@@ -153,7 +153,7 @@ export function HeroBanner(props: HeroBannerProps) {
 
   return (
     <section
-      className={`relative ${HEIGHT_CLASSES[variant]} flex overflow-hidden bg-[#0a0a0a] ${posClass} ${props.className || ""}`}
+      className={`relative ${HEIGHT_CLASSES[variant]} flex overflow-hidden bg-[#0a0a0a] ${posClass} ${variant === "fullscreen" ? "max-md:pt-[84px]" : ""} max-md:!flex-col max-md:!items-stretch max-md:!justify-start max-md:!h-auto max-md:!min-h-0 max-md:!max-h-none ${props.className || ""}`}
     >
       {/* Background media: video для fullscreen, image для section */}
       {variant === "fullscreen" ? (
@@ -166,7 +166,7 @@ export function HeroBanner(props: HeroBannerProps) {
             preload="auto"
             poster={banner?.image_url || undefined}
             style={{ objectPosition: focalPoint }}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover max-md:!relative max-md:!inset-auto max-md:!h-auto max-md:max-h-[64vh] max-md:!object-top max-md:[mask-image:linear-gradient(to_bottom,black_76%,transparent)]"
           >
             <source src={videoSrc} type="video/mp4" />
           </video>
@@ -179,7 +179,7 @@ export function HeroBanner(props: HeroBannerProps) {
             loading="eager"
             fetchPriority="high"
             style={{ objectPosition: focalPoint }}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover max-md:!relative max-md:!inset-auto max-md:!h-auto max-md:max-h-[64vh] max-md:!object-top max-md:[mask-image:linear-gradient(to_bottom,black_76%,transparent)]"
           />
         ) : null
       ) : props.introVideo ? (
@@ -193,16 +193,16 @@ export function HeroBanner(props: HeroBannerProps) {
           loading="eager"
           fetchPriority="high"
           style={{ objectPosition: focalPoint }}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover max-md:!relative max-md:!inset-auto max-md:!h-auto max-md:max-h-[64vh] max-md:!object-top max-md:[mask-image:linear-gradient(to_bottom,black_76%,transparent)]"
         />
       ) : null}
 
       {/* Виньетка-градиент под зону текста */}
-      <div className={`absolute inset-0 ${gradientClass} pointer-events-none`} />
+      <div className={`absolute inset-0 ${gradientClass} pointer-events-none max-md:hidden`} />
 
       {/* Text container — позиционирован через POS_CLASSES на parent flex */}
       <div
-        className={`relative px-6 md:px-12 lg:px-20 ${variant === "fullscreen" ? "pt-32 pb-20" : "py-12 md:py-16 lg:py-20"} max-w-2xl lg:max-w-3xl w-full animate-fade-up`}
+        className={`relative px-6 md:px-12 lg:px-20 ${variant === "fullscreen" ? "pt-32 pb-20" : "py-12 md:py-16 lg:py-20"} max-md:!pt-3 max-md:!pb-10 ${variant === "section" ? "max-w-2xl md:max-w-[46%] lg:max-w-[42%] xl:max-w-[38%]" : "max-w-2xl lg:max-w-3xl"} w-full animate-fade-up`}
       >
         {props.eyebrow && (
           <p className="font-barlow font-medium text-[12px] tracking-[0.3em] uppercase text-white/80 mb-8">
@@ -210,7 +210,7 @@ export function HeroBanner(props: HeroBannerProps) {
           </p>
         )}
 
-        <TitleRender title={title} variant={variant} />
+        <TitleRender title={title} variant={variant} compact={variant === "section"} />
 
         {subtitle && (
           <p
@@ -229,7 +229,7 @@ export function HeroBanner(props: HeroBannerProps) {
 
       {/* Scroll cue (только для fullscreen) */}
       {props.showScrollCue && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 font-barlow text-[10px] tracking-[0.3em] uppercase text-white/60">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 font-barlow text-[10px] tracking-[0.3em] uppercase text-white/60 max-md:hidden">
           {props.scrollCueLabel || "Scroll"} ↓
         </div>
       )}
