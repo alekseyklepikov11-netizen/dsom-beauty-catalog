@@ -24,19 +24,19 @@ import NotFound from "./NotFound";
 // FAQ блок — короткий, общий для всех 4 продуктов DSOM
 const PRODUCT_FAQS_RU = [
   { q: "Когда стартуют продажи?", a: `Старт — ${LAUNCH_CONFIG.launchLabelRu}, эксклюзивно на Ozon. Подпишитесь на промокод выше — напомним за день до старта.` },
-  { q: "Где производится?", a: "В России, по нашим спецификациям. Отвечаем за продукцию в полной мере, разрешительная документация — в открытом доступе. Реквизиты — в публичной оферте на dsom.ru/page/oferta." },
+  { q: "Где производится?", a: "В России, по нашим спецификациям. Продукция прошла лабораторные испытания и обязательное подтверждение соответствия — отвечаем за неё в полной мере. Реквизиты компании и документы — на странице dsom.ru/page/documents." },
   { q: "Есть ли отдушка?", a: "Да, в составе есть лёгкая отдушка. Мы не делаем «100% без отдушек» из принципа честной коммуникации." },
   { q: "Можно ли использовать беременным и кормящим?", a: "При беременности и грудном вскармливании RENEW (ретинола пальмитат) не применять. По остальным продуктам линейки — только после консультации с врачом." },
   { q: "Подходит ли для чувствительной кожи?", a: "LIFT и HYDRO подходят для всех типов кожи. GLOW и RENEW рассчитаны на нормальную, жирную и комбинированную кожу; при чувствительной, сухой, обезвоженной коже, розацеа, куперозе и акне в острой стадии — с осторожностью. Возможна индивидуальная непереносимость." },
-  { q: "Сколько хватает одной упаковки?", a: "Зависит от продукта и частоты: GLOW и RENEW наносят 2–3 раза в неделю, LIFT и HYDRO — утром и вечером. Одной упаковки хватает надолго." },
+  { q: "Сколько хватает одной упаковки?", a: "Сыворотки — 30 мл, крем HYDRO — 50 мл. Срок зависит от продукта и частоты: GLOW и RENEW наносят 2–3 раза в неделю, LIFT и HYDRO — утром и вечером. Одной упаковки хватает надолго." },
 ];
 const PRODUCT_FAQS_EN = [
   { q: "When does it launch?", a: `Launch ${LAUNCH_CONFIG.launchLabelEn}, exclusively on Ozon. Subscribe to the promo above — we'll remind you the day before.` },
-  { q: "Where is it made?", a: "In Russia, to our specifications. We take full responsibility for our products; permit documentation is publicly available. Legal details are in the public offer at dsom.ru/page/oferta." },
+  { q: "Where is it made?", a: "In Russia, to our specifications. Our products have passed laboratory testing and mandatory conformity assessment, and we take full responsibility for them. Company details and documents are at dsom.ru/page/documents." },
   { q: "Is there fragrance?", a: "Yes, a light fragrance is added. We don't claim '100% fragrance-free' on principle." },
   { q: "Safe during pregnancy?", a: "RENEW (retinyl palmitate) — do not use during pregnancy or breastfeeding. For the rest of the line — only after consulting your doctor." },
   { q: "Sensitive skin?", a: "LIFT and HYDRO suit all skin types. GLOW and RENEW are made for normal, oily and combination skin; for sensitive, dry or dehydrated skin, rosacea, couperose or acute acne — use with caution. Individual intolerance is possible." },
-  { q: "How long does one bottle last?", a: "Depends on the product and frequency: GLOW and RENEW are applied 2–3 times a week, LIFT and HYDRO — morning and evening. One pack lasts a long time." },
+  { q: "How long does one bottle last?", a: "Serums are 30 ml, HYDRO cream is 50 ml. How long it lasts depends on the product and frequency: GLOW and RENEW are applied 2–3 times a week, LIFT and HYDRO — morning and evening. One pack lasts a long time." },
 ];
 
 interface Product {

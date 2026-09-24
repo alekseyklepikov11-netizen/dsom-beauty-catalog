@@ -180,7 +180,7 @@ const QUESTIONS: QuizQuestion[] = [
       },
       {
         value: "comfort",
-        label: { ru: "Успокоение и комфорт", en: "Soothing and comfort" },
+        label: { ru: "Восстановление и комфорт", en: "Recovery and comfort" },
         scores: { [SLUGS.LIFT]: 2, [SLUGS.HYDRO]: 2 },
       },
     ],

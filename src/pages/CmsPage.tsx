@@ -239,6 +239,13 @@ const CmsPage = () => {
           fallbackTitle={title}
           eyebrow={`— ${title}`}
           className="border-b border-border/60"
+          introVideo={slug === "about" ? {
+            mp4: "/videos/brand-intro.mp4",
+            webm: "/videos/brand-intro.webm",
+            poster: "/videos/hero-intro-poster.jpg",
+            endFrame: "/videos/brand-intro-end.webp",
+            alt: lang === "en" ? "DSOM RENEW serum" : "Сыворотка DSOM RENEW",
+          } : undefined}
         />
       )}
 

@@ -21,7 +21,7 @@ const COPY = {
     ],
     s2eyebrow: "Как мы работаем",
     s2: [
-      "Мы устанавливаем требования к каждой формуле и выбираем те, которые им соответствуют. Производим в России. Реквизиты ответственного юрлица — в публичной оферте на /page/oferta. Мы несём ответственность за каждый продукт.",
+      "Мы устанавливаем требования к каждой формуле и выбираем те, которые им соответствуют. Производим в России. Каждый продукт прошёл испытания и обязательное подтверждение соответствия требованиям безопасности. Реквизиты ответственного юрлица и разрешительные документы — на странице /page/documents. Мы несём ответственность за каждый продукт.",
       "Цена до 1990 ₽ — не потому что «эконом». Потому что нам не нужно покрывать телевизионный бюджет, флагманский салон в центре Москвы и премиум-наценку за восприятие. Нам нужно покрывать хорошее сырьё и честную формулу.",
     ],
     principlesEyebrow: "Во что это складывается",
@@ -32,7 +32,7 @@ const COPY = {
     ],
     s3eyebrow: "Линейка",
     s3:
-      "Мы начали с сывороток — с витамином C и микроиглами, с ретинола пальмитатом, с PDRN — и с ламеллярного крема. Ритуал простой: одна сыворотка, затем крем, утром — обязательно SPF. Линейка развивается: очищение, защита, специализированные форматы — по тем же стандартам. Новый продукт появляется, когда формула готова. Не раньше.",
+      "Мы начали с четырёх продуктов — сыворотки с витамином C и микроиглами, сыворотки с ретинолом (ретинола пальмитатом), сыворотки с PDRN и ламеллярного крема. Это базовый ритуал, который закрывает большинство задач. Линейка развивается: очищение, защита, специализированные форматы — по тем же стандартам. Новый продукт появляется, когда формула готова. Не раньше.",
     cta: "Смотреть линейку",
     craft: "Производим в России · по нашим спецификациям",
   },
@@ -47,7 +47,7 @@ const COPY = {
     ],
     s2eyebrow: "How we work",
     s2: [
-      "We set requirements for every formula and pick the ones that meet them. Made in Russia. The responsible legal entity's details are in the public offer at /page/oferta. We stand behind every product.",
+      "We set requirements for every formula and pick the ones that meet them. Made in Russia. Every product has been tested and has passed mandatory conformity assessment against safety requirements. The responsible legal entity's details and regulatory documents are at /page/documents. We stand behind every product.",
       "A price up to 1990 ₽ — not because it's «budget». Because we don't need to cover a TV budget, a flagship salon in central Moscow, and a premium markup for perception. We need to cover good raw materials and an honest formula.",
     ],
     principlesEyebrow: "What it adds up to",
@@ -58,7 +58,7 @@ const COPY = {
     ],
     s3eyebrow: "The line",
     s3:
-      "We started with serums — vitamin C with microneedles, retinyl palmitate, PDRN — and a lamellar cream. The ritual is simple: one serum, then the cream, and SPF is a must in the morning. The line grows — cleansing, protection, specialised formats — to the same standards. A new product appears when the formula is ready. Not before.",
+      "We started with four products — a vitamin C serum with microneedles, a retinol (retinyl palmitate) serum, a PDRN serum and a lamellar cream. A base ritual that covers most needs. The line grows — cleansing, protection, specialised formats — to the same standards. A new product appears when the formula is ready. Not before.",
     cta: "See the line",
     craft: "Made in Russia · to our specifications",
   },

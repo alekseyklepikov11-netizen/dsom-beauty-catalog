@@ -8,7 +8,7 @@
 // Это устраняет FOOC «Активная косметика» при загрузке /.
 // ============================================================
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { BannerState } from "@/hooks/useBanner";
 import {
   POS_CLASSES,
@@ -36,6 +36,9 @@ export interface HeroBannerProps {
   /** Scroll cue ↓ в нижней части (для fullscreen). */
   showScrollCue?: boolean;
   scrollCueLabel?: string;
+  /** Видео для section-варианта: проигрывается один раз без звука и остаётся на последнем кадре.
+   *  При prefers-reduced-motion сразу показывается последний кадр. Приоритет над картинкой баннера. */
+  introVideo?: { mp4: string; webm?: string; poster: string; endFrame: string; alt: string };
   /** Дополнительный класс на корневой section (для border-b и т.п.). */
   className?: string;
 }
@@ -44,6 +47,32 @@ const HEIGHT_CLASSES: Record<HeroBannerProps["variant"], string> = {
   fullscreen: "min-h-[100vh]",
   section: "h-[55vh] min-h-[420px] max-h-[680px]",
 };
+
+/** Видео, которое проигрывается один раз и останавливается на последнем кадре (браузер сам держит его на экране). */
+function PlayOnceVideo({ mp4, webm, poster, endFrame, alt }: NonNullable<HeroBannerProps["introVideo"]>) {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    setReduced(!!mq?.matches);
+  }, []);
+  if (reduced) {
+    return <img src={endFrame} alt={alt} loading="eager" className="absolute inset-0 w-full h-full object-cover" />;
+  }
+  return (
+    <video
+      autoPlay
+      muted
+      playsInline
+      preload="auto"
+      poster={poster}
+      aria-label={alt}
+      className="absolute inset-0 w-full h-full object-cover"
+    >
+      {webm && <source src={webm} type="video/webm" />}
+      <source src={mp4} type="video/mp4" />
+    </video>
+  );
+}
 
 export function HeroBanner(props: HeroBannerProps) {
   const { state, variant } = props;
@@ -122,6 +151,8 @@ export function HeroBanner(props: HeroBannerProps) {
             className="absolute inset-0 w-full h-full object-cover"
           />
         ) : null
+      ) : props.introVideo ? (
+        <PlayOnceVideo {...props.introVideo} />
       ) : banner?.image_url ? (
         <img
           src={banner.image_url}
@@ -140,7 +171,7 @@ export function HeroBanner(props: HeroBannerProps) {
 
       {/* Text container — позиционирован через POS_CLASSES на parent flex */}
       <div
-        className={`relative px-6 md:px-12 lg:px-20 ${variant === "fullscreen" ? "pt-32 pb-20" : "py-12 md:py-16 lg:py-20"} max-w-2xl lg:max-w-3xl w-full animate-fade-up`}
+        className={`relative px-6 md:px-12 lg:px-20 ${variant === "fullscreen" ? "pt-32 pb-20" : "py-12 md:py-16 lg:py-20"} ${props.introVideo ? "max-w-xl md:max-w-[44%] lg:max-w-[40%] xl:max-w-[38%]" : "max-w-2xl lg:max-w-3xl"} w-full animate-fade-up`}
       >
         {props.eyebrow && (
           <p className="font-barlow font-medium text-[12px] tracking-[0.3em] uppercase text-white/80 mb-8">
@@ -148,7 +179,7 @@ export function HeroBanner(props: HeroBannerProps) {
           </p>
         )}
 
-        <TitleRender title={title} variant={variant} />
+        <TitleRender title={title} variant={variant} compact={!!props.introVideo} />
 
         {subtitle && (
           <p
@@ -191,6 +222,8 @@ function buildSrcset(srcset: Record<string, string>): string | undefined {
 interface TitleProps {
   title: string;
   variant: "fullscreen" | "section";
+  /** Меньший кегль, когда под текстом видео с продуктом по центру кадра. */
+  compact?: boolean;
 }
 
 /**
@@ -198,7 +231,7 @@ interface TitleProps {
  * - Если title содержит «|», левая часть — sans-serif, правая — italic serif (2 строки)
  * - Иначе — одна строка с font зависящим от variant
  */
-function TitleRender({ title, variant }: TitleProps) {
+function TitleRender({ title, variant, compact }: TitleProps) {
   const splitIdx = title.indexOf("|");
   if (splitIdx > 0) {
     const line1 = title.slice(0, splitIdx).trim();
@@ -223,7 +256,7 @@ function TitleRender({ title, variant }: TitleProps) {
   }
   // section variant — display font (для catalog/about)
   return (
-    <h1 className="font-display text-4xl md:text-6xl lg:text-7xl leading-[1.0] text-white">
+    <h1 className={`font-display ${compact ? "text-4xl md:text-5xl xl:text-6xl" : "text-4xl md:text-6xl lg:text-7xl"} leading-[1.0] text-white`}>
       {title}
     </h1>
   );

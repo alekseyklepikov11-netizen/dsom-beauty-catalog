@@ -4,8 +4,8 @@ import { initReactI18next } from "react-i18next";
 const resources = {
   ru: {
     translation: {
-      nav: { catalog: "Каталог", about: "О бренде", stores: "Где купить", contact: "Контакты", shop: "К линейке", quiz: "Подбор ухода" },
-      hero: { cta: "Получить промокод 5%", eyebrow: "DSOM · Активная косметика", title1: "Активная косметика", title2: "с прозрачным составом" },
+      nav: { catalog: "Каталог", about: "О бренде", stores: "Где купить", contact: "Контакты", shop: "В магазин", quiz: "Подбор ухода" },
+      hero: { cta: "Получить промокод 5%", eyebrow: "DSOM · Лаборатория ухода", title1: "Активная косметика", title2: "с прозрачным составом" },
       sections: { bestsellers: "Линейка", brands: "Бренды", philosophy: "Философия", all: "Весь каталог", new: "Новинки" },
       catalog: {
         title: "Каталог",
@@ -25,7 +25,7 @@ const resources = {
         ingredients: "Состав",
         howToUse: "Как применять",
         description: "Описание",
-        marketplaces: "Маркетплейсы",
+        marketplaces: "Купить на маркетплейсах",
         offline: "В офлайн-магазинах",
         openFull: "Полная страница товара",
         back: "Назад в каталог",
@@ -37,8 +37,8 @@ const resources = {
   },
   en: {
     translation: {
-      nav: { catalog: "Catalog", about: "About", stores: "Where to buy", contact: "Contact", shop: "View the line", quiz: "Find your routine" },
-      hero: { cta: "Get 5% launch promo", eyebrow: "DSOM · Active skincare", title1: "Active cosmetics", title2: "with transparent formulas" },
+      nav: { catalog: "Catalog", about: "About", stores: "Where to buy", contact: "Contact", shop: "Shop", quiz: "Find your routine" },
+      hero: { cta: "Get 5% launch promo", eyebrow: "DSOM · Skincare laboratory", title1: "Active cosmetics", title2: "with transparent formulas" },
       sections: { bestsellers: "The line", brands: "Brands", philosophy: "Philosophy", all: "Full catalog", new: "New in" },
       catalog: {
         title: "Catalog",
@@ -58,7 +58,7 @@ const resources = {
         ingredients: "Ingredients",
         howToUse: "How to use",
         description: "Description",
-        marketplaces: "Marketplaces",
+        marketplaces: "Buy on marketplaces",
         offline: "In offline stores",
         openFull: "Open full product page",
         back: "Back to catalog",

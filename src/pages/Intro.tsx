@@ -11,11 +11,12 @@
  * Архитектура — Apple Vision Pro паттерн:
  *   - hero-section высотой 600vh даёт scroll range
  *   - inside: sticky video + sticky text overlays
- *   - video перекодирован с keyint=1 (каждый кадр — keyframe) для
- *     frame-accurate scroll-scrubbing
+ *   - video перекодирован с keyint=3 (ключевой кадр каждые 3 кадра) — почти
+ *     покадровый scroll-scrubbing при весе 3,9 МБ вместо 11 МБ (keyint=1)
  *   - бургер-меню всегда доступно для skip в нужный раздел сайта
  *
- * Видео: public/videos/hero-intro.mp4 (10.85 MB, 1344×768, 15 сек, H.264).
+ * Видео: public/videos/brand-intro-scrub.mp4 (3,9 MB, 1280×720, 15 сек, H.264, CRF 28, keyint 3).
+ * Та же сцена на странице «О бренде» — brand-intro.mp4/webm (проигрывается один раз).
  * Шрифты: Fraunces / Cormorant Garamond / Cormorant SC — подгружены в index.html.
  */
 import { useEffect, useRef } from "react";
@@ -354,7 +355,7 @@ const Intro = () => {
           <video
             ref={videoRef}
             className="intro-hero-video"
-            src="/videos/hero-intro.mp4"
+            src="/videos/brand-intro-scrub.mp4"
             poster="/videos/hero-intro-poster.jpg"
             muted
             playsInline
@@ -425,7 +426,7 @@ const Intro = () => {
               <p className="subtitle">
                 У большинства брендов цена — это маркетинговая надбавка.
                 <br />
-                Наша цена — за сырьё и формулу.
+                Мы перестали этому подыгрывать.
               </p>
             </div>
 
@@ -437,7 +438,7 @@ const Intro = () => {
               data-mark="06"
             >
               <div className="finale-left">
-                <span className="small-caps">— DSOM</span>
+                <span className="small-caps">— DSOM Renew</span>
                 <h2 className="statement">
                   Активная косметика
                   <br />
