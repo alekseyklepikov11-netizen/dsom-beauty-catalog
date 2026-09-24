@@ -120,6 +120,37 @@ export function HeroBanner(props: HeroBannerProps) {
   // используют те же ключи (но содержат mobile-композиции внутри).
   const srcset = banner?.image_srcset ? buildSrcset(banner.image_srcset) : undefined;
 
+  // Баннер с видео (страница «О бренде»): продукт стоит в центре кадра, поэтому текст не кладём поверх него
+  // и не обрезаем кадр. Телефон — видео сверху, текст под ним. Компьютер — текст колонкой слева,
+  // видео справа в родных пропорциях 16:9 (флакон целиком, без обрезки сверху и снизу).
+  if (props.introVideo && variant === "section") {
+    return (
+      <section
+        className={`relative bg-[#0a0a0a] overflow-hidden md:grid md:grid-cols-[38%_62%] md:items-center ${props.className || ""}`}
+      >
+        <div className="relative h-[58vh] min-h-[340px] max-h-[560px] md:order-2 md:h-auto md:min-h-0 md:max-h-none md:aspect-video">
+          <PlayOnceVideo {...props.introVideo} />
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#0a0a0a] to-transparent md:hidden pointer-events-none" />
+          <div className="hidden md:block absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-[#0a0a0a] to-transparent pointer-events-none" />
+        </div>
+        <div className="relative md:order-1 px-6 pt-2 pb-12 md:px-10 lg:px-16 xl:px-20 md:py-16 w-full animate-fade-up">
+          {props.eyebrow && (
+            <p className="font-barlow font-medium text-[12px] tracking-[0.3em] uppercase text-white/80 mb-6 md:mb-8">
+              {props.eyebrow}
+            </p>
+          )}
+          <TitleRender title={title} variant={variant} compact />
+          {subtitle && (
+            <p className="mt-5 md:mt-8 font-barlow font-medium text-sm md:text-base lg:text-lg text-white/85 leading-relaxed">
+              {subtitle}
+            </p>
+          )}
+          {props.cta && <div className="mt-8 md:mt-10 flex flex-wrap items-center gap-3">{props.cta}</div>}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section
       className={`relative ${HEIGHT_CLASSES[variant]} flex overflow-hidden bg-[#0a0a0a] ${posClass} ${props.className || ""}`}
@@ -171,7 +202,7 @@ export function HeroBanner(props: HeroBannerProps) {
 
       {/* Text container — позиционирован через POS_CLASSES на parent flex */}
       <div
-        className={`relative px-6 md:px-12 lg:px-20 ${variant === "fullscreen" ? "pt-32 pb-20" : "py-12 md:py-16 lg:py-20"} ${props.introVideo ? "max-w-xl md:max-w-[44%] lg:max-w-[40%] xl:max-w-[38%]" : "max-w-2xl lg:max-w-3xl"} w-full animate-fade-up`}
+        className={`relative px-6 md:px-12 lg:px-20 ${variant === "fullscreen" ? "pt-32 pb-20" : "py-12 md:py-16 lg:py-20"} max-w-2xl lg:max-w-3xl w-full animate-fade-up`}
       >
         {props.eyebrow && (
           <p className="font-barlow font-medium text-[12px] tracking-[0.3em] uppercase text-white/80 mb-8">
@@ -179,7 +210,7 @@ export function HeroBanner(props: HeroBannerProps) {
           </p>
         )}
 
-        <TitleRender title={title} variant={variant} compact={!!props.introVideo} />
+        <TitleRender title={title} variant={variant} />
 
         {subtitle && (
           <p
