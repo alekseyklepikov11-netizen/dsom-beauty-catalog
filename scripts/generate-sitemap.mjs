@@ -24,6 +24,7 @@ const OUT = path.resolve("public/sitemap.xml");
 const STATIC_PAGES = [
   { loc: "/", priority: 1.0, change: "weekly" },
   { loc: "/catalog", priority: 0.9, change: "weekly" },
+  { loc: "/journal", priority: 0.8, change: "weekly" },
   { loc: "/quiz", priority: 0.7, change: "monthly" },
 ];
 
