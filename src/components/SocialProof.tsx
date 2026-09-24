@@ -105,7 +105,7 @@ const SocialProof = () => {
                 </p>
                 <div className="mt-6 pt-6 border-t border-border/60">
                   <p className="text-[11px] tracking-luxe uppercase text-foreground">
-                    {r.guest_name || (lang === "en" ? "Verified buyer" : "Проверенный покупатель")}
+                    {r.guest_name || (lang === "en" ? "Reviewer" : "Автор отзыва")}
                   </p>
                   {r.product && (
                     <Link

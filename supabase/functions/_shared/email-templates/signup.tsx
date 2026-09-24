@@ -110,8 +110,7 @@ export const SignupEmail = ({
               <Text style={pillarNumber}>03</Text>
               <Text style={pillarTitle}>Результат</Text>
               <Text style={pillarText}>
-                Здоровое сияние, ровный тон, ощущение комфорта.
-                Видимо уже через 2 недели.
+                Эффект накопительный, при регулярном применении.
               </Text>
             </Column>
           </Row>

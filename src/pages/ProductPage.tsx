@@ -24,19 +24,19 @@ import NotFound from "./NotFound";
 // FAQ блок — короткий, общий для всех 4 продуктов DSOM
 const PRODUCT_FAQS_RU = [
   { q: "Когда стартуют продажи?", a: `Старт — ${LAUNCH_CONFIG.launchLabelRu}, эксклюзивно на Ozon. Подпишитесь на промокод выше — напомним за день до старта.` },
-  { q: "Где производится?", a: "В России, по нашим спецификациям. Все продукты сертифицированы; реквизиты юр.лица и регистрационные документы — в публичной оферте на dsom.ru/page/oferta." },
+  { q: "Где производится?", a: "В России, по нашим спецификациям. Отвечаем за продукцию в полной мере, разрешительная документация — в открытом доступе. Реквизиты — в публичной оферте на dsom.ru/page/oferta." },
   { q: "Есть ли отдушка?", a: "Да, в составе есть лёгкая отдушка. Мы не делаем «100% без отдушек» из принципа честной коммуникации." },
-  { q: "Можно ли использовать беременным и кормящим?", a: "Ретинол (P2 Renew) — нет. Vitamin C, PDRN, ламеллярный крем — возможно, но рекомендуем согласовать с врачом." },
-  { q: "Подходит ли для чувствительной кожи?", a: "P3 Lift и P4 Hydro — да. P1 Glow и P2 Renew — начинать постепенно (1-2 раза в неделю)." },
-  { q: "Сколько хватает одной упаковки?", a: "30 мл сыворотки — на 2-3 месяца при ежедневном использовании. 50 мл крема — на 1.5-2 месяца." },
+  { q: "Можно ли использовать беременным и кормящим?", a: "При беременности и грудном вскармливании RENEW (ретинола пальмитат) не применять. По остальным продуктам линейки — только после консультации с врачом." },
+  { q: "Подходит ли для чувствительной кожи?", a: "LIFT и HYDRO подходят для всех типов кожи. GLOW и RENEW рассчитаны на нормальную, жирную и комбинированную кожу; при чувствительной, сухой, обезвоженной коже, розацеа, куперозе и акне в острой стадии — с осторожностью. Возможна индивидуальная непереносимость." },
+  { q: "Сколько хватает одной упаковки?", a: "Зависит от продукта и частоты: GLOW и RENEW наносят 2–3 раза в неделю, LIFT и HYDRO — утром и вечером. Одной упаковки хватает надолго." },
 ];
 const PRODUCT_FAQS_EN = [
   { q: "When does it launch?", a: `Launch ${LAUNCH_CONFIG.launchLabelEn}, exclusively on Ozon. Subscribe to the promo above — we'll remind you the day before.` },
-  { q: "Where is it made?", a: "In Russia, to our specifications. All products are certified; legal entity details and registration documents are in the public offer at dsom.ru/page/oferta." },
+  { q: "Where is it made?", a: "In Russia, to our specifications. We take full responsibility for our products; permit documentation is publicly available. Legal details are in the public offer at dsom.ru/page/oferta." },
   { q: "Is there fragrance?", a: "Yes, a light fragrance is added. We don't claim '100% fragrance-free' on principle." },
-  { q: "Safe during pregnancy?", a: "Retinol (P2 Renew) — no. Vitamin C, PDRN, lamellar cream — possibly, but consult your doctor." },
-  { q: "Sensitive skin?", a: "P3 Lift and P4 Hydro — yes. P1 Glow and P2 Renew — start 1-2 times per week." },
-  { q: "How long does one bottle last?", a: "30 ml serum — 2-3 months at daily use. 50 ml cream — 1.5-2 months." },
+  { q: "Safe during pregnancy?", a: "RENEW (retinyl palmitate) — do not use during pregnancy or breastfeeding. For the rest of the line — only after consulting your doctor." },
+  { q: "Sensitive skin?", a: "LIFT and HYDRO suit all skin types. GLOW and RENEW are made for normal, oily and combination skin; for sensitive, dry or dehydrated skin, rosacea, couperose or acute acne — use with caution. Individual intolerance is possible." },
+  { q: "How long does one bottle last?", a: "Depends on the product and frequency: GLOW and RENEW are applied 2–3 times a week, LIFT and HYDRO — morning and evening. One pack lasts a long time." },
 ];
 
 interface Product {
@@ -374,8 +374,8 @@ const ProductPage = () => {
                   <AddToCartButton product={product} variant="full" />
                   <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
                     {lang === "en"
-                      ? "Checkout & payment open at launch, summer 2026. For now — build your set and grab a promo code."
-                      : "Оформление и оплата — на старте, летом 2026. Сейчас можно собрать набор и забрать промокод."}
+                      ? `Checkout & payment open at launch, ${LAUNCH_CONFIG.launchWhenEn}. For now — build your set and grab a promo code.`
+                      : `Оформление и оплата — на старте, ${LAUNCH_CONFIG.launchWhenRu}. Сейчас можно собрать набор и забрать промокод.`}
                   </p>
                 </div>
               )}
@@ -383,8 +383,8 @@ const ProductPage = () => {
               {/* Статус каналов покупки — честно */}
               <p className="max-w-md mt-5 text-[10px] tracking-[0.16em] uppercase text-muted-foreground/80">
                 {lang === "en"
-                  ? "Cart — active · Ozon — summer 2026 · Delivery — in setup"
-                  : "Корзина — активна · Ozon — лето 2026 · Доставка — настраиваем"}
+                  ? `Cart — active · Ozon — ${LAUNCH_CONFIG.launchLabelEn} · Delivery — in setup`
+                  : `Корзина — активна · Ozon — ${LAUNCH_CONFIG.launchLabelRu} · Доставка — настраиваем`}
               </p>
             </div>
 

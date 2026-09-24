@@ -21,6 +21,7 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import "./Intro.css";
+import { LAUNCH_CONFIG } from "@/lib/launchConfig";
 
 const Intro = () => {
   const cursorCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -342,8 +343,8 @@ const Intro = () => {
 
         <div className="intro-menu-footer">
           <span>hello@dsom.ru</span>
-          <span>@dsom_official</span>
-          <span>Старт продаж — лето 2026</span>
+          <span>Telegram · @dsom_official</span>
+          <span>Старт продаж — {LAUNCH_CONFIG.launchLabelRu}</span>
         </div>
       </nav>
 
@@ -369,7 +370,7 @@ const Intro = () => {
               <p className="subtitle">
                 Активная косметика без маркетинговой наценки.
                 <br />
-                Старт продаж — лето 2026.
+                Старт продаж — {LAUNCH_CONFIG.launchLabelRu}.
               </p>
             </div>
 
@@ -377,12 +378,12 @@ const Intro = () => {
             <div className="intro-overlay" data-from="0.18" data-to="0.34" data-mark="02">
               <span className="small-caps">— P3 Lift</span>
               <h2 className="huge-number">
-                0,1<span className="unit">%</span>
+                Упру&shy;гость
               </h2>
               <p className="lede">
                 PDRN — фрагменты ДНК лосося. Молекула регенерации.
                 <br />
-                Та же концентрация, что в лабораторных премиум-сыворотках.
+                0,1% — это доля чистого компонента. Многие бренды указывают процент водного раствора.
               </p>
             </div>
 
@@ -390,12 +391,12 @@ const Intro = () => {
             <div className="intro-overlay" data-from="0.34" data-to="0.50" data-mark="03">
               <span className="small-caps">— P2 Renew</span>
               <h2 className="huge-number">
-                0,3<span className="unit">%</span>
+                Обнов&shy;ление
               </h2>
               <p className="lede">
-                Ретинол в осмыслённой дозировке.
+                Ретинола пальмитат — мягкая форма ретиноида.
                 <br />
-                Меньше — не работает. Больше — раздражение.
+                Работает в комплексе с ниацинамидом и церамидами.
               </p>
             </div>
 
@@ -403,12 +404,12 @@ const Intro = () => {
             <div className="intro-overlay" data-from="0.50" data-to="0.68" data-mark="04">
               <span className="small-caps">— P1 Glow</span>
               <h2 className="huge-number">
-                2000<span className="unit"> ppm</span>
+                Сияние
               </h2>
               <p className="lede">
-                Микроиглы спикул морских губок.
+                Микроиглы из спикул пресноводной губки — вместе с витамином C в стабильной форме.
                 <br />
-                Кожа не царапается. Кожа открывается.
+                Они создают микроканалы в роговом слое — активам проще пройти глубже.
               </p>
             </div>
 
@@ -424,7 +425,7 @@ const Intro = () => {
               <p className="subtitle">
                 У большинства брендов цена — это маркетинговая надбавка.
                 <br />
-                Мы перестали этому подыгрывать.
+                Наша цена — за сырьё и формулу.
               </p>
             </div>
 
@@ -436,7 +437,7 @@ const Intro = () => {
               data-mark="06"
             >
               <div className="finale-left">
-                <span className="small-caps">— DSOM Renew</span>
+                <span className="small-caps">— DSOM</span>
                 <h2 className="statement">
                   Активная косметика
                   <br />
@@ -455,7 +456,7 @@ const Intro = () => {
                   <span className="arrow" />
                 </Link>
                 <span className="intro-cta-meta">
-                  — Старт продаж · лето 2026 · Ozon
+                  — Старт продаж · {LAUNCH_CONFIG.launchLabelRu} · Ozon
                 </span>
               </div>
             </div>

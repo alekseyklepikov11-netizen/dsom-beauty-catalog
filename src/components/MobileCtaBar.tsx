@@ -42,7 +42,7 @@ const MobileCtaBar = () => {
     pathname.startsWith("/product/"); // product page already has its own CTAs
   if (hidden) return null;
 
-  const label = i18n.language === "en" ? "Shop the catalog" : "В магазин";
+  const label = i18n.language === "en" ? "View the catalog" : "В каталог";
 
   return (
     <div

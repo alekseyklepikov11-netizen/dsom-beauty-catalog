@@ -25,8 +25,8 @@ interface LaunchConfig {
 // При сдвиге даты shift-launch.py обновляет launchConfig.ts (frontend), а сюда тоже надо.
 // TODO: вынести в DB-таблицу app_settings когда понадобится третья точка истины.
 const LAUNCH_CONFIG: LaunchConfig = {
-  launch_date: "2026-07-01",
-  phase1_end: "2026-07-31",
+  launch_date: "2026-11-30",
+  phase1_end: "2026-12-31",
   launch_code: "DSOM10",
   launch_discount: 10,
   welcome_code: "DSOM5",
@@ -38,16 +38,25 @@ function currentPhase(): "launch" | "welcome" {
   return new Date().toISOString().slice(0, 10) <= LAUNCH_CONFIG.phase1_end ? "launch" : "welcome";
 }
 
+function lastDayOfNextMonth(iso: string): string {
+  const [y, m] = iso.split("-").map(Number);
+  const ny = m === 12 ? y + 1 : y;
+  const nm = m === 12 ? 1 : m + 1;
+  const last = new Date(Date.UTC(ny, nm, 0)).getUTCDate();
+  return `${ny}-${String(nm).padStart(2, "0")}-${String(last).padStart(2, "0")}`;
+}
+
 function validUntil(phase: "launch" | "welcome"): string {
-  const d = new Date();
+  const today = new Date().toISOString().slice(0, 10);
   if (phase === "launch") {
-    // Конец СЛЕДУЮЩЕГО месяца от сегодня
-    const nextMonth = d.getMonth() === 11 ? 0 : d.getMonth() + 1;
-    const year = d.getMonth() === 11 ? d.getFullYear() + 1 : d.getFullYear();
-    const lastDay = new Date(year, nextMonth + 1, 0).getDate();
-    return `${year}-${String(nextMonth + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+    // Конец СЛЕДУЮЩЕГО месяца от выдачи, но не раньше конца месяца после старта продаж:
+    // иначе код, выданный заранее, истекает до старта (так было летом 2026).
+    const fromIssue = lastDayOfNextMonth(today);
+    const fromLaunch = lastDayOfNextMonth(LAUNCH_CONFIG.launch_date);
+    return fromIssue > fromLaunch ? fromIssue : fromLaunch;
   }
   // welcome: +1 год
+  const d = new Date();
   d.setFullYear(d.getFullYear() + 1);
   return d.toISOString().slice(0, 10);
 }

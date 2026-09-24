@@ -46,7 +46,7 @@ const StockAlertDialog = ({ productId, productName }: Props) => {
       toast.error(error.message);
       return;
     }
-    toast.success(en ? "We'll notify you when it's back" : "Мы напишем, когда товар появится");
+    toast.success(en ? "We'll notify you when it's available" : "Мы напишем, когда товар появится");
     setEmail("");
     setOpen(false);
   };
@@ -72,8 +72,8 @@ const StockAlertDialog = ({ productId, productName }: Props) => {
             </h3>
             <p className="text-sm text-muted-foreground mb-6">
               {en
-                ? `We'll send a one-time email when "${productName}" is back in stock.`
-                : `Пришлём одно письмо, когда «${productName}» снова появится в наличии.`}
+                ? `We'll send a one-time email when "${productName}" becomes available.`
+                : `Пришлём одно письмо, когда «${productName}» появится в продаже.`}
             </p>
             <form onSubmit={submit} className="space-y-4">
               <input
@@ -96,7 +96,7 @@ const StockAlertDialog = ({ productId, productName }: Props) => {
                 <span className="text-xs text-muted-foreground leading-relaxed">
                   {en ? (
                     <>
-                      Send me one email when the product is back. The email is used only for this
+                      Send me one email when the product becomes available. The email is used only for this
                       notification and then deleted (
                       <Link to="/page/privacy" target="_blank" className="text-foreground border-b border-foreground/30 hover:border-foreground transition-colors">Privacy policy</Link>
                       ).

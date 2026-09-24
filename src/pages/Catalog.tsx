@@ -135,7 +135,7 @@ const Catalog = () => {
     <main className="min-h-screen bg-background">
       <SEO
         title={lang === "en" ? "Catalog" : "Каталог"}
-        description={lang === "en" ? "DSOM skincare line: serums with vitamin C, retinol and PDRN, plus a lamellar cream." : "Каталог DSOM: сыворотки с витамином С, ретинолом, PDRN и ламеллярный крем. Понятный состав, цена до 1990 ₽."}
+        description={lang === "en" ? "DSOM skincare line: serums with vitamin C, retinol (retinyl palmitate) and PDRN, plus a lamellar cream." : "Каталог DSOM: сыворотки с витамином С, ретинолом (ретинола пальмитатом), PDRN и ламеллярный крем. Понятный состав, цена до 1990 ₽."}
         jsonLd={catalogJsonLd || undefined}
       />
       <Header />
