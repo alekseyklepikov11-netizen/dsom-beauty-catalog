@@ -17,6 +17,47 @@ const DEFAULT_TRANSACTIONAL_TTL_MINUTES = 60
 // Теперь добавляем сами — страница /email-unsubscribe уже есть на сайте.
 const UNSUBSCRIBE_BASE_URL = 'https://dsom.ru/email-unsubscribe'
 
+function b64urlToBytes(s: string): Uint8Array {
+  const b64 = s.replaceAll('-', '+').replaceAll('_', '/').padEnd(Math.ceil(s.length / 4) * 4, '=')
+  const bin = atob(b64)
+  const out = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i)
+  return out
+}
+
+/**
+ * Проверка подписи HS256 секретом JWT из окружения.
+ * true — подпись верна, false — неверна или токен не HS256, null — секрета в окружении нет.
+ */
+async function verifyHs256(token: string): Promise<boolean | null> {
+  const secret = Deno.env.get('SUPABASE_JWT_SECRET') || Deno.env.get('JWT_SECRET')
+  if (!secret) {
+    console.warn('JWT secret not in env: service_role token signature not verified')
+    return null
+  }
+  const parts = token.split('.')
+  if (parts.length !== 3) return false
+  try {
+    const header = JSON.parse(new TextDecoder().decode(b64urlToBytes(parts[0])))
+    if (header?.alg !== 'HS256') return false
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify'],
+    )
+    return await crypto.subtle.verify(
+      'HMAC',
+      key,
+      b64urlToBytes(parts[2]),
+      new TextEncoder().encode(`${parts[0]}.${parts[1]}`),
+    )
+  } catch {
+    return false
+  }
+}
+
 function parseJwtClaims(token: string): Record<string, unknown> | null {
   const parts = token.split('.')
   if (parts.length < 2) {
@@ -144,7 +185,12 @@ Deno.serve(async (req) => {
   // callers can trigger queue processing.
   const token = authHeader.slice('Bearer '.length).trim()
   const claims = parseJwtClaims(token)
-  if (claims?.role !== 'service_role') {
+  // На self-hosted шлюз подпись JWT не проверяет, поэтому одной роли из payload мало:
+  // поддельный токен с role=service_role запускал бы рассылку. Принимаем точный серверный ключ
+  // или токен с верной подписью HS256 (секрет из окружения). Если секрета в окружении нет —
+  // прежнее поведение с предупреждением, чтобы не остановить отправку писем.
+  const trusted = token === supabaseServiceKey || (await verifyHs256(token))
+  if (claims?.role !== 'service_role' || trusted === false) {
     return new Response(
       JSON.stringify({ error: 'Forbidden' }),
       { status: 403, headers: { 'Content-Type': 'application/json' } }

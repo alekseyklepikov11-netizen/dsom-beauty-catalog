@@ -2,6 +2,17 @@ import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
+import {
+  PUBLIC_TEMPLATE,
+  cleanSubject,
+  isFreshSubscriber,
+  isServiceRoleCaller,
+  isValidEmail,
+  maskEmail,
+  parseEmailList,
+  resolveSupportRecipient,
+  sanitizeSupportEscalationData,
+} from './guard.ts'
 
 // Configuration baked in at scaffold time — do NOT change these manually.
 // To update, re-run the email domain setup flow.
@@ -30,9 +41,20 @@ function generateToken(): string {
     .join('')
 }
 
-// Auth note: this function uses verify_jwt = true in config.toml, so Supabase's
-// gateway validates the caller's JWT (anon or service_role) before the request
-// reaches this code. No in-function auth check is needed.
+// Auth (SEC-2, аудит 28.09.2026): на self-hosted шлюз JWT не проверяет, а anon-ключ
+// публичный, поэтому доступ проверяется здесь.
+//  - С серверным ключом (service_role в Authorization/apikey) — любой шаблон.
+//  - Без него — ТОЛЬКО 'newsletter-confirmation' и ТОЛЬКО на адрес, который есть
+//    в newsletter_subscribers и добавлен туда за последние PUBLIC_WINDOW_MINUTES минут;
+//    одно письмо на адрес (повтор не ставится в очередь).
+//  - support-escalation: получатель только из SUPPORT_ESCALATION_TO или support_channels.email.
+// В логах email маскируется, клиенту не отдаются внутренние подробности (SEC-10).
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  })
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -54,6 +76,16 @@ Deno.serve(async (req) => {
     )
   }
 
+  if (req.method !== 'POST') {
+    return json({ error: 'Method not allowed' }, 405)
+  }
+
+  const isService = isServiceRoleCaller(
+    req.headers.get('authorization'),
+    req.headers.get('apikey'),
+    supabaseServiceKey,
+  )
+
   // Parse request body
   let templateName: string
   let recipientEmail: string
@@ -70,60 +102,146 @@ Deno.serve(async (req) => {
       templateData = body.templateData
     }
   } catch {
-    return new Response(
-      JSON.stringify({ error: 'Invalid JSON in request body' }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
+    return json({ error: 'Invalid request body' }, 400)
   }
 
-  if (!templateName) {
-    return new Response(
-      JSON.stringify({ error: 'templateName is required' }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
+  if (!templateName || typeof templateName !== 'string') {
+    return json({ error: 'templateName is required' }, 400)
   }
 
-  // 1. Look up template from registry (early — needed to resolve recipient)
-  const template = TEMPLATES[templateName]
+  // 1. Look up template from registry (early — needed to resolve recipient).
+  // Список шаблонов клиенту не отдаём (SEC-10).
+  const template = Object.prototype.hasOwnProperty.call(TEMPLATES, templateName)
+    ? TEMPLATES[templateName]
+    : undefined
 
   if (!template) {
-    console.error('Template not found in registry', { templateName })
-    return new Response(
-      JSON.stringify({
-        error: `Template '${templateName}' not found. Available: ${Object.keys(TEMPLATES).join(', ')}`,
-      }),
-      {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
+    console.warn('Template not found in registry', { templateName: String(templateName).slice(0, 64) })
+    return json({ error: 'Template not found' }, 404)
   }
 
-  // Resolve effective recipient: template-level `to` takes precedence over
-  // the caller-provided recipientEmail. This allows notification templates
-  // to always send to a fixed address (e.g., site owner from env var).
-  const effectiveRecipient = template.to || recipientEmail
-
-  if (!effectiveRecipient) {
-    return new Response(
-      JSON.stringify({
-        error: 'recipientEmail is required (unless the template defines a fixed recipient)',
-      }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
+  // Без серверного ключа — только публичный шаблон.
+  if (!isService && templateName !== PUBLIC_TEMPLATE) {
+    console.warn('Rejected non-service call', { templateName })
+    return json({ error: 'Unauthorized' }, 401)
   }
 
   // Create Supabase client with service role (bypasses RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+  // Resolve effective recipient: template-level `to` takes precedence over
+  // the caller-provided recipientEmail.
+  let effectiveRecipient: string = template.to || recipientEmail
+  // Публичный путь «забрал» право на письмо (confirmation_sent_at) — при сбое постановки в очередь вернуть.
+  let claimedPattern = ''
+
+  if (!isService) {
+    // Публичный путь: письмо-подтверждение подписки из NewsletterForm.
+    const email = typeof recipientEmail === 'string' ? recipientEmail.trim().toLowerCase() : ''
+    if (!isValidEmail(email)) {
+      return json({ error: 'recipientEmail is required' }, 400)
+    }
+
+    // ilike без подстановочных символов: % _ \ экранируются, сравнение без учёта регистра
+    const emailPattern = email.replace(/[\\%_]/g, (c) => '\\' + c)
+    const { data: sub, error: subError } = await supabase
+      .from('newsletter_subscribers')
+      .select('created_at, is_active, unsubscribed_at')
+      .ilike('email', emailPattern)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (subError) {
+      console.error('Subscriber lookup failed', { code: subError.code })
+      return json({ error: 'Failed to prepare email' }, 500)
+    }
+    if (
+      !sub ||
+      !sub.is_active ||
+      sub.unsubscribed_at ||
+      !isFreshSubscriber(sub.created_at, new Date())
+    ) {
+      console.warn('Public confirmation rejected: no fresh subscriber', {
+        recipient: maskEmail(email),
+      })
+      // Ответ не раскрывает, есть ли адрес в базе.
+      return json({ error: 'Unauthorized' }, 401)
+    }
+
+    // Одно подтверждение на адрес — атомарно. UPDATE … WHERE confirmation_sent_at IS NULL идёт
+    // под блокировкой строки: из N параллельных запросов строку «забирает» только первый,
+    // остальные получают 0 строк и выходят. Одной проверки по email_send_log (ниже) мало:
+    // строка pending пишется только после рендера письма, и все запросы в этом окне проходили.
+    const { data: claimed, error: claimError } = await supabase
+      .from('newsletter_subscribers')
+      .update({ confirmation_sent_at: new Date().toISOString() })
+      .ilike('email', emailPattern)
+      .is('confirmation_sent_at', null)
+      .select('id')
+
+    if (claimError) {
+      // Колонки ещё нет (sec.sql не применён): работаем по старой проверке ниже, но пишем в лог.
+      if (claimError.code === '42703' || claimError.code === 'PGRST204') {
+        console.warn('confirmation_sent_at missing: apply sec.sql; falling back to send-log check')
+      } else {
+        console.error('Confirmation claim failed', { code: claimError.code })
+        return json({ error: 'Failed to prepare email' }, 500)
+      }
+    } else if (!claimed || claimed.length === 0) {
+      return json({ success: true, queued: true })
+    } else {
+      claimedPattern = emailPattern
+    }
+
+    // Одно подтверждение на адрес: если уже ставили в очередь/отправили — не повторяем.
+    const { data: already, error: alreadyError } = await supabase
+      .from('email_send_log')
+      .select('id')
+      .eq('template_name', PUBLIC_TEMPLATE)
+      .eq('recipient_email', email)
+      .in('status', ['pending', 'sent'])
+      .limit(1)
+      .maybeSingle()
+
+    if (alreadyError) {
+      console.error('Send-log lookup failed', { code: alreadyError.code })
+      return json({ error: 'Failed to prepare email' }, 500)
+    }
+    if (already) {
+      return json({ success: true, queued: true })
+    }
+
+    effectiveRecipient = email
+    // Данные шаблона и ключ идемпотентности задаёт сервер, а не клиент.
+    templateData = { recipient: email }
+    idempotencyKey = `newsletter-confirm-${email}`
+  } else if (templateName === 'support-escalation') {
+    // Получатель эскалации — только из SUPPORT_ESCALATION_TO или адресов каналов поддержки.
+    const envList = parseEmailList(Deno.env.get('SUPPORT_ESCALATION_TO'))
+    const { data: channels, error: chError } = await supabase
+      .from('support_channels')
+      .select('email')
+    if (chError) {
+      console.warn('support_channels lookup failed', { code: chError.code })
+    }
+    const channelEmails = (channels || [])
+      .map((c: { email?: string | null }) => (c.email || '').trim().toLowerCase())
+      .filter((e: string) => isValidEmail(e))
+    const resolved = resolveSupportRecipient(recipientEmail, envList, channelEmails)
+    if (!resolved) {
+      console.error('support-escalation: recipient not allowed and SUPPORT_ESCALATION_TO is empty', {
+        requested: maskEmail(recipientEmail),
+      })
+      return json({ error: 'Recipient not allowed' }, 400)
+    }
+    effectiveRecipient = resolved
+    templateData = sanitizeSupportEscalationData(templateData)
+  }
+
+  if (!effectiveRecipient || !isValidEmail(effectiveRecipient)) {
+    return json({ error: 'recipientEmail is required' }, 400)
+  }
 
   // 2. Check suppression list (fail-closed: if we can't verify, don't send)
   const { data: suppressed, error: suppressionError } = await supabase
@@ -135,7 +253,7 @@ Deno.serve(async (req) => {
   if (suppressionError) {
     console.error('Suppression check failed — refusing to send', {
       error: suppressionError,
-      effectiveRecipient,
+      recipient: maskEmail(effectiveRecipient),
     })
     return new Response(
       JSON.stringify({ error: 'Failed to verify suppression status' }),
@@ -155,7 +273,9 @@ Deno.serve(async (req) => {
       status: 'suppressed',
     })
 
-    console.log('Email suppressed', { effectiveRecipient, templateName })
+    console.log('Email suppressed', { recipient: maskEmail(effectiveRecipient), templateName })
+    // Публичному вызову не раскрываем, что адрес в списке подавления (SEC-10): ответ как у обычной постановки.
+    if (!isService) return json({ success: true, queued: true })
     return new Response(
       JSON.stringify({ success: false, reason: 'email_suppressed' }),
       {
@@ -179,7 +299,7 @@ Deno.serve(async (req) => {
   if (tokenLookupError) {
     console.error('Token lookup failed', {
       error: tokenLookupError,
-      email: normalizedEmail,
+      recipient: maskEmail(normalizedEmail),
     })
     await supabase.from('email_send_log').insert({
       message_id: messageId,
@@ -241,7 +361,7 @@ Deno.serve(async (req) => {
     if (reReadError || !storedToken) {
       console.error('Failed to read back unsubscribe token after upsert', {
         error: reReadError,
-        email: normalizedEmail,
+        recipient: maskEmail(normalizedEmail),
       })
       await supabase.from('email_send_log').insert({
         message_id: messageId,
@@ -263,7 +383,7 @@ Deno.serve(async (req) => {
     // Token exists but is already used — email should have been caught by suppression check above.
     // This is a safety fallback; log and skip sending.
     console.warn('Unsubscribe token already used but email not suppressed', {
-      email: normalizedEmail,
+      recipient: maskEmail(normalizedEmail),
     })
     await supabase.from('email_send_log').insert({
       message_id: messageId,
@@ -273,6 +393,7 @@ Deno.serve(async (req) => {
       error_message:
         'Unsubscribe token used but email missing from suppressed list',
     })
+    if (!isService) return json({ success: true, queued: true })
     return new Response(
       JSON.stringify({ success: false, reason: 'email_suppressed' }),
       {
@@ -292,10 +413,11 @@ Deno.serve(async (req) => {
   )
 
   // Resolve subject — supports static string or dynamic function
-  const resolvedSubject =
+  const resolvedSubject = cleanSubject(
     typeof template.subject === 'function'
       ? template.subject(templateData)
       : template.subject
+  )
 
   // 5. Enqueue the pre-rendered email for async processing by the dispatcher.
   // The dispatcher (process-email-queue) handles sending, retries, and rate-limit backoff.
@@ -330,7 +452,7 @@ Deno.serve(async (req) => {
     console.error('Failed to enqueue email', {
       error: enqueueError,
       templateName,
-      effectiveRecipient,
+      recipient: maskEmail(effectiveRecipient),
     })
 
     await supabase.from('email_send_log').insert({
@@ -341,13 +463,21 @@ Deno.serve(async (req) => {
       error_message: 'Failed to enqueue email',
     })
 
+    if (claimedPattern) {
+      // Письмо не ушло в очередь — снимаем захват, чтобы повторная попытка подписчика сработала.
+      await supabase
+        .from('newsletter_subscribers')
+        .update({ confirmation_sent_at: null })
+        .ilike('email', claimedPattern)
+    }
+
     return new Response(JSON.stringify({ error: 'Failed to enqueue email' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 
-  console.log('Transactional email enqueued', { templateName, effectiveRecipient })
+  console.log('Transactional email enqueued', { templateName, recipient: maskEmail(effectiveRecipient) })
 
   return new Response(
     JSON.stringify({ success: true, queued: true }),
