@@ -53,8 +53,13 @@ const ProductCard = ({ product, index, onQuickView, showAddToCart = false }: Pro
     e.preventDefault();
     e.stopPropagation();
     if (!isAuthenticated) {
-      toast.info(lang === "en" ? "Sign in to save favorites" : "Войдите, чтобы сохранять избранное");
-      navigate("/auth");
+      // Гостя не уводим со страницы: предлагаем войти кнопкой в тосте (контекст не теряется).
+      toast.info(lang === "en" ? "Sign in to save favorites" : "Войдите, чтобы сохранять избранное", {
+        action: {
+          label: lang === "en" ? "Sign in" : "Войти",
+          onClick: () => navigate("/auth"),
+        },
+      });
       return;
     }
     const added = await toggle(product.id);
@@ -83,12 +88,15 @@ const ProductCard = ({ product, index, onQuickView, showAddToCart = false }: Pro
               <Link
                 key={`${g}-${i}`}
                 to={`/product/${product.slug}`}
+                // Одна ссылка на товар в Tab-порядке и для скринридера: остальные слайды — дубли.
+                tabIndex={i === 0 ? undefined : -1}
+                aria-hidden={i === 0 ? undefined : true}
                 className="relative w-full h-full flex-shrink-0 snap-center snap-always block"
                 style={{ minWidth: "100%" }}
               >
                 <img
                   src={g}
-                  alt={name}
+                  alt={i === 0 ? name : ""}
                   loading={i === 0 ? "lazy" : "lazy"}
                   decoding="async"
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
@@ -118,7 +126,12 @@ const ProductCard = ({ product, index, onQuickView, showAddToCart = false }: Pro
 
         <button
           onClick={handleFav}
-          aria-label={fav ? "Remove from favorites" : "Add to favorites"}
+          aria-label={
+            fav
+              ? lang === "en" ? "Remove from favorites" : "Убрать из избранного"
+              : lang === "en" ? "Add to favorites" : "Добавить в избранное"
+          }
+          aria-pressed={fav}
           className={`absolute top-3 right-3 z-10 grid place-items-center w-9 h-9 rounded-full backdrop-blur-md transition-all ${
             fav ? "bg-accent text-accent-foreground" : "bg-background/80 text-foreground hover:bg-background"
           }`}
@@ -130,7 +143,7 @@ const ProductCard = ({ product, index, onQuickView, showAddToCart = false }: Pro
           <>
             <button
               type="button"
-              aria-label="Previous image"
+              aria-label={lang === "en" ? "Previous image" : "Предыдущее фото"}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -138,14 +151,14 @@ const ProductCard = ({ product, index, onQuickView, showAddToCart = false }: Pro
                 if (!el) return;
                 el.scrollTo({ left: Math.max(0, activeIdx - 1) * el.clientWidth, behavior: "smooth" });
               }}
-              className="hidden md:grid absolute top-1/2 -translate-y-1/2 left-2 z-20 place-items-center w-9 h-9 rounded-full bg-background/80 backdrop-blur-md text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background disabled:opacity-30"
+              className="hidden md:grid absolute top-1/2 -translate-y-1/2 left-2 z-20 place-items-center w-9 h-9 rounded-full bg-background/80 backdrop-blur-md text-foreground opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/60 transition-opacity hover:bg-background disabled:opacity-30"
               disabled={activeIdx === 0}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               type="button"
-              aria-label="Next image"
+              aria-label={lang === "en" ? "Next image" : "Следующее фото"}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -153,7 +166,7 @@ const ProductCard = ({ product, index, onQuickView, showAddToCart = false }: Pro
                 if (!el) return;
                 el.scrollTo({ left: Math.min(gallery.length - 1, activeIdx + 1) * el.clientWidth, behavior: "smooth" });
               }}
-              className="hidden md:grid absolute top-1/2 -translate-y-1/2 right-2 z-20 place-items-center w-9 h-9 rounded-full bg-background/80 backdrop-blur-md text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background disabled:opacity-30"
+              className="hidden md:grid absolute top-1/2 -translate-y-1/2 right-2 z-20 place-items-center w-9 h-9 rounded-full bg-background/80 backdrop-blur-md text-foreground opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/60 transition-opacity hover:bg-background disabled:opacity-30"
               disabled={activeIdx === gallery.length - 1}
             >
               <ChevronRight className="w-4 h-4" />
@@ -174,7 +187,7 @@ const ProductCard = ({ product, index, onQuickView, showAddToCart = false }: Pro
         {onQuickView && (
           <button
             onClick={(e) => { e.preventDefault(); onQuickView(product.slug); }}
-            className={`absolute ${hasMultiple ? "bottom-7" : "bottom-4"} left-1/2 -translate-x-1/2 z-10 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500 inline-flex items-center gap-2 bg-background text-foreground rounded-full pl-4 pr-4 py-2 text-[10px] tracking-luxe uppercase shadow-soft hover:bg-foreground hover:text-background`}
+            className={`absolute ${hasMultiple ? "bottom-7" : "bottom-4"} left-1/2 -translate-x-1/2 z-10 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 translate-y-2 group-hover:translate-y-0 group-focus-within:translate-y-0 focus-visible:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/60 transition-all duration-500 inline-flex items-center gap-2 bg-background text-foreground rounded-full pl-4 pr-4 py-2 text-[10px] tracking-luxe uppercase shadow-soft hover:bg-foreground hover:text-background`}
           >
             <Eye className="w-3.5 h-3.5" />
             {t("catalog.quickView")}
@@ -188,7 +201,7 @@ const ProductCard = ({ product, index, onQuickView, showAddToCart = false }: Pro
             {subtitle && <p className="text-xs sm:text-sm text-muted-foreground mt-1 italic font-display break-words">{subtitle}</p>}
           </div>
           <div className="text-right shrink-0">
-            <p className="font-display text-base sm:text-xl whitespace-nowrap">{Number(product.price).toLocaleString(lang === "en" ? "en-US" : "ru-RU")} ₽</p>
+            <p className="font-display text-base sm:text-xl whitespace-nowrap lining-nums tabular-nums">{Number(product.price).toLocaleString(lang === "en" ? "en-US" : "ru-RU")} ₽</p>
             {product.volume && <p className="text-[11px] text-muted-foreground mt-1 whitespace-nowrap">{product.volume}</p>}
           </div>
         </div>

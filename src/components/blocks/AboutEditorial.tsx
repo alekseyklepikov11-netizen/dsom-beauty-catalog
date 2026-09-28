@@ -32,7 +32,7 @@ const COPY = {
     ],
     s3eyebrow: "Линейка",
     s3:
-      "Мы начали с четырёх продуктов — сыворотки с витамином C и микроиглами, сыворотки с ретинолом (ретинола пальмитатом), сыворотки с PDRN и ламеллярного крема. Это базовый ритуал, который закрывает большинство задач. Линейка развивается: очищение, защита, специализированные форматы — по тем же стандартам. Новый продукт появляется, когда формула готова. Не раньше.",
+      "Мы начали с сывороток под разные задачи и увлажняющего крема. Это базовый ритуал, который закрывает большинство задач. Линейка развивается: очищение, защита, специализированные форматы — по тем же стандартам. Новый продукт появляется, когда формула готова. Не раньше.",
     cta: "Смотреть линейку",
     craft: "Производим в России · по нашим спецификациям",
   },
@@ -58,8 +58,8 @@ const COPY = {
     ],
     s3eyebrow: "The line",
     s3:
-      "We started with four products — a vitamin C serum with microneedles, a retinol (retinyl palmitate) serum, a PDRN serum and a lamellar cream. A base ritual that covers most needs. The line grows — cleansing, protection, specialised formats — to the same standards. A new product appears when the formula is ready. Not before.",
-    cta: "See the line",
+      "We started with serums for different needs and a moisturising cream. A base ritual that covers most needs. The line grows — cleansing, protection, specialised formats — to the same standards. A new product appears when the formula is ready. Not before.",
+    cta: "Explore the range",
     craft: "Made in Russia · to our specifications",
   },
 } as const;

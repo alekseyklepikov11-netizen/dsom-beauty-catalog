@@ -6,7 +6,6 @@
 // ОТДЕЛЬНОЙ миграцией analytics_event_type ДО включения трекинга. Пока — без track().
 import { useTranslation } from "react-i18next";
 import { ShoppingBag, Check } from "lucide-react";
-import { toast } from "sonner";
 import { useCart } from "@/hooks/useCart";
 import type { ProductLite } from "@/components/ProductCard";
 
@@ -37,7 +36,8 @@ const AddToCartButton = ({ product, variant = "full", className = "" }: Props) =
       image: product.cover_image_url,
       volume: product.volume,
     });
-    toast.success(lang === "en" ? "Added to cart" : "Добавлено в корзину");
+    // Тост не показываем: add() сразу открывает корзину, она и есть подтверждение,
+    // а тост внизу экрана перекрывал бы её нижний блок (аудит DES-12 / CJM-7).
   };
 
   const label = inCart
@@ -49,7 +49,7 @@ const AddToCartButton = ({ product, variant = "full", className = "" }: Props) =
       <button
         onClick={handleAdd}
         aria-label={label}
-        className={`grid place-items-center w-9 h-9 rounded-full border border-foreground/40 bg-background/80 backdrop-blur text-foreground hover:bg-foreground hover:text-background active:scale-95 transition-[background-color,color,transform] duration-200 ease-out ${className}`}
+        className={`grid place-items-center w-11 h-11 rounded-full border border-foreground/40 bg-background/80 backdrop-blur text-foreground hover:bg-foreground hover:text-background active:scale-95 transition-[background-color,color,transform] duration-200 ease-out ${className}`}
       >
         {inCart ? <Check className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
       </button>

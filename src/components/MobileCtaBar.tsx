@@ -1,17 +1,26 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
+import { hasCookieDecision } from "@/lib/cookieConsent";
 
 /**
  * Sticky bottom CTA on mobile. Appears after the user scrolls past the hero
  * area. Hidden on /admin and /auth routes and on desktop (md+).
  */
 const MobileCtaBar = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { pathname } = useLocation();
   const [visible, setVisible] = useState(false);
   const [overDark, setOverDark] = useState(false);
+  // Пока на экране cookie-баннер (нет решения), панель не показываем — иначе они перекрывают друг друга.
+  const [cookieDecided, setCookieDecided] = useState(hasCookieDecision);
+
+  useEffect(() => {
+    const onConsent = () => setCookieDecided(true);
+    window.addEventListener("dsom:cookie-consent", onConsent);
+    return () => window.removeEventListener("dsom:cookie-consent", onConsent);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => {
@@ -40,25 +49,27 @@ const MobileCtaBar = () => {
     pathname.startsWith("/auth") ||
     pathname.startsWith("/catalog") ||
     pathname.startsWith("/product/"); // product page already has its own CTAs
-  if (hidden) return null;
+  if (hidden || !cookieDecided) return null;
 
-  const label = i18n.language === "en" ? "Shop the catalog" : "В магазин";
+  const label = t("nav.shop");
 
   return (
     <div
+      aria-hidden={!visible}
       className={`md:hidden fixed bottom-4 left-4 right-4 z-50 transition-all duration-300 ${
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6 pointer-events-none"
       }`}
     >
       <Link
         to="/catalog"
+        tabIndex={visible ? undefined : -1}
         className={`flex items-center justify-center gap-3 w-full rounded-full py-4 text-[12px] tracking-luxe uppercase shadow-lg transition-colors duration-500 ${
           overDark
             ? "bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
             : "bg-foreground text-background hover:bg-accent hover:text-accent-foreground"
         }`}
       >
-        <ShoppingBag className="w-4 h-4" />
+        <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
         <span>{label}</span>
       </Link>
     </div>

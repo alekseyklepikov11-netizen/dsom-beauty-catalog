@@ -200,7 +200,14 @@ const CampaignEdit = () => {
                 <p className="text-sm font-medium mt-0.5">{c.subject}</p>
                 {c.preheader && <p className="text-xs text-muted-foreground mt-1">{c.preheader}</p>}
               </div>
-              <div className="bg-white p-8 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: c.content_html }} />
+              {/* Предпросмотр в изолированном iframe: sandbox без allow-scripts и allow-same-origin —
+                  скрипты из HTML письма не выполнятся и не получат доступ к сессии админки (SEC-15). */}
+              <iframe
+                title="Предпросмотр письма"
+                sandbox=""
+                srcDoc={buildPreviewDoc(c.content_html)}
+                className="block w-full bg-white h-[640px]"
+              />
               <div className="bg-secondary/50 px-4 py-4 border-t border-border text-center">
                 <p className="text-[11px] text-muted-foreground">
                   Вы получили это письмо, потому что подписаны на рассылку DSOM.<br />
@@ -246,5 +253,15 @@ const CampaignEdit = () => {
     </AdminLayout>
   );
 };
+
+
+/** HTML-документ для предпросмотра письма в sandbox-iframe (стили — примерно как prose-sm). */
+function buildPreviewDoc(html: string): string {
+  const css =
+    "body{margin:0;padding:32px;font:14px/1.7 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#231f1b;background:#fff}" +
+    "h1,h2,h3{line-height:1.3;margin:1.2em 0 .5em}h1{font-size:1.6em}h2{font-size:1.35em}h3{font-size:1.15em}" +
+    "p,ul,ol{margin:0 0 1em}img{max-width:100%;height:auto}a{color:#231f1b}";
+  return `<!doctype html><html><head><meta charset="utf-8"><style>${css}</style></head><body>${html || ""}</body></html>`;
+}
 
 export default CampaignEdit;

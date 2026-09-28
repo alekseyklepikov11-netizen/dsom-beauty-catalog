@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Check, Mail } from "lucide-react";
 import Header from "@/components/Header";
+import SEO from "@/components/SEO";
 
 // Public site key — safe to expose in client code
 const TURNSTILE_SITE_KEY = "0x4AAAAAADESddF-sUahSVGU";
@@ -326,7 +327,7 @@ const AuthPage = () => {
             </div>
           </div>
 
-          <Link to="/" className="inline-block mt-12 text-[10px] tracking-luxe uppercase text-muted-foreground/70 hover:text-foreground transition-colors">
+          <Link to="/" className="inline-block mt-12 text-[10px] tracking-luxe uppercase text-muted-foreground hover:text-foreground transition-colors">
             ← На главную
           </Link>
         </section>
@@ -348,7 +349,7 @@ const AuthPage = () => {
             Если аккаунт с адресом <span className="text-foreground">{email}</span> у нас есть —<br/>
             мы выслали ссылку для сброса пароля.
           </p>
-          <p className="text-xs text-muted-foreground/70 mt-4">
+          <p className="text-xs text-muted-foreground mt-4">
             Ссылка действует 1 час. Не пришло — посмотрите в «Спам».
           </p>
 
@@ -400,7 +401,7 @@ const AuthPage = () => {
               У меня уже есть пароль — войти
             </button>
           </div>
-          <Link to="/" className="inline-block mt-12 text-[10px] tracking-luxe uppercase text-muted-foreground/70 hover:text-foreground transition-colors">
+          <Link to="/" className="inline-block mt-12 text-[10px] tracking-luxe uppercase text-muted-foreground hover:text-foreground transition-colors">
             ← На главную
           </Link>
         </section>
@@ -435,7 +436,7 @@ const AuthPage = () => {
               Забыли пароль?
             </button>
           </div>
-          <Link to="/" className="inline-block mt-12 text-[10px] tracking-luxe uppercase text-muted-foreground/70 hover:text-foreground transition-colors">
+          <Link to="/" className="inline-block mt-12 text-[10px] tracking-luxe uppercase text-muted-foreground hover:text-foreground transition-colors">
             ← На главную
           </Link>
         </section>
@@ -463,11 +464,13 @@ const AuthPage = () => {
         <form onSubmit={submit} className="space-y-5">
           {(mode === "signup" || mode === "promo") && (
             <div>
-              <label className="text-[10px] tracking-luxe uppercase text-muted-foreground">
-                Имя {mode === "promo" && <span className="opacity-50">(опционально)</span>}
+              <label htmlFor="auth-name" className="text-[10px] tracking-luxe uppercase text-muted-foreground">
+                Имя {mode === "promo" && <span>(опционально)</span>}
               </label>
               <input
+                id="auth-name"
                 type="text"
+                autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required={mode === "signup"}
@@ -477,8 +480,9 @@ const AuthPage = () => {
             </div>
           )}
           <div>
-            <label className="text-[10px] tracking-luxe uppercase text-muted-foreground">Email</label>
+            <label htmlFor="auth-email" className="text-[10px] tracking-luxe uppercase text-muted-foreground">Email</label>
             <input
+              id="auth-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -491,12 +495,14 @@ const AuthPage = () => {
             <>
               <div>
                 <div className="flex items-center justify-between">
-                  <label className="text-[10px] tracking-luxe uppercase text-muted-foreground">Пароль</label>
+                  <label htmlFor="auth-password" className="text-[10px] tracking-luxe uppercase text-muted-foreground">Пароль</label>
                   {mode === "signup" && (
-                    <span className="text-[10px] text-muted-foreground/70">мин. 6 символов</span>
+                    <span id="auth-password-hint" className="text-[10px] text-muted-foreground">мин. 6 символов</span>
                   )}
                 </div>
                 <input
+                  id="auth-password"
+                  aria-describedby={mode === "signup" ? "auth-password-hint" : undefined}
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -508,17 +514,21 @@ const AuthPage = () => {
               </div>
               {mode === "signup" && (
                 <div>
-                  <label className="text-[10px] tracking-luxe uppercase text-muted-foreground">Подтвердите пароль</label>
+                  <label htmlFor="auth-password-confirm" className="text-[10px] tracking-luxe uppercase text-muted-foreground">Подтвердите пароль</label>
                   <input
+                    id="auth-password-confirm"
                     type="password"
                     value={passwordConfirm}
                     onChange={(e) => setPasswordConfirm(e.target.value)}
                     required minLength={6} autoComplete="new-password"
+                    aria-invalid={passwordConfirm && password !== passwordConfirm ? true : undefined}
+                    aria-describedby="auth-password-confirm-error"
                     className="mt-1.5 w-full bg-transparent border-b border-border focus:border-foreground outline-none py-2 text-sm"
                   />
-                  {passwordConfirm && password !== passwordConfirm && (
-                    <p className="mt-1.5 text-[10px] text-destructive">Пароли не совпадают</p>
-                  )}
+                  {/* Контейнер live-региона всегда в DOM — иначе скринридер не объявит появившуюся ошибку. */}
+                  <p id="auth-password-confirm-error" aria-live="polite" className="mt-1.5 empty:mt-0 text-[10px] text-destructive">
+                    {passwordConfirm && password !== passwordConfirm ? "Пароли не совпадают" : ""}
+                  </p>
                 </div>
               )}
             </>
@@ -629,7 +639,7 @@ const AuthPage = () => {
                   Войти и получить промокод
                 </button>
               </p>
-              <p className="text-muted-foreground/70 mt-3">
+              <p className="text-muted-foreground mt-3">
                 Без пароля — мы пришлём одноразовую ссылку на email.<br/>
                 После клика по ссылке вы попадёте на страницу со своим промокодом.
               </p>
@@ -648,7 +658,7 @@ const AuthPage = () => {
           )}
         </div>
 
-        <p className="text-center text-[10px] tracking-luxe uppercase text-muted-foreground/50 mt-12">
+        <p className="text-center text-[10px] tracking-luxe uppercase text-muted-foreground mt-12">
           <Link to="/" className="hover:text-foreground transition-colors">← На главную</Link>
         </p>
       </section>
@@ -656,4 +666,15 @@ const AuthPage = () => {
   );
 };
 
-export default AuthPage;
+// Служебная страница входа (на неё же ведёт /account без входа): вне индекса, как /favorites и /promo.
+const AuthPageWithSeo = () => {
+  const { t } = useTranslation();
+  return (
+    <>
+      <SEO title={t("nav.login")} noindex />
+      <AuthPage />
+    </>
+  );
+};
+
+export default AuthPageWithSeo;

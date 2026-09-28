@@ -130,7 +130,7 @@ const QuickViewDialog = ({ slug, onClose }: QuickViewProps) => {
                       el.scrollTo({ left: Math.max(0, activeIdx - 1) * el.clientWidth, behavior: "smooth" });
                     }}
                     disabled={activeIdx === 0}
-                    className="hidden md:grid absolute top-1/2 -translate-y-1/2 left-3 z-10 place-items-center w-10 h-10 rounded-full bg-background/85 backdrop-blur-md text-foreground opacity-0 group-hover:opacity-100 transition hover:bg-background disabled:opacity-30"
+                    className="hidden md:grid absolute top-1/2 -translate-y-1/2 left-3 z-10 place-items-center w-10 h-10 rounded-full bg-background/85 backdrop-blur-md text-foreground opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/60 transition hover:bg-background disabled:opacity-30"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
@@ -143,7 +143,7 @@ const QuickViewDialog = ({ slug, onClose }: QuickViewProps) => {
                       el.scrollTo({ left: Math.min(gallery.length - 1, activeIdx + 1) * el.clientWidth, behavior: "smooth" });
                     }}
                     disabled={activeIdx === gallery.length - 1}
-                    className="hidden md:grid absolute top-1/2 -translate-y-1/2 right-3 z-10 place-items-center w-10 h-10 rounded-full bg-background/85 backdrop-blur-md text-foreground opacity-0 group-hover:opacity-100 transition hover:bg-background disabled:opacity-30"
+                    className="hidden md:grid absolute top-1/2 -translate-y-1/2 right-3 z-10 place-items-center w-10 h-10 rounded-full bg-background/85 backdrop-blur-md text-foreground opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/60 transition hover:bg-background disabled:opacity-30"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -164,7 +164,7 @@ const QuickViewDialog = ({ slug, onClose }: QuickViewProps) => {
               {subtitle && <p className="font-display italic text-xl text-muted-foreground mt-2">{subtitle}</p>}
 
               <div className="flex items-end justify-between mt-6 pb-6 border-b border-border/60">
-                <p className="font-display text-3xl">{Number(product.price).toLocaleString(lang === "en" ? "en-US" : "ru-RU")} ₽</p>
+                <p className="font-display text-3xl lining-nums tabular-nums">{Number(product.price).toLocaleString(lang === "en" ? "en-US" : "ru-RU")} ₽</p>
                 {product.volume && <p className="text-[11px] tracking-luxe uppercase text-muted-foreground">{product.volume}</p>}
               </div>
 

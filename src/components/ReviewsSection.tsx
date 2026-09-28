@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { shouldQueryTable } from "@/lib/staticCatalog";
+import { isSalesOpen } from "@/lib/salesStatus";
 import { useAuth } from "@/hooks/useAuth";
 import { track } from "@/lib/analytics";
 import { toast } from "sonner";
@@ -128,6 +129,11 @@ const ReviewsSection = ({ productId }: Props) => {
     }
   };
 
+  // До старта продаж форму отзыва не показываем (купить товар пока нельзя),
+  // а пустой блок «Отзывов пока нет» не выводим вовсе.
+  const salesOpen = isSalesOpen();
+  if (!salesOpen && (loading || reviews.length === 0)) return null;
+
   const inputCls =
     "w-full bg-transparent border-b border-border focus:border-foreground py-2 text-sm focus:outline-none transition-colors";
 
@@ -151,6 +157,7 @@ const ReviewsSection = ({ productId }: Props) => {
             </div>
           )}
         </div>
+        {salesOpen && (
         <button
           onClick={() => setShowForm((v) => !v)}
           className="text-[11px] tracking-luxe uppercase border-b border-foreground pb-1 hover:text-accent hover:border-accent transition-colors"
@@ -159,9 +166,10 @@ const ReviewsSection = ({ productId }: Props) => {
             ? lang === "en" ? "Cancel" : "Отмена"
             : lang === "en" ? "Write a review" : "Оставить отзыв"}
         </button>
+        )}
       </div>
 
-      {showForm && (
+      {salesOpen && showForm && (
         <div className="bg-secondary/40 p-6 md:p-8 mb-10 space-y-5 animate-fade-up">
           <div>
             <p className="text-[11px] tracking-luxe uppercase text-muted-foreground mb-2">
@@ -173,10 +181,13 @@ const ReviewsSection = ({ productId }: Props) => {
           {!user && (
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="text-[11px] tracking-luxe uppercase text-muted-foreground">
+                <label htmlFor="rv-name" className="text-[11px] tracking-luxe uppercase text-muted-foreground">
                   {lang === "en" ? "Name" : "Имя"}
                 </label>
                 <input
+                  id="rv-name"
+                  name="name"
+                  autoComplete="name"
                   value={guestName}
                   onChange={(e) => setGuestName(e.target.value)}
                   className={"ym-disable-keys " + inputCls}
@@ -184,10 +195,13 @@ const ReviewsSection = ({ productId }: Props) => {
                 />
               </div>
               <div>
-                <label className="text-[11px] tracking-luxe uppercase text-muted-foreground">
+                <label htmlFor="rv-email" className="text-[11px] tracking-luxe uppercase text-muted-foreground">
                   Email
                 </label>
                 <input
+                  id="rv-email"
+                  name="email"
+                  autoComplete="email"
                   type="email"
                   value={guestEmail}
                   onChange={(e) => setGuestEmail(e.target.value)}
@@ -199,10 +213,11 @@ const ReviewsSection = ({ productId }: Props) => {
           )}
 
           <div>
-            <label className="text-[11px] tracking-luxe uppercase text-muted-foreground">
+            <label htmlFor="rv-title" className="text-[11px] tracking-luxe uppercase text-muted-foreground">
               {lang === "en" ? "Title (optional)" : "Заголовок (необязательно)"}
             </label>
             <input
+              id="rv-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className={inputCls}
@@ -211,10 +226,11 @@ const ReviewsSection = ({ productId }: Props) => {
           </div>
 
           <div>
-            <label className="text-[11px] tracking-luxe uppercase text-muted-foreground">
+            <label htmlFor="rv-body" className="text-[11px] tracking-luxe uppercase text-muted-foreground">
               {lang === "en" ? "Your review" : "Ваш отзыв"}
             </label>
             <textarea
+              id="rv-body"
               value={body}
               onChange={(e) => setBody(e.target.value)}
               rows={4}

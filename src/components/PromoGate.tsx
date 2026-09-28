@@ -40,7 +40,7 @@ const PromoGate = ({ variant = "card", source }: Props) => {
     <div className={variant === "card" ? "rounded-2xl border border-border bg-card p-6" : ""}>
       {variant === "card" && (
         <>
-          <p className="text-[10px] tracking-luxe uppercase text-accent mb-2">— {lang === "en" ? (phase === "launch" ? "Launch offer" : "Welcome offer") : (phase === "launch" ? "Стартовая акция" : "Приветственная скидка")}</p>
+          <p className="text-[11px] tracking-luxe uppercase text-foreground mb-2">— {lang === "en" ? (phase === "launch" ? "Launch offer" : "Welcome offer") : (phase === "launch" ? "Стартовая акция" : "Приветственная скидка")}</p>
           <p className="font-display text-xl mb-1">
             {lang === "en" ? `Get ${DISCOUNT}% off on Ozon` : `${DISCOUNT}% на первый заказ на Ozon`}
           </p>
@@ -65,7 +65,7 @@ const PromoGate = ({ variant = "card", source }: Props) => {
           {lang === "en" ? "Register on site" : "На сайте"}
         </button>
       </div>
-      <p className="text-[10px] tracking-luxe uppercase text-muted-foreground/60 mt-4 text-center">
+      <p className="text-[11px] tracking-luxe uppercase text-muted-foreground mt-4 text-center">
         {lang === "en"
           ? "Telegram: subscribe to channel · Site: free account, code by email"
           : "Telegram — подписка на канал · Сайт — регистрация, код придёт на почту"}

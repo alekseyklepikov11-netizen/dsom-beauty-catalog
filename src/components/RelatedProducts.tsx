@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
-import { loadStaticCatalog, selectRelatedProducts } from "@/lib/staticCatalog";
+import { isIncompatiblePair, loadStaticCatalog, selectRelatedProducts } from "@/lib/staticCatalog";
 import ProductCard, { ProductLite } from "./ProductCard";
 
 interface Props {
   productId: string;
+  /** slug текущего товара — для стоп-пар несовместимости в fallback-пути. */
+  productSlug?: string;
   categoryId: string | null;
   brandId: string | null;
   onQuickView?: (slug: string) => void;
 }
 
-const RelatedProducts = ({ productId, categoryId, brandId, onQuickView }: Props) => {
+const RelatedProducts = ({ productId, productSlug, categoryId, brandId, onQuickView }: Props) => {
   const { i18n } = useTranslation();
   const lang = i18n.language;
   const [items, setItems] = useState<ProductLite[]>([]);
@@ -25,38 +27,28 @@ const RelatedProducts = ({ productId, categoryId, brandId, onQuickView }: Props)
         return;
       }
 
-      // Try same brand first, then same category
-      let q = supabase
+      // Fallback на Supabase: те же правила, что и в selectRelatedProducts
+      // (бренд → категория → остальные; стоп-пара GLOW↔RENEW не рекомендуется).
+      const { data } = await supabase
         .from("products")
-        .select("id,slug,name,name_en,subtitle,subtitle_en,price,volume,cover_image_url,is_bestseller,is_new")
+        .select("id,slug,name,name_en,subtitle,subtitle_en,price,volume,cover_image_url,is_bestseller,is_new,brand_id,category_id")
         .eq("is_visible", true)
         .neq("id", productId)
-        .limit(4);
-
-      if (brandId) q = q.eq("brand_id", brandId);
-      else if (categoryId) q = q.eq("category_id", categoryId);
-
-      const { data } = await q;
-      let list = (data || []) as ProductLite[];
-
-      // Fallback: if too few, fetch by category
-      if (list.length < 4 && categoryId) {
-        const { data: more } = await supabase
-          .from("products")
-          .select("id,slug,name,name_en,subtitle,subtitle_en,price,volume,cover_image_url,is_bestseller,is_new")
-          .eq("is_visible", true)
-          .eq("category_id", categoryId)
-          .neq("id", productId)
-          .limit(4);
-        const ids = new Set(list.map((p) => p.id));
-        for (const p of (more || []) as ProductLite[]) {
-          if (!ids.has(p.id) && list.length < 4) list.push(p);
-        }
-      }
+        .order("sort_order")
+        .limit(12);
+      type Row = ProductLite & { brand_id: string | null; category_id: string | null };
+      const rank = (p: Row) =>
+        (brandId && p.brand_id === brandId ? 0 : 2) + (categoryId && p.category_id === categoryId ? 0 : 1);
+      const list = ((data || []) as Row[])
+        .filter((p) => !(productSlug && isIncompatiblePair(productSlug, p.slug)))
+        .map((p, i) => ({ p, i }))
+        .sort((a, b) => rank(a.p) - rank(b.p) || a.i - b.i)
+        .slice(0, 4)
+        .map((x) => x.p as ProductLite);
 
       setItems(list);
     })();
-  }, [productId, categoryId, brandId]);
+  }, [productId, productSlug, categoryId, brandId]);
 
   if (items.length === 0) return null;
 
@@ -70,9 +62,12 @@ const RelatedProducts = ({ productId, categoryId, brandId, onQuickView }: Props)
           {lang === "en" ? "Discover more" : "Откройте больше"}
         </h2>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
+      {/* flex + justify-center: неполный ряд центрируется, одиночная карточка не прижата влево */}
+      <div className="flex flex-wrap justify-center gap-x-6 gap-y-12">
         {items.map((p, i) => (
-          <ProductCard key={p.id} product={p} index={i} onQuickView={onQuickView} />
+          <div key={p.id} className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)]">
+            <ProductCard product={p} index={i} onQuickView={onQuickView} />
+          </div>
         ))}
       </div>
     </section>

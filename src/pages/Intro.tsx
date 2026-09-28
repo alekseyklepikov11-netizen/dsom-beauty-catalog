@@ -17,12 +17,13 @@
  *
  * Видео: public/videos/brand-intro-scrub.mp4 (3,9 MB, 1280×720, 15 сек, H.264, CRF 28, keyint 3).
  * Та же сцена на странице «О бренде» — brand-intro.mp4/webm (проигрывается один раз).
- * Шрифты: Fraunces / Cormorant Garamond / Cormorant SC — подгружены в index.html.
+ * Шрифты: Cormorant Garamond — в index.html; Fraunces / Cormorant SC подключает только этот маршрут (IntroRoute в App.tsx).
  */
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import "./Intro.css";
 import { LAUNCH_CONFIG } from "@/lib/launchConfig";
+import SEO from "@/components/SEO";
 
 const Intro = () => {
   const cursorCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -307,6 +308,8 @@ const Intro = () => {
 
   return (
     <div className="intro-root">
+      {/* Служебная встречающая страница — не индексируем (дублирует главную/«О бренде») */}
+      <SEO noindex />
       {/* Курсор */}
       <canvas ref={cursorCanvasRef} className="intro-cursor-canvas" />
       <div ref={cursorDotRef} className="intro-cursor-dot" />
@@ -457,7 +460,7 @@ const Intro = () => {
                   <span className="arrow" />
                 </Link>
                 <span className="intro-cta-meta">
-                  — Старт продаж · {LAUNCH_CONFIG.launchLabelRu} · Ozon
+                  — Старт продаж · {LAUNCH_CONFIG.launchLabelRu} · Ozon и dsom.ru
                 </span>
               </div>
             </div>

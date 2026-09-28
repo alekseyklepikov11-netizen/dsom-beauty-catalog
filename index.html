@@ -23,11 +23,18 @@
     <meta name="theme-color" content="#000000" />
     <!-- og:title / twitter:title / og:description / twitter:description НЕ в shell: задаёт per-page SEO (react-helmet). Дублирование удалено 18.06 (Яндекс флагнул дубли title/description). -->
 
-  <!-- Fonts для /intro hero-cinematic (Fraunces / Cormorant Garamond / Cormorant SC) -->
+  <!-- Ранние соединения: баннеры и данные — с new.dsom.ru (картинки без CORS и запросы API с CORS — разные пулы). -->
+  <link rel="preconnect" href="https://new.dsom.ru" />
+  <link rel="preconnect" href="https://new.dsom.ru" crossorigin />
+  <!-- Статический каталог (товары, баннеры, страницы) — первый запрос любой страницы (src/lib/staticCatalog.ts). -->
+  <link rel="preload" href="/data/catalog.json" as="fetch" crossorigin />
+
+  <!-- Шрифты сайта. Раньше подключались через @import в index.css (цепочка HTML → CSS → Google → woff2).
+       Fraunces и Cormorant SC нужны только странице /intro — подключаются на ней (App.tsx, IntroRoute). -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Cormorant+SC:wght@300;400&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&family=Barlow:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap"
     rel="stylesheet"
   />
 

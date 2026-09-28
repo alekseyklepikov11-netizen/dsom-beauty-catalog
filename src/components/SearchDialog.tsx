@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Search, X } from "lucide-react";
+import { Dialog, DialogOverlay, DialogPortal, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { loadStaticCatalog, searchProducts, selectBrandById } from "@/lib/staticCatalog";
 import { track } from "@/lib/analytics";
@@ -98,39 +100,58 @@ const SearchDialog = ({ open, onClose }: Props) => {
     };
   }, [query, lang]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    if (open) document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  // Окно открывается без Radix-Trigger, поэтому возврат фокуса делаем сами:
+  // запоминаем элемент, с которого открыли, и возвращаем на него (или на кнопку в шапке).
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const onOpenAutoFocus = () => {
+    returnFocusRef.current = document.activeElement as HTMLElement | null;
+  };
+  const onCloseAutoFocus = (e: Event) => {
+    e.preventDefault();
+    const prev = returnFocusRef.current;
+    const target =
+      prev && prev.isConnected && prev !== document.body
+        ? prev
+        : (document.querySelector("header button[data-search-trigger]") as HTMLElement | null);
+    target?.focus();
+  };
 
-  if (!open) return null;
-
+  // Esc, ловушка фокуса, aria-modal и возврат фокуса на кнопку поиска — от Radix Dialog.
   const goto = (slug: string) => {
     onClose();
     navigate(`/product/${slug}`);
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-foreground/40 backdrop-blur-sm animate-fade-in" onClick={onClose}>
-      <div
-        className="mx-auto max-w-2xl mt-[10vh] bg-background shadow-soft rounded-md overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-border">
-          <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogPortal>
+        <DialogOverlay className="z-[100] bg-foreground/40 backdrop-blur-sm" />
+        <DialogPrimitive.Content
+          aria-modal="true"
+          onOpenAutoFocus={onOpenAutoFocus}
+          onCloseAutoFocus={onCloseAutoFocus}
+          aria-describedby={undefined}
+          className="fixed inset-x-0 top-[10vh] z-[100] mx-auto w-[calc(100%-2rem)] max-w-2xl bg-background shadow-soft rounded-md overflow-hidden focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+        >
+        <DialogTitle className="sr-only">{t("a11y.searchDialog")}</DialogTitle>
+        <div className="flex items-center gap-3 pl-5 pr-2 py-2 border-b border-border">
+          <Search className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
           <input
             autoFocus
+            type="search"
+            enterKeyHint="search"
+            aria-label={t("a11y.search")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={lang === "en" ? "Search products, brands…" : "Искать товары, бренды…"}
-            className="flex-1 bg-transparent border-0 outline-none text-base placeholder:text-muted-foreground/70"
+            placeholder={lang === "en" ? "Search by name…" : "Искать по названию…"}
+            className="flex-1 min-w-0 bg-transparent border-0 outline-none text-base py-2 placeholder:text-muted-foreground/70 [&::-webkit-search-cancel-button]:hidden"
           />
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1">
+          <DialogPrimitive.Close
+            aria-label={t("a11y.closeSearch")}
+            className="inline-flex items-center justify-center w-11 h-11 text-muted-foreground hover:text-foreground"
+          >
             <X className="w-4 h-4" />
-          </button>
+          </DialogPrimitive.Close>
         </div>
 
         <div className="max-h-[60vh] overflow-y-auto">
@@ -155,6 +176,7 @@ const SearchDialog = ({ open, onClose }: Props) => {
               return (
                 <li key={r.id}>
                   <button
+                    type="button"
                     onClick={() => goto(r.slug)}
                     className="w-full flex items-center gap-4 px-5 py-3 hover:bg-secondary/60 text-left transition-colors"
                   >
@@ -174,8 +196,9 @@ const SearchDialog = ({ open, onClose }: Props) => {
             })}
           </ul>
         </div>
-      </div>
-    </div>
+        </DialogPrimitive.Content>
+      </DialogPortal>
+    </Dialog>
   );
 };
 

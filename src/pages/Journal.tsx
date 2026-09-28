@@ -6,6 +6,7 @@ import { loadStaticCatalog, selectPagesBySlugs } from "@/lib/staticCatalog";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Список статей журнала. Новые статьи добавлять сюда (плюс саму страницу /page/<slug>).
 const ARTICLE_SLUGS = ["chuvstvitelnaya-kozha-kak-vybirat-uhod", "poryadok-naneseniya-uhoda-layering", "retinol-retinal-bakuchiol-raznica", "kak-vosstanovit-barer-kozhi","kakaya-syvorotka-nuzhna-po-zadache", "kak-chitat-sostav-kosmetiki-inci", "rossiyskie-analogi-koreyskih-syvorotok", "pdrn", "retinol", "vitamin-c", "lamellar", "microneedles", "retinol-i-vitamin-c"];
@@ -80,7 +81,17 @@ const Journal = () => {
         <h1 className="font-display text-5xl md:text-7xl leading-[0.95] mb-6">{heading}</h1>
         <p className="text-foreground/70 mb-14 text-lg leading-relaxed">{desc}</p>
         {loading ? (
-          <p className="text-center text-muted-foreground tracking-luxe uppercase text-xs py-24">…</p>
+          // Скелетон по сетке списка (столько же карточек, сколько статей): футер не «прыгает» (CLS).
+          <div className="space-y-10" role="status" aria-busy="true" aria-label={lang === "en" ? "Loading" : "Загрузка"}>
+            {ARTICLE_SLUGS.map((s) => (
+              <div key={s} className="border-t border-foreground/10 pt-8">
+                <Skeleton className="h-8 md:h-9 w-3/4 mb-3 rounded-sm" />
+                <Skeleton className="h-4 w-full mb-2 rounded-sm" />
+                <Skeleton className="h-4 w-2/3 rounded-sm" />
+                <Skeleton className="h-3 w-16 mt-5 rounded-sm" />
+              </div>
+            ))}
+          </div>
         ) : items.length === 0 ? (
           <p className="italic text-muted-foreground">—</p>
         ) : (

@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import SEO from "@/components/SEO";
-import { LAUNCH_CONFIG } from "@/lib/launchConfig";
+import { buildOzonUrl } from "@/lib/launchConfig";
 import { track } from "@/lib/analytics";
 import { ymGoal } from "@/lib/metrika";
 
@@ -76,7 +76,7 @@ const PromoClaim = () => {
 
   return (
     <main className="min-h-screen bg-background">
-      <SEO title={lang === "en" ? "Your promocode" : "Ваш промокод"} />
+      <SEO title={lang === "en" ? "Your promocode" : "Ваш промокод"} noindex />
       <Header />
       <section className="container max-w-md py-20 md:py-28 text-center">
         {state.stage === "loading" && (
@@ -166,7 +166,7 @@ const PromoClaim = () => {
               <Link to="/catalog" className="bg-foreground text-background py-3 rounded-full text-[11px] tracking-luxe uppercase hover:bg-accent transition-colors">
                 {lang === "en" ? "View products" : "Перейти в каталог"}
               </Link>
-              <a href={LAUNCH_CONFIG.ozonSellerUrl + "&utm_medium=promo_claim"} target="_blank" rel="noopener noreferrer"
+              <a href={buildOzonUrl({ utm_medium: "promo_claim" })} target="_blank" rel="noopener noreferrer"
                 className="border border-border py-3 rounded-full text-[11px] tracking-luxe uppercase text-muted-foreground hover:text-foreground hover:border-foreground transition-colors">
                 {lang === "en" ? "Go to Ozon (after launch)" : "Открыть Ozon (с момента старта)"}
               </a>

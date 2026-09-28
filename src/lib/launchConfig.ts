@@ -47,6 +47,11 @@ export const LAUNCH_CONFIG = {
   /** Блок выбора нашей доставки/ПВЗ в чекауте. false = скрыт даже при включённой корзине
    *  (правило владельца 19.06: иметь возможность скрывать пункты выдачи). */
   cartDeliveryEnabled: false,
+  /** ФИЧА-ФЛАГ оформления заказа (кнопка «Оформить», шаг оплаты).
+   *  false = оформить заказ на сайте нельзя. Включать вместе с подключением оплаты. */
+  checkoutEnabled: false,
+  /** ФИЧА-ФЛАГ чата поддержки. false = виджет чата не рендерится и его код не грузится. */
+  chatEnabled: false,
 } as const;
 
 /** Сегодняшняя фаза: 'launch' (10%) или 'welcome' (5%). */
@@ -70,3 +75,23 @@ export const isCartEnabled = (): boolean => LAUNCH_CONFIG.cartEnabled;
 /** Блок нашей доставки/ПВЗ в чекауте включён? (требует и cartEnabled). */
 export const isCartDeliveryEnabled = (): boolean =>
   LAUNCH_CONFIG.cartEnabled && LAUNCH_CONFIG.cartDeliveryEnabled;
+/** Оформление заказа (оплата) включено? Включать вместе с подключением оплаты. */
+export const isCheckoutEnabled = (): boolean => LAUNCH_CONFIG.checkoutEnabled;
+/** Чат поддержки включён? */
+export const isChatEnabled = (): boolean => LAUNCH_CONFIG.chatEnabled;
+
+/** Ссылка на магазин Ozon с UTM-метками; параметры не дублируются. */
+export function buildOzonUrl(
+  utm: Record<string, string> = {},
+  base: string = LAUNCH_CONFIG.ozonSellerUrl,
+): string {
+  try {
+    const url = new URL(base);
+    for (const [key, value] of Object.entries(utm)) {
+      if (value) url.searchParams.set(key, value);
+    }
+    return url.toString();
+  } catch {
+    return base;
+  }
+}

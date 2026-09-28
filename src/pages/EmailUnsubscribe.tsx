@@ -63,7 +63,7 @@ const EmailUnsubscribe = () => {
 
   return (
     <main className="min-h-screen bg-background">
-      <SEO title="Отписка от писем — DSOM" description="Отписка от писем DSOM" />
+      <SEO title="Отписка от писем — DSOM" description="Отписка от писем DSOM" noindex />
       <Header />
 
       <section className="container max-w-md py-20 md:py-28 text-center">

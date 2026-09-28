@@ -1,14 +1,18 @@
 // Чекаут D2C (демо-каркас). Скрыт, если cartEnabled=false → редирект на главную.
 // Онлайн-оплата, фискализация и расчёт доставки подключаются ПОСЛЕ договоров
 // эквайринга/кассы и деплоя Edge Functions (create-order / pay-init / calc-delivery).
-// Сейчас: обзор корзины + контакты + согласие ПДн + заглушки доставки/оплаты.
+// Пока checkoutEnabled=false: обзор корзины + «Заказ на сайте откроется …» + промокод.
+// Контакты НЕ собираем (данные никуда не уходят — не просим их вводить).
+// При checkoutEnabled=true: контакты (label/autocomplete/type) + согласие ПДн + заглушки доставки/оплаты.
 import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
+import PromoGate from "@/components/PromoGate";
 import { useCart } from "@/hooks/useCart";
-import { isCartEnabled, isCartDeliveryEnabled } from "@/lib/launchConfig";
+import { LAUNCH_CONFIG, isCartEnabled, isCartDeliveryEnabled, isCheckoutEnabled } from "@/lib/launchConfig";
 import { useAuth } from "@/hooks/useAuth";
 
 const CheckoutPage = () => {
@@ -27,6 +31,12 @@ const CheckoutInner = () => {
   const fmt = (n: number) => n.toLocaleString(en ? "en-US" : "ru-RU") + " ₽";
   const [contact, setContact] = useState({ name: "", phone: "", email: "" });
   const [consent, setConsent] = useState(false);
+  const checkoutOn = isCheckoutEnabled();
+  // Служебная страница: не индексируем. Title — «Оформление заказа — DSOM» (суффикс добавляет SEO).
+  const seo = <SEO title={en ? "Checkout" : "Оформление заказа"} noindex />;
+  const fieldCls =
+    "ym-disable-keys w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground focus-visible:ring-2 focus-visible:ring-foreground/30";
+  const labelCls = "block text-[11px] tracking-luxe uppercase text-muted-foreground mb-1.5";
 
   // Авторизованному предзаполняем контакты из профиля (грузится асинхронно).
   // Не перетираем то, что пользователь уже ввёл руками.
@@ -37,6 +47,7 @@ const CheckoutInner = () => {
   if (count === 0) {
     return (
       <div className="min-h-screen flex flex-col">
+        {seo}
         <Header />
         <main className="flex-1 container py-24 text-center">
           <h1 className="font-display text-3xl">{en ? "Your cart is empty" : "Корзина пуста"}</h1>
@@ -51,11 +62,29 @@ const CheckoutInner = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {seo}
       <Header />
       <main className="flex-1 container py-12 lg:py-16">
         <h1 className="font-display text-4xl mb-10">{en ? "Checkout" : "Оформление заказа"}</h1>
         <div className="grid lg:grid-cols-[1fr_380px] gap-12">
-          <div className="space-y-10">
+          {!checkoutOn ? (
+            // Оформление на сайте ещё не открыто: не собираем контакты, предлагаем промокод.
+            <div className="space-y-8 max-w-md">
+              <p className="font-display text-2xl leading-snug">
+                {en
+                  ? `Ordering on the site opens ${LAUNCH_CONFIG.launchWhenEn}`
+                  : `Заказ на сайте откроется ${LAUNCH_CONFIG.launchWhenRu}`}
+              </p>
+              <PromoGate variant="card" source="checkout" />
+              <Link
+                to="/catalog"
+                className="inline-flex items-center gap-2 text-[11px] tracking-luxe uppercase border-b border-foreground pb-1 hover:text-accent hover:border-accent transition-colors"
+              >
+                ← {en ? "Back to catalog" : "Вернуться в каталог"}
+              </Link>
+            </div>
+          ) : (
+          <form className="space-y-10" noValidate onSubmit={(e) => e.preventDefault()}>
             <section>
               <h2 className="text-[11px] tracking-luxe uppercase text-muted-foreground mb-4">{en ? "Contact" : "Контакты"}</h2>
               {user ? (
@@ -64,14 +93,29 @@ const CheckoutInner = () => {
                     <span className="text-muted-foreground shrink-0">{en ? "Signed in as" : "Вы вошли как"}</span>
                     <span className="font-medium truncate">{authedEmail}</span>
                   </div>
-                  <input value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} placeholder={en ? "Recipient name" : "Имя получателя"} className="ym-disable-keys w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
-                  <input value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} placeholder={en ? "Phone" : "Телефон"} inputMode="tel" className="ym-disable-keys w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
+                  <div>
+                    <label htmlFor="co-name" className={labelCls}>{en ? "Recipient name" : "Имя получателя"}</label>
+                    <input id="co-name" name="name" autoComplete="name" value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} className={fieldCls} />
+                  </div>
+                  <div>
+                    <label htmlFor="co-phone" className={labelCls}>{en ? "Phone" : "Телефон"}</label>
+                    <input id="co-phone" name="tel" type="tel" autoComplete="tel" inputMode="tel" value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} className={fieldCls} />
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-3 max-w-md">
-                  <input value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} placeholder={en ? "Name" : "Имя"} className="ym-disable-keys w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
-                  <input value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} placeholder={en ? "Phone" : "Телефон"} inputMode="tel" className="ym-disable-keys w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
-                  <input value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} placeholder="Email" inputMode="email" className="ym-disable-keys w-full border border-border rounded-lg px-4 py-3 bg-transparent focus:outline-none focus:border-foreground" />
+                  <div>
+                    <label htmlFor="co-name" className={labelCls}>{en ? "Name" : "Имя"}</label>
+                    <input id="co-name" name="name" autoComplete="name" value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} className={fieldCls} />
+                  </div>
+                  <div>
+                    <label htmlFor="co-phone" className={labelCls}>{en ? "Phone" : "Телефон"}</label>
+                    <input id="co-phone" name="tel" type="tel" autoComplete="tel" inputMode="tel" value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} className={fieldCls} />
+                  </div>
+                  <div>
+                    <label htmlFor="co-email" className={labelCls}>Email</label>
+                    <input id="co-email" name="email" type="email" autoComplete="email" inputMode="email" value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} className={fieldCls} />
+                  </div>
                   <p className="text-xs text-muted-foreground pt-1">
                     {en ? "Already have an account? " : "Уже есть аккаунт? "}
                     <Link to="/auth" className="text-accent hover:underline">{en ? "Sign in" : "Войти"}</Link>
@@ -80,7 +124,6 @@ const CheckoutInner = () => {
                 </div>
               )}
             </section>
-
             <section>
               <h2 className="text-[11px] tracking-luxe uppercase text-muted-foreground mb-4">{en ? "Delivery" : "Доставка"}</h2>
               {isCartDeliveryEnabled() ? (
@@ -116,7 +159,8 @@ const CheckoutInner = () => {
                 </span>
               </label>
             </section>
-          </div>
+          </form>
+          )}
 
           <aside className="lg:sticky lg:top-24 h-fit border border-border rounded-2xl p-6 space-y-5">
             <h2 className="text-[11px] tracking-luxe uppercase text-muted-foreground">{en ? "Order" : "Заказ"}</h2>
@@ -126,15 +170,17 @@ const CheckoutInner = () => {
                 return (
                   <div key={l.productId} className="flex justify-between gap-3 text-sm">
                     <span className="min-w-0">{nm} × {l.qty}</span>
-                    <span className="whitespace-nowrap">{fmt(l.price * l.qty)}</span>
+                    <span className="whitespace-nowrap lining-nums tabular-nums">{fmt(l.price * l.qty)}</span>
                   </div>
                 );
               })}
             </div>
             <div className="border-t border-border pt-4 flex justify-between font-display text-xl">
               <span>{en ? "Total" : "Итого"}</span>
-              <span>{fmt(subtotal)}</span>
+              <span className="lining-nums tabular-nums">{fmt(subtotal)}</span>
             </div>
+            {checkoutOn && (
+            <>
             <button
               disabled
               title={en ? "Online payment is being connected" : "Онлайн-оплата подключается"}
@@ -145,6 +191,8 @@ const CheckoutInner = () => {
             <p className="text-[11px] text-muted-foreground text-center">
               {en ? "Payment & fiscalization are being connected." : "Оплата и фискализация в стадии подключения."}
             </p>
+            </>
+            )}
           </aside>
         </div>
       </main>

@@ -19,6 +19,25 @@ const DOT_COLORS: Record<string, string> = {
   other: "bg-accent",
 };
 
+/** Убирает повторы параметров в ссылке (например, два utm_medium): остаётся последнее значение.
+ *  Ссылки собираются через URL/URLSearchParams; при неразборчивом адресе — возвращается как есть. */
+function dedupeUrlParams(raw: string): string {
+  try {
+    const url = new URL(raw);
+    let changed = false;
+    for (const key of new Set(url.searchParams.keys())) {
+      const values = url.searchParams.getAll(key);
+      if (values.length > 1) {
+        url.searchParams.set(key, values[values.length - 1]);
+        changed = true;
+      }
+    }
+    return changed ? url.toString() : raw;
+  } catch {
+    return raw;
+  }
+}
+
 interface Props {
   kind: string;
   url: string;
@@ -26,7 +45,8 @@ interface Props {
   productId?: string;
 }
 
-const MarketplaceButton = ({ kind, url, label, productId }: Props) => {
+const MarketplaceButton = ({ kind, url: rawUrl, label, productId }: Props) => {
+  const url = dedupeUrlParams(rawUrl);
   return (
     <a
       href={url}

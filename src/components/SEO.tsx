@@ -36,10 +36,36 @@ const ORGANIZATION_JSONLD = {
   sameAs: ["https://t.me/dsom_official", "https://vk.com/dsom_skin_care"],
 };
 
+const SITE_ORIGIN = "https://dsom.ru";
+
+/** Канонический URL: всегда https://dsom.ru + путь, без query (utm_*, yclid, gclid…),
+ *  без #hash и без завершающего слэша (кроме корня). */
+function buildCanonical(raw?: string): string {
+  let path = "";
+  try {
+    if (raw) {
+      path = new URL(raw, SITE_ORIGIN).pathname;
+    } else if (typeof window !== "undefined") {
+      path = window.location.pathname;
+    } else {
+      return "";
+    }
+  } catch {
+    return "";
+  }
+  if (path.length > 1) path = path.replace(/\/+$/, "");
+  return `${SITE_ORIGIN}${path || "/"}`;
+}
+
 const SEO = ({ title, description, image, type = "website", jsonLd, canonical, noindex }: Props) => {
-  const fullTitle = title ? `${title} — ${SITE_NAME}` : `${SITE_NAME} — Активная косметика с прозрачным составом`;
+  // Не дублируем бренд: если в title уже есть «DSOM», суффикс не дописываем.
+  const fullTitle = title
+    ? /DSOM/.test(title)
+      ? title
+      : `${title} — ${SITE_NAME}`
+    : `${SITE_NAME} — Активная косметика с прозрачным составом`;
   const desc = description || DEFAULT_DESCRIPTION;
-  const url = canonical || (typeof window !== "undefined" ? window.location.href : "");
+  const url = buildCanonical(canonical);
   const ogImageRaw = image || "/og-default.jpg";
   // og:image должен быть абсолютным URL, иначе соцсети/парсеры его не подхватывают.
   // Плюс переписываем new.dsom.ru → dsom.ru (тот же /storage/-путь, nginx отдаёт статику).

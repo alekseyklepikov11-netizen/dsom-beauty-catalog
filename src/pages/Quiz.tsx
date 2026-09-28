@@ -3,20 +3,22 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ArrowRight, RefreshCw, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { loadStaticCatalog, selectProductsBySlugs } from "@/lib/staticCatalog";
+import { isIncompatiblePair, loadStaticCatalog, selectProductsBySlugs } from "@/lib/staticCatalog";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard, { ProductLite } from "@/components/ProductCard";
 import QuickViewDialog from "@/components/QuickViewDialog";
+import PromoGate from "@/components/PromoGate";
 import SEO from "@/components/SEO";
 
-// Slugs of real DSOM products in the database.
-// Quiz answers map to scores per product; top-scoring 2-3 products are recommended.
+// Slugs реальных продуктов DSOM (сверено с /data/catalog.json 28.09.2026).
+// Ответы квиза дают баллы продуктам; рекомендуются 2-3 лучших.
+// ⚠️ GLOW и RENEW несовместимы в одной рутине — вместе в результат не попадают (см. isIncompatiblePair).
 const SLUGS = {
-  RENEW: "retinol-palmitate-microneedles-serum",   // P2 Renew — Retinol 0.3% + microspicules
-  RENEW_NIGHT: "night-micro-needle-retinol-serum", // P2 Renew (alt night SKU)
-  LIFT: "pdrn-aloe-lifting-serum",                 // P3 Lift — PDRN 0.1% + peptide
-  HYDRO: "lamellar-cream-hyaluronic",              // P4 Hydro — lamellar cream
+  GLOW: "vitamin-c-microspicules-serum",           // P1 GLOW — витамин C + микроспикулы (сияние, ровный тон; вечером)
+  RENEW: "retinol-palmitate-microneedles-serum",   // P2 RENEW — ретинол (обновление, гладкость)
+  LIFT: "pdrn-aloe-lifting-serum",                 // P3 LIFT — PDRN (упругость, восстановление)
+  HYDRO: "lamellar-cream-hyaluronic",              // P4 HYDRO — ламеллярный крем (увлажнение, барьер)
 };
 
 type Slug = typeof SLUGS[keyof typeof SLUGS];
@@ -50,7 +52,7 @@ const QUESTIONS: QuizQuestion[] = [
       {
         value: "dullness",
         label: { ru: "Тусклость, нет сияния", en: "Dullness, lack of radiance" },
-        scores: { [SLUGS.HYDRO]: 2, [SLUGS.LIFT]: 1 },
+        scores: { [SLUGS.GLOW]: 3, [SLUGS.HYDRO]: 1 },
       },
       {
         value: "dryness",
@@ -60,7 +62,7 @@ const QUESTIONS: QuizQuestion[] = [
       {
         value: "texture",
         label: { ru: "Неровный тон, текстура", en: "Uneven tone, texture" },
-        scores: { [SLUGS.RENEW]: 3, [SLUGS.RENEW_NIGHT]: 1, [SLUGS.HYDRO]: 1 },
+        scores: { [SLUGS.RENEW]: 3, [SLUGS.GLOW]: 2, [SLUGS.HYDRO]: 1 },
       },
     ],
   },
@@ -79,22 +81,22 @@ const QUESTIONS: QuizQuestion[] = [
       {
         value: "dry",
         label: { ru: "Сухая", en: "Dry" },
-        scores: { [SLUGS.HYDRO]: 2, [SLUGS.LIFT]: 1, [SLUGS.RENEW]: -1 },
+        scores: { [SLUGS.HYDRO]: 2, [SLUGS.LIFT]: 1, [SLUGS.RENEW]: -1, [SLUGS.GLOW]: -2 },
       },
       {
         value: "oily",
         label: { ru: "Жирная", en: "Oily" },
-        scores: { [SLUGS.RENEW]: 1 },
+        scores: { [SLUGS.RENEW]: 1, [SLUGS.GLOW]: 1 },
       },
       {
         value: "combo",
         label: { ru: "Комбинированная", en: "Combination" },
-        scores: { [SLUGS.RENEW]: 1, [SLUGS.HYDRO]: 1 },
+        scores: { [SLUGS.RENEW]: 1, [SLUGS.GLOW]: 1, [SLUGS.HYDRO]: 1 },
       },
       {
         value: "sensitive",
         label: { ru: "Чувствительная", en: "Sensitive" },
-        scores: { [SLUGS.LIFT]: 2, [SLUGS.HYDRO]: 2, [SLUGS.RENEW]: -2, [SLUGS.RENEW_NIGHT]: -2 },
+        scores: { [SLUGS.LIFT]: 2, [SLUGS.HYDRO]: 2, [SLUGS.RENEW]: -2, [SLUGS.GLOW]: -2 },
       },
     ],
   },
@@ -108,12 +110,12 @@ const QUESTIONS: QuizQuestion[] = [
       {
         value: "regular",
         label: { ru: "Использую регулярно", en: "Use it regularly" },
-        scores: { [SLUGS.RENEW]: 2, [SLUGS.RENEW_NIGHT]: 1 },
+        scores: { [SLUGS.RENEW]: 2 },
       },
       {
         value: "tried_irritation",
         label: { ru: "Пробовала — раздражает кожу", en: "Tried it — caused irritation" },
-        scores: { [SLUGS.RENEW]: -2, [SLUGS.RENEW_NIGHT]: -2, [SLUGS.LIFT]: 2, [SLUGS.HYDRO]: 1 },
+        scores: { [SLUGS.RENEW]: -2, [SLUGS.LIFT]: 2, [SLUGS.HYDRO]: 1 },
       },
       {
         value: "never",
@@ -137,12 +139,12 @@ const QUESTIONS: QuizQuestion[] = [
       {
         value: "morning",
         label: { ru: "Только утром", en: "Only in the morning" },
-        scores: { [SLUGS.HYDRO]: 2, [SLUGS.LIFT]: 1, [SLUGS.RENEW]: -1, [SLUGS.RENEW_NIGHT]: -2 },
+        scores: { [SLUGS.HYDRO]: 2, [SLUGS.LIFT]: 1, [SLUGS.RENEW]: -1, [SLUGS.GLOW]: -2 },
       },
       {
         value: "evening",
         label: { ru: "Только вечером", en: "Only in the evening" },
-        scores: { [SLUGS.RENEW]: 2, [SLUGS.RENEW_NIGHT]: 2, [SLUGS.LIFT]: 1, [SLUGS.HYDRO]: 1 },
+        scores: { [SLUGS.RENEW]: 2, [SLUGS.GLOW]: 2, [SLUGS.LIFT]: 1, [SLUGS.HYDRO]: 1 },
       },
       {
         value: "both",
@@ -171,7 +173,7 @@ const QUESTIONS: QuizQuestion[] = [
       {
         value: "renewal",
         label: { ru: "Обновление, гладкость", en: "Renewal, smoothness" },
-        scores: { [SLUGS.RENEW]: 3, [SLUGS.RENEW_NIGHT]: 2 },
+        scores: { [SLUGS.RENEW]: 3 },
       },
       {
         value: "hydration",
@@ -186,6 +188,15 @@ const QUESTIONS: QuizQuestion[] = [
     ],
   },
 ];
+
+/** Убирает из списка второй продукт стоп-пары (GLOW↔RENEW), сохраняя порядок. */
+function dropIncompatible<T extends { slug: string }>(list: T[]): T[] {
+  const out: T[] = [];
+  for (const p of list) {
+    if (!out.some((q) => isIncompatiblePair(q.slug, p.slug))) out.push(p);
+  }
+  return out;
+}
 
 const Quiz = () => {
   const { i18n } = useTranslation();
@@ -202,8 +213,8 @@ const Quiz = () => {
   // Compute scores per product slug from all answers.
   const recommendedSlugs = useMemo<Slug[]>(() => {
     const scores: Record<string, number> = {
+      [SLUGS.GLOW]: 0,
       [SLUGS.RENEW]: 0,
-      [SLUGS.RENEW_NIGHT]: 0,
       [SLUGS.LIFT]: 0,
       [SLUGS.HYDRO]: 0,
     };
@@ -216,13 +227,14 @@ const Quiz = () => {
         scores[slug] = (scores[slug] || 0) + (delta as number);
       }
     }
-    // Avoid recommending both retinol SKUs simultaneously: pick the higher one
-    if (scores[SLUGS.RENEW] > 0 && scores[SLUGS.RENEW_NIGHT] > 0) {
-      if (scores[SLUGS.RENEW] >= scores[SLUGS.RENEW_NIGHT]) {
-        scores[SLUGS.RENEW_NIGHT] = -10;
-      } else {
-        scores[SLUGS.RENEW] = -10;
-      }
+    // GLOW и RENEW несовместимы — в результат попадает только один.
+    // Главная забота «тусклость/сияние» — это задача GLOW: тогда остаётся GLOW, даже если RENEW набрал больше
+    // за счёт следующих ответов (опыт с ретинолом, «обновление»). В остальных случаях — продукт с бОльшим баллом.
+    if (isIncompatiblePair(SLUGS.GLOW, SLUGS.RENEW) && scores[SLUGS.GLOW] > 0 && scores[SLUGS.RENEW] > 0) {
+      const glowWins =
+        answers.concern === "dullness" || scores[SLUGS.GLOW] > scores[SLUGS.RENEW];
+      if (glowWins) scores[SLUGS.RENEW] = -10;
+      else scores[SLUGS.GLOW] = -10;
     }
     // Sort slugs by score desc, keep those with positive score, take top 3
     const sorted = Object.entries(scores)
@@ -248,6 +260,7 @@ const Quiz = () => {
         let fromJson = selectProductsBySlugs(cat, slugs) as ProductLite[];
         // Fallback внутри JSON: если slug'и не совпали (продукты переименованы) — первые 4
         if (fromJson.length === 0) fromJson = cat.products.slice(0, 4) as ProductLite[];
+        fromJson = dropIncompatible(fromJson);
         setResults(fromJson);
         return;
       }
@@ -274,7 +287,7 @@ const Quiz = () => {
           .limit(4);
         products = (data || []) as ProductLite[];
       }
-      setResults(products);
+      setResults(dropIncompatible(products));
     } finally {
       setLoading(false);
     }
@@ -285,9 +298,9 @@ const Quiz = () => {
     setAnswers(next);
     if (step < total - 1) {
       setStep(step + 1);
-    } else {
-      setTimeout(() => fetchResults(), 100);
     }
+    // Результат после последнего ответа запускает useEffect ниже — уже с актуальными answers.
+    // (Раньше здесь был setTimeout(fetchResults) со «старым» замыканием: считал баллы без последнего ответа.)
   };
 
   const restart = () => {
@@ -412,12 +425,22 @@ const Quiz = () => {
                   : "Подходящего совпадения не нашлось. Посмотрите весь каталог."}
               </p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16 max-w-6xl mx-auto">
+              <div className="flex flex-wrap justify-center gap-x-8 gap-y-16 max-w-6xl mx-auto">
                 {results.map((p, i) => (
-                  <ProductCard key={p.id} product={p} index={i} onQuickView={setQuickSlug} />
+                  <div
+                    key={p.id}
+                    className={`w-full sm:w-[calc(50%-16px)] ${results.length === 4 ? "lg:w-[calc(25%-24px)]" : "lg:w-[calc(33.333%-22px)]"}`}
+                  >
+                    <ProductCard product={p} index={i} onQuickView={setQuickSlug} />
+                  </div>
                 ))}
               </div>
             )}
+
+            {/* Промокод под результатом — экран выше обещает его */}
+            <div className="max-w-md mx-auto mt-16">
+              <PromoGate variant="card" source="quiz" />
+            </div>
 
             <div className="text-center mt-16">
               <Link

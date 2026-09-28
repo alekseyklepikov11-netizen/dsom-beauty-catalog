@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Bell, X } from "lucide-react";
+import { Dialog, DialogDescription, DialogOverlay, DialogPortal, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -11,7 +13,7 @@ interface Props {
 }
 
 const StockAlertDialog = ({ productId, productName }: Props) => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const en = i18n.language === "en";
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
@@ -53,28 +55,34 @@ const StockAlertDialog = ({ productId, productName }: Props) => {
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
+      <Dialog open={open} onOpenChange={setOpen}>
+      <DialogPrimitive.Trigger
         className="w-full flex items-center justify-center gap-2 border border-foreground/20 hover:border-foreground py-3.5 text-[11px] tracking-luxe uppercase transition-colors"
       >
-        <Bell className="w-3.5 h-3.5" />
+        <Bell className="w-3.5 h-3.5" aria-hidden="true" />
         {en ? "Notify when available" : "Сообщить о поступлении"}
-      </button>
+      </DialogPrimitive.Trigger>
 
-      {open && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setOpen(false)}>
-          <div className="bg-background w-full max-w-md p-8 relative" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setOpen(false)} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground">
+      <DialogPortal>
+        <DialogOverlay className="bg-black/60" />
+        <DialogPrimitive.Content
+          aria-modal="true"
+          className="fixed inset-0 m-auto h-fit z-50 w-[calc(100%-2rem)] max-w-md bg-background p-8 max-h-[calc(100dvh-2rem)] overflow-y-auto focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+        >
+            <DialogPrimitive.Close
+              aria-label={t("a11y.close")}
+              className="absolute top-2 right-2 inline-flex items-center justify-center w-11 h-11 text-muted-foreground hover:text-foreground"
+            >
               <X className="w-5 h-5" />
-            </button>
-            <h3 className="font-display text-2xl mb-2">
+            </DialogPrimitive.Close>
+            <DialogTitle className="font-display text-2xl font-normal leading-8 tracking-normal mb-2 pr-8">
               {en ? "Notify me" : "Уведомить о наличии"}
-            </h3>
-            <p className="text-sm text-muted-foreground mb-6">
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground mb-6">
               {en
                 ? `We'll send a one-time email when "${productName}" becomes available.`
                 : `Пришлём одно письмо, когда «${productName}» появится в продаже.`}
-            </p>
+            </DialogDescription>
             <form onSubmit={submit} className="space-y-4">
               <input
                 type="email"
@@ -82,6 +90,9 @@ const StockAlertDialog = ({ productId, productName }: Props) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="email@example.com"
+                aria-label={t("a11y.notifyEmail")}
+                autoComplete="email"
+                inputMode="email"
                 className="ym-disable-keys w-full border border-border bg-background px-4 py-3 text-sm focus:border-foreground outline-none"
                 autoFocus
               />
@@ -122,9 +133,9 @@ const StockAlertDialog = ({ productId, productName }: Props) => {
             <p className="text-[10px] text-muted-foreground mt-4 text-center">
               {en ? "We won't share your email with anyone." : "Email не передаём третьим лицам."}
             </p>
-          </div>
-        </div>
-      )}
+        </DialogPrimitive.Content>
+      </DialogPortal>
+      </Dialog>
     </>
   );
 };

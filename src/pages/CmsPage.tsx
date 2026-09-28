@@ -10,6 +10,7 @@ import NotFound from "./NotFound";
 import { HeroBanner } from "@/components/HeroBanner";
 import { useBanner, type BannerPosition } from "@/hooks/useBanner";
 import AboutEditorial from "@/components/blocks/AboutEditorial";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Page {
   slug: string;
@@ -254,7 +255,15 @@ const CmsPage = () => {
       ) : (
       <article className="container max-w-3xl py-20 md:py-28">
         {loading ? (
-          <p className="text-center text-muted-foreground tracking-luxe uppercase text-xs py-24">…</p>
+          // Скелетон высотой, близкой к статье: футер не поднимается в первый экран и не «прыгает» (CLS).
+          <div className="min-h-[70vh]" role="status" aria-busy="true" aria-label={lang === "en" ? "Loading" : "Загрузка"}>
+            {!showBannerHero && <Skeleton className="h-12 md:h-16 w-4/5 mb-12 rounded-sm" />}
+            <div className="space-y-4">
+              {[100, 96, 92, 98, 70, 0, 100, 94, 97, 60].map((w, i) =>
+                w === 0 ? <div key={i} className="h-4" /> : <Skeleton key={i} className="h-4 rounded-sm" style={{ width: `${w}%` }} />
+              )}
+            </div>
+          </div>
         ) : (
           <>
             {!showBannerHero && (

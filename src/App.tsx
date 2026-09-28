@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import { Component, Suspense, lazy } from "react";
+import { Helmet } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,8 +12,9 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import CookieBanner from "@/components/CookieBanner";
 import MobileCtaBar from "@/components/MobileCtaBar";
 import ScrollToTop from "@/components/ScrollToTop";
-import SupportChat from "@/components/SupportChat";
 import YandexMetrika from "@/components/YandexMetrika";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import { isChatEnabled } from "@/lib/launchConfig";
 
 // Главная грузится сразу (самый частый вход) — без задержки на первый экран.
 import Index from "./pages/Index.tsx";
@@ -34,6 +36,10 @@ const Unsubscribe = lazy(() => import("./pages/Unsubscribe.tsx"));
 const EmailUnsubscribe = lazy(() => import("./pages/EmailUnsubscribe.tsx"));
 const PromoClaim = lazy(() => import("./pages/PromoClaim.tsx"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage.tsx"));
+
+// Чат поддержки (вместе с markdown-стеком) — отдельным чанком и только при включённом флаге:
+// при chatEnabled=false его код посетителю не грузится вовсе.
+const SupportChat = lazy(() => import("@/components/SupportChat"));
 
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin.tsx"));
 const Dashboard = lazy(() => import("./pages/admin/Dashboard.tsx"));
@@ -72,6 +78,25 @@ const RouteFallback = () => (
   </div>
 );
 
+// Шрифты презентации /intro (Fraunces, Cormorant SC) нужны только там — подключаем их на этом маршруте,
+// а не на всех страницах из index.html. Cormorant Garamond уже подключён глобально.
+const INTRO_FONTS_HREF =
+  "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Cormorant+SC:wght@300;400&display=swap";
+const IntroRoute = () => (
+  <>
+    <Helmet>
+      <link rel="stylesheet" href={INTRO_FONTS_HREF} />
+    </Helmet>
+    <Intro />
+  </>
+);
+
+// Граница ошибок сбрасывается при переходе на другой адрес.
+const RoutesErrorBoundary = ({ children }: { children: React.ReactNode }) => {
+  const { pathname } = useLocation();
+  return <ErrorBoundary resetKey={pathname}>{children}</ErrorBoundary>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -82,10 +107,11 @@ const App = () => (
         <YandexMetrika />
         <AuthProvider>
           <CartProvider>
+          <RoutesErrorBoundary>
           <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/intro" element={<Intro />} />
+            <Route path="/intro" element={<IntroRoute />} />
             <Route path="/catalog" element={<Catalog />} />
             <Route path="/product/:slug" element={<ProductPage />} />
             <Route path="/favorites" element={<Favorites />} />
@@ -125,6 +151,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
+          </RoutesErrorBoundary>
           <CookieBanner />
           <MobileCtaGate />
           <SupportChatGate />
@@ -136,15 +163,33 @@ const App = () => (
   </QueryClientProvider>
 );
 
-// Чат не показываем в админке и на /intro (презентация).
+// Чат не показываем, пока он выключен флагом (launchConfig.chatEnabled), в админке и на /intro (презентация).
+// Ошибка загрузки чанка чата не должна ронять страницу — своя граница с пустым фолбэком.
 const SupportChatGate = () => {
   const { pathname } = useLocation();
+  if (!isChatEnabled()) return null;
   if (pathname.startsWith("/admin")) return null;
   if (pathname === "/intro") return null;
-  return <SupportChat />;
+  return (
+    <SilentBoundary>
+      <Suspense fallback={null}>
+        <SupportChat />
+      </Suspense>
+    </SilentBoundary>
+  );
 };
 
-// MobileCtaBar «В магазин» не показываем в админке и на /intro.
+class SilentBoundary extends Component<{ children: React.ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
+// Нижнюю мобильную CTA (MobileCtaBar) не показываем в админке и на /intro.
 const MobileCtaGate = () => {
   const { pathname } = useLocation();
   if (pathname.startsWith("/admin")) return null;

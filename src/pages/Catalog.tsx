@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { LayoutGrid, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { loadStaticCatalog, selectCatalogProducts, selectRootCategories, type CatalogSort } from "@/lib/staticCatalog";
+import { loadStaticCatalog, selectCatalogProducts, selectNonEmptyRootCategories, type CatalogSort } from "@/lib/staticCatalog";
 import { toPublicAssetUrl } from "@/lib/utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -11,6 +11,7 @@ import ProductCard, { ProductLite } from "@/components/ProductCard";
 import QuickViewDialog from "@/components/QuickViewDialog";
 import PromoGate from "@/components/PromoGate";
 import { LAUNCH_CONFIG, currentPhase } from "@/lib/launchConfig";
+import { offerAvailability } from "@/lib/salesStatus";
 import { SKIN_TYPES } from "@/lib/skinTypes";
 import { useBanner } from "@/hooks/useBanner";
 import { HeroBanner } from "@/components/HeroBanner";
@@ -19,6 +20,16 @@ import SEO from "@/components/SEO";
 interface Cat { id: string; slug: string; name: string; name_en: string | null; parent_id: string | null }
 
 type SortKey = "new" | "price_asc" | "price_desc";
+
+/** Колонки на десктопе без одиночной карточки в последнем ряду:
+ *  4/8 товаров → 2+2 на lg и 4 в ряд с xl (на 1024 при 4 колонках названия обрезаются),
+ *  3/6 → по 3, 5 → 3+2, 7 → 4+3. */
+function lgColsFor(n: number): string {
+  if (n % 4 === 0) return "lg:grid-cols-2 xl:grid-cols-4";
+  if (n % 3 === 0) return "lg:grid-cols-3";
+  if (n % 4 === 3) return "lg:grid-cols-4";
+  return "lg:grid-cols-3";
+}
 
 const Catalog = () => {
   const { t, i18n } = useTranslation();
@@ -50,11 +61,22 @@ const Catalog = () => {
       // Сначала статический JSON, при его отсутствии — прежний supabase-путь
       const cat = await loadStaticCatalog();
       if (cat) {
-        setCats(selectRootCategories(cat) as Cat[]);
+        // Вкладки только для категорий, где есть товары (пустые «Тело», «Очищение» и т. п. не показываем)
+        setCats(selectNonEmptyRootCategories(cat) as Cat[]);
         return;
       }
-      const { data } = await supabase.from("categories").select("id,slug,name,name_en,parent_id").eq("is_visible", true).is("parent_id", null).order("sort_order");
-      setCats((data || []) as Cat[]);
+      // Запасной путь (catalog.json устарел или не ответил): та же логика — только корни, где есть товары
+      const [{ data: allCats }, { data: used }] = await Promise.all([
+        supabase.from("categories").select("id,slug,name,name_en,parent_id").eq("is_visible", true).order("sort_order"),
+        supabase.from("products").select("category_id,subcategory_id").eq("is_visible", true),
+      ]);
+      const usedIds = new Set<string>();
+      for (const p of used || []) {
+        if (p.category_id) usedIds.add(p.category_id);
+        if (p.subcategory_id) usedIds.add(p.subcategory_id);
+      }
+      const all = (allCats || []) as Cat[];
+      setCats(all.filter((root) => !root.parent_id && (usedIds.has(root.id) || all.some((c) => c.parent_id === root.id && usedIds.has(c.id)))));
     })();
   }, []);
 
@@ -125,7 +147,7 @@ const Catalog = () => {
         name: lang === "en" && p.name_en ? p.name_en : p.name,
         url: `https://dsom.ru/product/${p.slug}`,
         ...(p.cover_image_url ? { image: toPublicAssetUrl(p.cover_image_url) } : {}),
-        ...(p.price ? { offers: { "@type": "Offer", priceCurrency: "RUB", price: p.price, availability: "https://schema.org/PreOrder" } } : {}),
+        ...(p.price ? { offers: { "@type": "Offer", priceCurrency: "RUB", price: p.price, availability: offerAvailability() } } : {}),
       },
     }));
     return items.length ? { "@context": "https://schema.org", "@type": "ItemList", itemListElement: items } : null;
@@ -158,6 +180,8 @@ const Catalog = () => {
               return (
                 <button
                   key={c.slug}
+                  type="button"
+                  aria-pressed={active}
                   onClick={() => setParam("cat", c.slug)}
                   className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-[11px] tracking-luxe uppercase transition-colors ${
                     active ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
@@ -173,7 +197,7 @@ const Catalog = () => {
             <select
               value={skin}
               onChange={(e) => setParam("skin", e.target.value)}
-              className="bg-transparent border-0 cursor-pointer focus:outline-none focus:ring-0 underline underline-offset-4 decoration-foreground/30"
+              className="bg-transparent border-0 cursor-pointer rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background underline underline-offset-4 decoration-foreground/30"
               aria-label={lang === "en" ? "Skin type" : "Тип кожи"}
             >
               <option value="">{lang === "en" ? "All skin types" : "Любой тип кожи"}</option>
@@ -184,7 +208,8 @@ const Catalog = () => {
             <select
               value={sort}
               onChange={(e) => setParam("sort", e.target.value)}
-              className="bg-transparent border-0 cursor-pointer focus:outline-none focus:ring-0 underline underline-offset-4 decoration-foreground/30"
+              className="bg-transparent border-0 cursor-pointer rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background underline underline-offset-4 decoration-foreground/30"
+              aria-label={lang === "en" ? "Sort" : "Сортировка"}
             >
               <option value="new">{t("catalog.sortNew")}</option>
               <option value="price_asc">{t("catalog.sortPriceAsc")}</option>
@@ -226,7 +251,7 @@ const Catalog = () => {
             <div
               className={`grid auto-rows-fr ${
                 mobileCols === 2 ? "grid-cols-2 gap-x-4 gap-y-10" : "grid-cols-1 gap-y-16"
-              } sm:grid-cols-2 sm:gap-x-8 sm:gap-y-16 lg:grid-cols-3`}
+              } sm:grid-cols-2 sm:gap-x-8 sm:gap-y-16 ${lgColsFor(products.length)}`}
             >
               {products.map((p, i) => <ProductCard key={p.id} product={p} index={i} onQuickView={setQuickSlug} showAddToCart />)}
             </div>

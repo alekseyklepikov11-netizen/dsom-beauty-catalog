@@ -19,11 +19,25 @@ import { LAUNCH_CONFIG, currentPhase, isCartEnabled } from "@/lib/launchConfig";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import { track } from "@/lib/analytics";
 import { addRecentlyViewed } from "@/lib/recentlyViewed";
+import { offerAvailability } from "@/lib/salesStatus";
 import NotFound from "./NotFound";
+
+// Meta description товара: подзаголовок + начало описания, до ~160 символов по границе слова.
+// Один подзаголовок (24–45 символов) для сниппета слишком короток. Когда появится колонка
+// products.seo_description (SEO-5), брать её первой.
+function metaDescription(subtitle: string | null | undefined, description: string | null | undefined): string {
+  const head = (subtitle || "").trim().replace(/[.\s]+$/, "");
+  const body = (description || "").replace(/\s+/g, " ").trim();
+  const text = head && body ? `${head}. ${body}` : head || body;
+  if (text.length <= 160) return text;
+  const cut = text.slice(0, 158);
+  const at = cut.lastIndexOf(" ");
+  return `${(at > 100 ? cut.slice(0, at) : cut).replace(/[,.;:—–\s-]+$/, "")}…`;
+}
 
 // FAQ блок — короткий, общий для всех 4 продуктов DSOM
 const PRODUCT_FAQS_RU = [
-  { q: "Когда стартуют продажи?", a: `Старт — ${LAUNCH_CONFIG.launchLabelRu}, эксклюзивно на Ozon. Подпишитесь на промокод выше — напомним за день до старта.` },
+  { q: "Когда стартуют продажи?", a: `Старт — ${LAUNCH_CONFIG.launchLabelRu}: на Ozon и на сайте dsom.ru. Подпишитесь на промокод выше — напомним за день до старта.` },
   { q: "Где производится?", a: "В России, по нашим спецификациям. Продукция прошла лабораторные испытания и обязательное подтверждение соответствия — отвечаем за неё в полной мере. Реквизиты компании и документы — на странице dsom.ru/page/documents." },
   { q: "Есть ли отдушка?", a: "Да, в составе есть лёгкая отдушка. Мы не делаем «100% без отдушек» из принципа честной коммуникации." },
   { q: "Можно ли использовать беременным и кормящим?", a: "При беременности и грудном вскармливании RENEW (ретинола пальмитат) не применять. По остальным продуктам линейки — только после консультации с врачом." },
@@ -31,7 +45,7 @@ const PRODUCT_FAQS_RU = [
   { q: "Сколько хватает одной упаковки?", a: "Сыворотки — 30 мл, крем HYDRO — 50 мл. Срок зависит от продукта и частоты: GLOW и RENEW наносят 2–3 раза в неделю, LIFT и HYDRO — утром и вечером. Одной упаковки хватает надолго." },
 ];
 const PRODUCT_FAQS_EN = [
-  { q: "When does it launch?", a: `Launch ${LAUNCH_CONFIG.launchLabelEn}, exclusively on Ozon. Subscribe to the promo above — we'll remind you the day before.` },
+  { q: "When does it launch?", a: `Launch ${LAUNCH_CONFIG.launchLabelEn}: on Ozon and on dsom.ru. Subscribe to the promo above — we'll remind you the day before.` },
   { q: "Where is it made?", a: "In Russia, to our specifications. Our products have passed laboratory testing and mandatory conformity assessment, and we take full responsibility for them. Company details and documents are at dsom.ru/page/documents." },
   { q: "Is there fragrance?", a: "Yes, a light fragrance is added. We don't claim '100% fragrance-free' on principle." },
   { q: "Safe during pregnancy?", a: "RENEW (retinyl palmitate) — do not use during pregnancy or breastfeeding. For the rest of the line — only after consulting your doctor." },
@@ -54,6 +68,21 @@ interface Img { id: string; url: string; alt: string | null }
 interface MLink { id: string; kind: string; url: string; label: string | null }
 interface Store { id: string; name: string; city: string; address: string }
 
+type TabKey = "description" | "ingredients" | "how_to_use";
+const TAB_KEYS: TabKey[] = ["description", "ingredients", "how_to_use"];
+
+/** Число колонок ленты миниатюр без «сироты» в последнем ряду (4–6 колонок). */
+function thumbColsClass(n: number): string {
+  if (n <= 4) return "grid-cols-4";
+  if (n <= 6) return n === 5 ? "grid-cols-5" : "grid-cols-6";
+  if (n % 6 === 0) return "grid-cols-6";
+  if (n % 5 === 0) return "grid-cols-5";
+  if (n % 4 === 0) return "grid-cols-4";
+  // иначе — вариант с самым заполненным последним рядом
+  const best = [6, 5, 4].sort((a, b) => (n % b) - (n % a))[0];
+  return best === 6 ? "grid-cols-6" : best === 5 ? "grid-cols-5" : "grid-cols-4";
+}
+
 const ProductPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { t, i18n } = useTranslation();
@@ -63,7 +92,8 @@ const ProductPage = () => {
   const [stores, setStores] = useState<Store[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const galleryRef = useRef<HTMLDivElement>(null);
-  const [tab, setTab] = useState<"description" | "ingredients" | "how_to_use">("description");
+  const [tab, setTab] = useState<TabKey>("description");
+  const tabRefs = useRef<Record<TabKey, HTMLButtonElement | null>>({ description: null, ingredients: null, how_to_use: null });
   const [brandName, setBrandName] = useState<string | null>(null);
   const [quickSlug, setQuickSlug] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -164,32 +194,15 @@ const ProductPage = () => {
     brand: brandName ? { "@type": "Brand", name: brandName } : { "@type": "Brand", name: "DSOM" },
     offers: {
       "@type": "Offer",
-      url: typeof window !== "undefined" ? window.location.href : undefined,
+      url: `https://dsom.ru/product/${product.slug}`,
       priceCurrency: "RUB",
       price: Number(product.price),
-      availability: links.length > 0 ? "https://schema.org/InStock" : "https://schema.org/PreOrder",
+      // До старта продаж — предзаказ для всех SKU (не зависит от наличия ссылок на маркетплейсы).
+      // shippingDetails / hasMerchantReturnPolicy убраны: своей доставки пока нет, а условия
+      // возврата должны совпадать с Офертой (вернуть после решения юриста и запуска D2C).
+      availability: offerAvailability(),
       // Требования Google Merchant к полноте Offer:
       priceValidUntil: `${new Date().getFullYear()}-12-31`,
-      // Доставка маркетплейсом (Ozon), для покупателя бесплатно — нейтральный минимум
-      shippingDetails: {
-        "@type": "OfferShippingDetails",
-        shippingRate: { "@type": "MonetaryAmount", value: 0, currency: "RUB" },
-        shippingDestination: { "@type": "DefinedRegion", addressCountry: "RU" },
-        deliveryTime: {
-          "@type": "ShippingDeliveryTime",
-          handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 2, unitCode: "DAY" },
-          transitTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 7, unitCode: "DAY" },
-        },
-      },
-      // Возврат 14 дней — Закон о защите прав потребителей (РФ)
-      hasMerchantReturnPolicy: {
-        "@type": "MerchantReturnPolicy",
-        applicableCountry: "RU",
-        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
-        merchantReturnDays: 14,
-        returnMethod: "https://schema.org/ReturnByMail",
-        returnFees: "https://schema.org/FreeReturn",
-      },
     },
   };
   const faqLd = {
@@ -216,7 +229,7 @@ const ProductPage = () => {
     <main className="min-h-screen bg-background">
       <SEO
         title={name}
-        description={(subtitle || description || "").slice(0, 160) || name}
+        description={metaDescription(subtitle, description) || name}
         image={product.cover_image_url || undefined}
         type="product"
         jsonLd={jsonLd}
@@ -263,27 +276,27 @@ const ProductPage = () => {
                 <>
                   <button
                     type="button"
-                    aria-label="Previous image"
+                    aria-label={lang === "en" ? "Previous image" : "Предыдущее фото"}
                     onClick={() => {
                       const el = galleryRef.current;
                       if (!el) return;
                       el.scrollTo({ left: Math.max(0, activeIdx - 1) * el.clientWidth, behavior: "smooth" });
                     }}
                     disabled={activeIdx === 0}
-                    className="hidden md:grid absolute top-1/2 -translate-y-1/2 left-3 z-10 place-items-center w-10 h-10 rounded-full bg-background/85 backdrop-blur-md text-foreground opacity-0 group-hover:opacity-100 transition hover:bg-background disabled:opacity-30"
+                    className="hidden md:grid absolute top-1/2 -translate-y-1/2 left-3 z-10 place-items-center w-10 h-10 rounded-full bg-background/85 backdrop-blur-md text-foreground opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/60 transition hover:bg-background disabled:opacity-30"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
-                    aria-label="Next image"
+                    aria-label={lang === "en" ? "Next image" : "Следующее фото"}
                     onClick={() => {
                       const el = galleryRef.current;
                       if (!el) return;
                       el.scrollTo({ left: Math.min(gallery.length - 1, activeIdx + 1) * el.clientWidth, behavior: "smooth" });
                     }}
                     disabled={activeIdx === gallery.length - 1}
-                    className="hidden md:grid absolute top-1/2 -translate-y-1/2 right-3 z-10 place-items-center w-10 h-10 rounded-full bg-background/85 backdrop-blur-md text-foreground opacity-0 group-hover:opacity-100 transition hover:bg-background disabled:opacity-30"
+                    className="hidden md:grid absolute top-1/2 -translate-y-1/2 right-3 z-10 place-items-center w-10 h-10 rounded-full bg-background/85 backdrop-blur-md text-foreground opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/60 transition hover:bg-background disabled:opacity-30"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -299,16 +312,18 @@ const ProductPage = () => {
               )}
             </div>
             {gallery.length > 1 && (
-              <div className="grid grid-cols-5 gap-2 mt-3">
+              <div className={`grid ${thumbColsClass(gallery.length)} gap-2 mt-3`}>
                 {gallery.map((g, i) => (
                   <button
                     key={`thumb-${i}`}
+                    type="button"
                     onClick={() => {
                       setActiveIdx(i);
                       const el = galleryRef.current;
                       if (el) el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
                     }}
-                    aria-label="Show image"
+                    aria-label={lang === "en" ? `Show image ${i + 1}` : `Показать фото ${i + 1}`}
+                    aria-current={activeIdx === i ? "true" : undefined}
                     className={`relative aspect-square ar-fb-1 bg-secondary overflow-hidden rounded-sm transition-all ${
                       activeIdx === i
                         ? "ring-1 ring-foreground opacity-100"
@@ -325,11 +340,11 @@ const ProductPage = () => {
           {/* Info */}
           <div className="lg:pt-8">
             {brandName && <p className="text-[11px] tracking-luxe uppercase text-accent mb-4">{brandName}</p>}
-            <h1 className="font-display text-5xl md:text-6xl leading-[0.98]">{name}</h1>
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl leading-[1.02] sm:leading-[0.98]">{name}</h1>
             {subtitle && <p className="font-display italic text-2xl text-muted-foreground mt-3">{subtitle}</p>}
 
             <div className="flex items-end justify-between mt-8 pb-8 border-b border-border">
-              <p className="font-display text-4xl">{Number(product.price).toLocaleString(lang === "en" ? "en-US" : "ru-RU")} ₽</p>
+              <p className="font-display text-4xl lining-nums tabular-nums">{Number(product.price).toLocaleString(lang === "en" ? "en-US" : "ru-RU")} ₽</p>
               {product.volume && (
                 <p className="text-[11px] tracking-luxe uppercase text-muted-foreground">
                   {t("product.volume")}: {product.volume}
@@ -359,8 +374,8 @@ const ProductPage = () => {
                         const ph = currentPhase();
                         const pct = ph === "launch" ? LAUNCH_CONFIG.launchDiscountPercent : LAUNCH_CONFIG.welcomeDiscountPercent;
                         return lang === "en"
-                          ? `Launch on Ozon. Get a ${pct}% promocode now.`
-                          : `Старт продаж на Ozon. Получите промокод ${pct}% уже сейчас.`;
+                          ? `Launch on Ozon and dsom.ru. Get a ${pct}% promocode now.`
+                          : `Старт продаж на Ozon и dsom.ru. Получите промокод ${pct}% уже сейчас.`;
                       })()}
                     </p>
                     <PromoGate variant="card" source={`product:${product.slug}`} />
@@ -379,33 +394,57 @@ const ProductPage = () => {
                   </p>
                 </div>
               )}
-
-              {/* Статус каналов покупки — честно */}
-              <p className="max-w-md mt-5 text-[10px] tracking-[0.16em] uppercase text-muted-foreground/80">
-                {lang === "en"
-                  ? `Cart — active · Ozon — ${LAUNCH_CONFIG.launchLabelEn} · Delivery — in setup`
-                  : `Корзина — активна · Ozon — ${LAUNCH_CONFIG.launchLabelRu} · Доставка — настраиваем`}
-              </p>
             </div>
 
-            {/* Tabs */}
+            {/* Tabs — все панели в DOM (текст виден поиску и снимку для ботов), неактивные скрыты через hidden */}
             <div className="mt-12">
-              <div className="flex items-center gap-6 border-b border-border">
-                {(["description", "ingredients", "how_to_use"] as const).map((k) => (
+              <div
+                role="tablist"
+                aria-label={lang === "en" ? "Product information" : "Информация о товаре"}
+                className="flex items-center gap-4 sm:gap-6 border-b border-border"
+              >
+                {TAB_KEYS.map((k, idx) => (
                   <button
                     key={k}
+                    ref={(el) => { tabRefs.current[k] = el; }}
+                    type="button"
+                    role="tab"
+                    id={`product-tab-${k}`}
+                    aria-selected={tab === k}
+                    aria-controls={`product-panel-${k}`}
+                    tabIndex={tab === k ? 0 : -1}
                     onClick={() => setTab(k)}
-                    className={`pb-3 text-[11px] tracking-luxe uppercase border-b-2 -mb-px transition-colors ${tab === k ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                    onKeyDown={(e) => {
+                      let next: number | null = null;
+                      if (e.key === "ArrowRight") next = (idx + 1) % TAB_KEYS.length;
+                      else if (e.key === "ArrowLeft") next = (idx - 1 + TAB_KEYS.length) % TAB_KEYS.length;
+                      else if (e.key === "Home") next = 0;
+                      else if (e.key === "End") next = TAB_KEYS.length - 1;
+                      if (next === null) return;
+                      e.preventDefault();
+                      const nk = TAB_KEYS[next];
+                      setTab(nk);
+                      tabRefs.current[nk]?.focus();
+                    }}
+                    className={`pb-3 whitespace-nowrap text-[11px] tracking-luxe uppercase border-b-2 -mb-px transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 ${tab === k ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
                   >
                     {t(`product.${k === "how_to_use" ? "howToUse" : k}`)}
                   </button>
                 ))}
               </div>
-              <div className="pt-6 text-sm leading-relaxed text-muted-foreground whitespace-pre-line min-h-[120px]">
-                {tab === "description" && (description || "—")}
-                {tab === "ingredients" && (ingredients || "—")}
-                {tab === "how_to_use" && (howTo || "—")}
-              </div>
+              {TAB_KEYS.map((k) => (
+                <div
+                  key={k}
+                  role="tabpanel"
+                  id={`product-panel-${k}`}
+                  aria-labelledby={`product-tab-${k}`}
+                  hidden={tab !== k}
+                  tabIndex={0}
+                  className="pt-6 text-sm leading-relaxed text-muted-foreground whitespace-pre-line min-h-[120px] focus-visible:outline-none"
+                >
+                  {(k === "description" ? description : k === "ingredients" ? ingredients : howTo) || "—"}
+                </div>
+              ))}
             </div>
 
             {/* Offline stores */}
@@ -484,6 +523,7 @@ const ProductPage = () => {
 
       <RelatedProducts
         productId={product.id}
+        productSlug={product.slug}
         categoryId={product.category_id}
         brandId={product.brand_id}
         onQuickView={setQuickSlug}

@@ -4,8 +4,34 @@ import { initReactI18next } from "react-i18next";
 const resources = {
   ru: {
     translation: {
-      nav: { catalog: "Каталог", about: "О бренде", stores: "Где купить", contact: "Контакты", shop: "В магазин", quiz: "Подбор ухода" },
-      hero: { cta: "Получить промокод 5%", eyebrow: "DSOM · Лаборатория ухода", title1: "Активная косметика", title2: "с прозрачным составом" },
+      nav: { catalog: "Каталог", about: "О бренде", stores: "Где купить", contact: "Контакты", shop: "Смотреть линейку", quiz: "Подбор ухода", journal: "Журнал", favorites: "Избранное", account: "Личный кабинет", login: "Войти" },
+      a11y: {
+        skip: "Перейти к содержимому",
+        menu: "Меню",
+        search: "Поиск",
+        searchDialog: "Поиск по каталогу",
+        closeSearch: "Закрыть поиск",
+        cart: "Корзина",
+        cartCount: "Корзина, товаров: {{count}}",
+        favorites: "Избранное",
+        close: "Закрыть",
+        toCatalog: "Перейти в каталог",
+        language: "Язык",
+        decrease: "Уменьшить количество: {{name}}",
+        increase: "Увеличить количество: {{name}}",
+        remove: "Удалить из корзины: {{name}}",
+        cookieClose: "Закрыть и отказаться",
+        notifyEmail: "Email для уведомления",
+      },
+      cart: {
+        title: "Корзина",
+        empty: "Корзина пуста",
+        subtotal: "Сумма",
+        checkout: "Оформить заказ",
+        soon: "Заказ на сайте откроется {{when}}",
+        promo: "Получить промокод {{pct}}%",
+      },
+      hero: { eyebrow: "DSOM", title1: "Активная косметика", title2: "с прозрачным составом" },
       sections: { bestsellers: "Линейка", brands: "Бренды", philosophy: "Философия", all: "Весь каталог", new: "Новинки" },
       catalog: {
         title: "Каталог",
@@ -37,8 +63,34 @@ const resources = {
   },
   en: {
     translation: {
-      nav: { catalog: "Catalog", about: "About", stores: "Where to buy", contact: "Contact", shop: "Shop", quiz: "Find your routine" },
-      hero: { cta: "Get 5% launch promo", eyebrow: "DSOM · Skincare laboratory", title1: "Active cosmetics", title2: "with transparent formulas" },
+      nav: { catalog: "Catalog", about: "About", stores: "Where to buy", contact: "Contact", shop: "Explore the range", quiz: "Find your routine", journal: "Journal", favorites: "Favorites", account: "My account", login: "Sign in" },
+      a11y: {
+        skip: "Skip to content",
+        menu: "Menu",
+        search: "Search",
+        searchDialog: "Search the catalog",
+        closeSearch: "Close search",
+        cart: "Cart",
+        cartCount: "Cart, items: {{count}}",
+        favorites: "Favorites",
+        close: "Close",
+        toCatalog: "Go to catalog",
+        language: "Language",
+        decrease: "Decrease quantity: {{name}}",
+        increase: "Increase quantity: {{name}}",
+        remove: "Remove from cart: {{name}}",
+        cookieClose: "Close and decline",
+        notifyEmail: "Email for notification",
+      },
+      cart: {
+        title: "Cart",
+        empty: "Your cart is empty",
+        subtotal: "Subtotal",
+        checkout: "Checkout",
+        soon: "Ordering on the site opens {{when}}",
+        promo: "Get a {{pct}}% promo code",
+      },
+      hero: { eyebrow: "DSOM", title1: "Active cosmetics", title2: "with transparent formulas" },
       sections: { bestsellers: "The line", brands: "Brands", philosophy: "Philosophy", all: "Full catalog", new: "New in" },
       catalog: {
         title: "Catalog",
@@ -76,5 +128,12 @@ i18n.use(initReactI18next).init({
   fallbackLng: "ru",
   interpolation: { escapeValue: false },
 });
+
+// Атрибут lang у <html> следует за языком интерфейса (скринридеры, переносы, перевод страницы).
+const syncHtmlLang = (lng: string) => {
+  if (typeof document !== "undefined") document.documentElement.lang = lng === "en" ? "en" : "ru";
+};
+syncHtmlLang(i18n.language);
+i18n.on("languageChanged", syncHtmlLang);
 
 export default i18n;

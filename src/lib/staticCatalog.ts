@@ -244,6 +244,19 @@ export function selectRootCategories(cat: StaticCatalog): CatalogCategory[] {
   return cat.categories.filter((c) => c.parent_id === null).sort(bySortOrder);
 }
 
+/** Корневые категории, в которых есть хотя бы один видимый товар
+ *  (с учётом товаров, привязанных к её подкатегориям). */
+export function selectNonEmptyRootCategories(cat: StaticCatalog): CatalogCategory[] {
+  const usedIds = new Set<string>();
+  for (const p of cat.products) {
+    if (p.category_id) usedIds.add(p.category_id);
+    if (p.subcategory_id) usedIds.add(p.subcategory_id);
+  }
+  return selectRootCategories(cat).filter(
+    (root) => usedIds.has(root.id) || cat.categories.some((c) => c.parent_id === root.id && usedIds.has(c.id))
+  );
+}
+
 export type CatalogSort = "new" | "price_asc" | "price_desc";
 
 /** Товары каталога: фильтр по категории (slug) / типу кожи + сортировка + доп. картинки. */
@@ -310,26 +323,36 @@ export function selectBrandById(cat: StaticCatalog, id: string | null): CatalogB
   return cat.brands.find((b) => b.id === id) || null;
 }
 
-/** Похожие товары: сперва тот же бренд (или категория), добор из категории — как RelatedProducts. */
+/** Пары продуктов, которые нельзя рекомендовать вместе (несовместимы в одной рутине).
+ *  GLOW (вит. C + спикулы) ↔ RENEW (ретинол + спикулы) — по паспортам/ответу технологов. */
+export const INCOMPATIBLE_SLUG_PAIRS: ReadonlyArray<readonly [string, string]> = [
+  ["vitamin-c-microspicules-serum", "retinol-palmitate-microneedles-serum"],
+];
+
+/** true, если два slug'а образуют стоп-пару (порядок не важен). */
+export function isIncompatiblePair(a: string, b: string): boolean {
+  return INCOMPATIBLE_SLUG_PAIRS.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
+}
+
+/** Похожие товары: сперва тот же бренд, затем та же категория, затем добор из остальных видимых.
+ *  Несовместимые пары (GLOW↔RENEW) не рекомендуются никогда. */
 export function selectRelatedProducts(
   cat: StaticCatalog,
   opts: { productId: string; brandId: string | null; categoryId: string | null },
   limit = 4
 ): CatalogProduct[] {
-  const others = cat.products.filter((p) => p.id !== opts.productId);
-  let list: CatalogProduct[];
-  if (opts.brandId) list = others.filter((p) => p.brand_id === opts.brandId).slice(0, limit);
-  else if (opts.categoryId) list = others.filter((p) => p.category_id === opts.categoryId).slice(0, limit);
-  else list = others.slice(0, limit);
-
-  if (list.length < limit && opts.categoryId) {
-    const ids = new Set(list.map((p) => p.id));
-    for (const p of others) {
-      if (list.length >= limit) break;
-      if (!ids.has(p.id) && p.category_id === opts.categoryId) list.push(p);
-    }
-  }
-  return list;
+  const current = cat.products.find((p) => p.id === opts.productId);
+  const others = cat.products.filter(
+    (p) => p.id !== opts.productId && !(current && isIncompatiblePair(current.slug, p.slug))
+  );
+  const rank = (p: CatalogProduct) =>
+    (opts.brandId && p.brand_id === opts.brandId ? 0 : 2) +
+    (opts.categoryId && p.category_id === opts.categoryId ? 0 : 1);
+  return others
+    .map((p, i) => ({ p, i }))
+    .sort((a, b) => rank(a.p) - rank(b.p) || a.i - b.i)
+    .slice(0, limit)
+    .map((x) => x.p);
 }
 
 /** Активные баннеры позиции (order by sort_order). Выбор viewport/AB — в useBanner. */
