@@ -9,7 +9,7 @@ import SEO from "@/components/SEO";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Список статей журнала. Новые статьи добавлять сюда (плюс саму страницу /page/<slug>).
-const ARTICLE_SLUGS = ["chuvstvitelnaya-kozha-kak-vybirat-uhod", "poryadok-naneseniya-uhoda-layering", "retinol-retinal-bakuchiol-raznica", "kak-vosstanovit-barer-kozhi","kakaya-syvorotka-nuzhna-po-zadache", "kak-chitat-sostav-kosmetiki-inci", "rossiyskie-analogi-koreyskih-syvorotok", "pdrn", "retinol", "vitamin-c", "lamellar", "microneedles", "retinol-i-vitamin-c"];
+const ARTICLE_SLUGS = ["niacinamid-dlya-chego-nuzhen", "gialuronovaya-kislota-nizko-i-vysokomolekulyarnaya", "chuvstvitelnaya-kozha-kak-vybirat-uhod", "poryadok-naneseniya-uhoda-layering", "retinol-retinal-bakuchiol-raznica", "kak-vosstanovit-barer-kozhi","kakaya-syvorotka-nuzhna-po-zadache", "kak-chitat-sostav-kosmetiki-inci", "rossiyskie-analogi-koreyskih-syvorotok", "pdrn", "retinol", "vitamin-c", "lamellar", "microneedles", "retinol-i-vitamin-c"];
 
 interface ArticleLite {
   slug: string;
