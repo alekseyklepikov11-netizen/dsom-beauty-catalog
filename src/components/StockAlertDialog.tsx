@@ -10,9 +10,12 @@ import { supabase } from "@/integrations/supabase/client";
 interface Props {
   productId: string;
   productName: string;
+  /** button — рамка на всю ширину (прежний вид); link — текстовая ссылка «Сообщить, когда появится»
+   *  внутри строки Ozon (схема А блока покупки, 14.10.2026). */
+  appearance?: "button" | "link";
 }
 
-const StockAlertDialog = ({ productId, productName }: Props) => {
+const StockAlertDialog = ({ productId, productName, appearance = "button" }: Props) => {
   const { t, i18n } = useTranslation();
   const en = i18n.language === "en";
   const [open, setOpen] = useState(false);
@@ -57,10 +60,16 @@ const StockAlertDialog = ({ productId, productName }: Props) => {
     <>
       <Dialog open={open} onOpenChange={setOpen}>
       <DialogPrimitive.Trigger
-        className="w-full flex items-center justify-center gap-2 border border-foreground/20 hover:border-foreground py-3.5 text-[11px] tracking-luxe uppercase transition-colors"
+        className={
+          appearance === "link"
+            ? "inline-flex items-center gap-2 mt-3 pb-0.5 text-[11px] tracking-luxe uppercase text-foreground border-b border-foreground/30 hover:text-accent hover:border-accent transition-colors"
+            : "w-full flex items-center justify-center gap-2 border border-foreground/20 hover:border-foreground py-3.5 text-[11px] tracking-luxe uppercase transition-colors"
+        }
       >
         <Bell className="w-3.5 h-3.5" aria-hidden="true" />
-        {en ? "Notify when available" : "Сообщить о поступлении"}
+        {appearance === "link"
+          ? en ? "Notify me when available" : "Сообщить, когда появится"
+          : en ? "Notify when available" : "Сообщить о поступлении"}
       </DialogPrimitive.Trigger>
 
       <DialogPortal>

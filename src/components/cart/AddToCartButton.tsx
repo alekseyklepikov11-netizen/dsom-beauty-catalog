@@ -14,11 +14,14 @@ interface Props {
     ProductLite,
     "id" | "slug" | "name" | "name_en" | "price" | "cover_image_url" | "volume"
   >;
-  variant?: "compact" | "full";
+  /** pill — в одном ряду с кнопками маркетплейсов на странице товара (схема А, 14.10.2026). */
+  variant?: "compact" | "full" | "pill";
+  /** Только для pill: dark — главная кнопка, outline — второстепенная. */
+  tone?: "dark" | "outline";
   className?: string;
 }
 
-const AddToCartButton = ({ product, variant = "full", className = "" }: Props) => {
+const AddToCartButton = ({ product, variant = "full", tone = "outline", className = "" }: Props) => {
   const { i18n } = useTranslation();
   const lang = i18n.language;
   const { add, has } = useCart();
@@ -43,6 +46,26 @@ const AddToCartButton = ({ product, variant = "full", className = "" }: Props) =
   const label = inCart
     ? lang === "en" ? "In cart — add more" : "В корзине — ещё"
     : lang === "en" ? "Add to cart" : "В корзину";
+
+  if (variant === "pill") {
+    const dark = tone === "dark";
+    return (
+      <button
+        type="button"
+        onClick={handleAdd}
+        className={`group flex items-center justify-between gap-4 w-full rounded-full pl-6 pr-2 py-2 text-[11px] tracking-luxe uppercase active:scale-[0.98] transition-[background-color,border-color,color,transform] duration-200 ease-out ${
+          dark
+            ? "bg-foreground text-background hover:bg-accent"
+            : "border border-foreground/40 text-foreground hover:bg-foreground hover:text-background hover:border-foreground"
+        } ${className}`}
+      >
+        <span>{label}</span>
+        <span aria-hidden className={`grid place-items-center w-9 h-9 rounded-full transition-colors ${dark ? "bg-white/15 group-hover:bg-white/25" : "bg-foreground/[0.06] group-hover:bg-white/15"}`}>
+          {inCart ? <Check className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
+        </span>
+      </button>
+    );
+  }
 
   if (variant === "compact") {
     return (

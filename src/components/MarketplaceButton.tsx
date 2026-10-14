@@ -43,23 +43,37 @@ interface Props {
   url: string;
   label?: string | null;
   productId?: string;
+  /** dark — главная кнопка (по умолчанию); outline — второстепенная (схема А: «Карточка на Ozon» без остатка). */
+  tone?: "dark" | "outline";
 }
 
-const MarketplaceButton = ({ kind, url: rawUrl, label, productId }: Props) => {
+const TONES = {
+  dark: {
+    pill: "bg-foreground text-background hover:bg-accent",
+    circle: "bg-white/15 group-hover:bg-white/25",
+  },
+  outline: {
+    pill: "border border-foreground/40 text-foreground hover:bg-foreground hover:text-background hover:border-foreground",
+    circle: "bg-foreground/[0.06] group-hover:bg-white/15",
+  },
+} as const;
+
+const MarketplaceButton = ({ kind, url: rawUrl, label, productId, tone = "dark" }: Props) => {
   const url = dedupeUrlParams(rawUrl);
+  const t = TONES[tone];
   return (
     <a
       href={url}
       target="_blank"
       rel="noreferrer noopener"
       onClick={() => track("marketplace_click", { product_id: productId, value: kind, meta: { url } })}
-      className="group flex items-center justify-between gap-4 rounded-full pl-6 pr-2 py-2 text-[11px] tracking-luxe uppercase transition-all duration-300 bg-foreground text-background hover:bg-accent active:scale-[0.98]"
+      className={`group flex items-center justify-between gap-4 rounded-full pl-6 pr-2 py-2 text-[11px] tracking-luxe uppercase transition-all duration-300 active:scale-[0.98] ${t.pill}`}
     >
       <span className="inline-flex items-center gap-2.5">
         <span aria-hidden className={`w-2 h-2 rounded-full shrink-0 ${DOT_COLORS[kind] || DOT_COLORS.other}`} />
         {label || LABELS[kind] || kind}
       </span>
-      <span className="grid place-items-center w-9 h-9 rounded-full bg-white/15 group-hover:bg-white/25 transition-colors">
+      <span aria-hidden className={`grid place-items-center w-9 h-9 rounded-full transition-colors ${t.circle}`}>
         <ArrowUpRight className="w-4 h-4" />
       </span>
     </a>

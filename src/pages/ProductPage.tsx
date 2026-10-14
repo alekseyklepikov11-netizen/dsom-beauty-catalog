@@ -7,16 +7,13 @@ import { loadStaticCatalog, selectProductBySlug } from "@/lib/staticCatalog";
 import { toPublicAssetUrl } from "@/lib/utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import MarketplaceButton from "@/components/MarketplaceButton";
+import ProductBuyBlock from "@/components/ProductBuyBlock";
 import SEO from "@/components/SEO";
 import ReviewsSection from "@/components/ReviewsSection";
 import RelatedProducts from "@/components/RelatedProducts";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import QuickViewDialog from "@/components/QuickViewDialog";
-import StockAlertDialog from "@/components/StockAlertDialog";
-import PromoGate from "@/components/PromoGate";
-import { LAUNCH_CONFIG, currentPhase, isCartEnabled } from "@/lib/launchConfig";
-import AddToCartButton from "@/components/cart/AddToCartButton";
+import { LAUNCH_CONFIG } from "@/lib/launchConfig";
 import { track } from "@/lib/analytics";
 import { addRecentlyViewed } from "@/lib/recentlyViewed";
 import { offerAvailability } from "@/lib/salesStatus";
@@ -352,49 +349,8 @@ const ProductPage = () => {
               )}
             </div>
 
-            {/* Как купить */}
-            <div className="mt-8">
-              <p className="text-[11px] tracking-luxe uppercase text-muted-foreground mb-4">{lang === "en" ? "— How to buy" : "— Как купить"}</p>
-              {(() => {
-                // WB пока не показываем как живой канал (карточки не созданы) — фильтр-предохранитель.
-                const visibleLinks = links.filter((l) => !["wildberries", "wb"].includes((l.kind || "").toLowerCase()));
-                return visibleLinks.length > 0 ? (
-                  <>
-                    <div className="flex flex-col gap-2.5 max-w-md">
-                      {visibleLinks.map((l) => <MarketplaceButton key={l.id} kind={l.kind} url={l.url} label={l.label} productId={product.id} />)}
-                    </div>
-                    <div className="max-w-md mt-3">
-                      <StockAlertDialog productId={product.id} productName={name} />
-                    </div>
-                  </>
-                ) : (
-                  <div className="max-w-md">
-                    <p className="text-sm text-muted-foreground mb-4 italic">
-                      {(() => {
-                        const ph = currentPhase();
-                        const pct = ph === "launch" ? LAUNCH_CONFIG.launchDiscountPercent : LAUNCH_CONFIG.welcomeDiscountPercent;
-                        return lang === "en"
-                          ? `Launch on Ozon and dsom.ru. Get a ${pct}% promocode now.`
-                          : `Старт продаж на Ozon и dsom.ru. Получите промокод ${pct}% уже сейчас.`;
-                      })()}
-                    </p>
-                    <PromoGate variant="card" source={`product:${product.slug}`} />
-                  </div>
-                );
-              })()}
-
-              {/* Корзина — вторичный способ (тизер до подключения оплаты) */}
-              {isCartEnabled() && (
-                <div className="max-w-md mt-4">
-                  <AddToCartButton product={product} variant="full" />
-                  <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
-                    {lang === "en"
-                      ? `Checkout & payment open at launch, ${LAUNCH_CONFIG.launchWhenEn}. For now — build your set and grab a promo code.`
-                      : `Оформление и оплата — на старте, ${LAUNCH_CONFIG.launchWhenRu}. Сейчас можно собрать набор и забрать промокод.`}
-                  </p>
-                </div>
-              )}
-            </div>
+            {/* Как купить — схема А «Два пути с подписями» (14.10.2026) */}
+            <ProductBuyBlock product={product} links={links} name={name} lang={lang} />
 
             {/* Tabs — все панели в DOM (текст виден поиску и снимку для ботов), неактивные скрыты через hidden */}
             <div className="mt-12">
