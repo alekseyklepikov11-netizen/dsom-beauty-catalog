@@ -43,7 +43,7 @@ const Footer = () => {
   }, []);
 
   return (
-    <footer className="bg-foreground text-background py-16">
+    <footer className="bg-foreground text-background pt-16 pb-24 md:pb-16">
       <div className="container grid md:grid-cols-4 gap-10">
         <div>
           <p className="font-display text-3xl tracking-[0.3em]">DSOM</p>

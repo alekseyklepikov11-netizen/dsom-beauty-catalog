@@ -174,7 +174,7 @@ const ProductBuyBlock = ({ product, links, name, lang }: Props) => {
             aria-expanded={showPromo}
             aria-controls="buy-promo"
             onClick={() => setShowPromo((v) => !v)}
-            className="text-[11px] tracking-luxe uppercase text-foreground border-b border-foreground/30 pb-0.5 whitespace-nowrap hover:text-accent hover:border-accent transition-colors"
+            className="relative before:absolute before:content-[''] before:-inset-x-2 before:-inset-y-[13px] text-[11px] tracking-luxe uppercase text-foreground border-b border-foreground/30 pb-0.5 whitespace-nowrap hover:text-accent hover:border-accent transition-colors"
           >
             {en ? "Get →" : "Получить →"}
           </button>

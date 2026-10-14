@@ -62,7 +62,7 @@ const StockAlertDialog = ({ productId, productName, appearance = "button" }: Pro
       <DialogPrimitive.Trigger
         className={
           appearance === "link"
-            ? "inline-flex items-center gap-2 mt-3 pb-0.5 text-[11px] tracking-luxe uppercase text-foreground border-b border-foreground/30 hover:text-accent hover:border-accent transition-colors"
+            ? "relative before:absolute before:content-[''] before:-inset-x-2 before:-inset-y-[13px] inline-flex items-center gap-2 mt-3 pb-0.5 text-[11px] tracking-luxe uppercase text-foreground border-b border-foreground/30 hover:text-accent hover:border-accent transition-colors"
             : "w-full flex items-center justify-center gap-2 border border-foreground/20 hover:border-foreground py-3.5 text-[11px] tracking-luxe uppercase transition-colors"
         }
       >

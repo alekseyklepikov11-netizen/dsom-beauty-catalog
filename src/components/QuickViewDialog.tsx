@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { loadStaticCatalog, selectProductBySlug } from "@/lib/staticCatalog";
+import { fetchMarketplaceStock } from "@/lib/marketplaceStock";
 import MarketplaceButton from "./MarketplaceButton";
 
 interface QuickViewProps {
@@ -64,6 +65,17 @@ const QuickViewDialog = ({ slug, onClose }: QuickViewProps) => {
       setLoading(false);
     })();
   }, [slug]);
+
+  // Наличие на Ozon — как в блоке покупки (схема А, 14.10.2026): нет свежей сверки = «нет в наличии».
+  const [stock, setStock] = useState<Record<string, boolean>>({});
+  const productId = product?.id;
+  useEffect(() => {
+    setStock({});
+    if (!productId) return;
+    let alive = true;
+    fetchMarketplaceStock(productId).then((s) => { if (alive) setStock(s); });
+    return () => { alive = false; };
+  }, [productId]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -176,7 +188,28 @@ const QuickViewDialog = ({ slug, onClose }: QuickViewProps) => {
                 <p className="text-[10px] tracking-luxe uppercase text-muted-foreground mb-3">{t("product.marketplaces")}</p>
                 <div className="flex flex-col gap-2">
                   {links.length === 0 && <p className="text-xs text-muted-foreground italic">—</p>}
-                  {links.map((l) => <MarketplaceButton key={l.id} kind={l.kind} url={l.url} label={l.label} />)}
+                  {links.map((l) => {
+                    if ((l.kind || "").toLowerCase() !== "ozon") {
+                      return <MarketplaceButton key={l.id} kind={l.kind} url={l.url} label={l.label} productId={product.id} />;
+                    }
+                    // Ozon: без остатка — светлая «Карточка на Ozon» и подпись, как на странице товара.
+                    const has = stock.ozon === true;
+                    const en = lang === "en";
+                    return (
+                      <div key={l.id}>
+                        {!has && (
+                          <p className="text-xs text-muted-foreground mb-2">{en ? "Not in stock on Ozon yet." : "Пока нет в наличии на Ozon."}</p>
+                        )}
+                        <MarketplaceButton
+                          kind="ozon"
+                          url={l.url}
+                          productId={product.id}
+                          tone={has ? "dark" : "outline"}
+                          label={has ? (en ? "Buy on Ozon" : "Купить на Ozon") : (en ? "Ozon product page" : "Карточка на Ozon")}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
